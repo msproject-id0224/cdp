@@ -13,41 +13,305 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Default users
-        User::updateOrCreate(['id_number' => 'ADMINFIRST'], [
-            'first_name' => 'Admin',
-            'last_name' => 'User',
-            'email' => 'id224ms.portal1a@gmail.com',
-            'role' => 'admin',
+        // -------------------------------------------------------
+        // Staff & Mentors — imported from staf_mentor.xlsx
+        // -------------------------------------------------------
+
+        // ADM001 — Admin (portal)
+        User::updateOrCreate(['id_number' => 'ADM001'], [
+            'first_name'        => 'Admin',
+            'last_name'         => 'User',
+            'nickname'          => null,
+            'email'             => 'id224ms.portal1a@gmail.com',
+            'role'              => 'admin',
+            'gender'            => null,
+            'date_of_birth'     => null,
+            'is_active'         => true,
             'email_verified_at' => now(),
-            'password' => Hash::make('Password1!'),
+            'password'          => Hash::make('Password1!'),
         ]);
 
-        User::updateOrCreate(['id_number' => 'ADMIN123'], [
-            'first_name' => 'Christine',
-            'last_name' => 'User',
-            'email' => 'id0224ms.sekretariat@gmail.com',
-            'role' => 'admin',
+        // MEN002 — Sandra Wungkana (Mentor Youth 12-14)
+        User::updateOrCreate(['id_number' => 'MEN002'], [
+            'first_name'        => 'Sandra',
+            'last_name'         => 'Wungkana',
+            'nickname'          => 'Anda',
+            'email'             => 'jamiemax71@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1982-09-25',
+            'gender'            => 'female',
+            'phone_number'      => '82293976177',
+            'specialization'    => 'Mentor Youth 12-14',
+            'experience'        => 'Youth Specialist',
+            'is_active'         => true,
             'email_verified_at' => now(),
-            'password' => Hash::make('Password1!'),
+            'password'          => Hash::make('Password1!'),
         ]);
 
-        User::updateOrCreate(['id_number' => 'MENTOR123'], [
-            'first_name' => 'Mentor',
-            'last_name' => 'User',
-            'email' => 'jamiemax71@gmail.com',
-            'role' => 'mentor',
+        // ADM003 — Christine Mawuntu (Sekretaris PPA)
+        User::updateOrCreate(['id_number' => 'ADM003'], [
+            'first_name'        => 'Christine',
+            'last_name'         => 'Mawuntu',
+            'nickname'          => 'Itin',
+            'email'             => 'id0224ms.sekretariat@gmail.com',
+            'role'              => 'admin',
+            'date_of_birth'     => '1990-07-17',
+            'gender'            => 'female',
+            'phone_number'      => '82191407762',
+            'specialization'    => 'Sekretaris PPA',
+            'experience'        => 'Staff PPA',
+            'is_active'         => true,
             'email_verified_at' => now(),
-            'password' => Hash::make('Password1!'),
+            'password'          => Hash::make('Password1!'),
         ]);
 
+        // MEN004 — Esther Kumajas (Mentor Youth 15-18)
+        User::updateOrCreate(['id_number' => 'MEN004'], [
+            'first_name'        => 'Esther',
+            'last_name'         => 'Kumajas',
+            'nickname'          => 'Ester',
+            'email'             => 'sikomekumajasestherkumajas@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1981-06-28',
+            'gender'            => 'female',
+            'phone_number'      => '81543415988',
+            'specialization'    => 'Mentor Youth 15-18',
+            'experience'        => 'Mentor Youth',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN005 — Vhelan Mongkareng (Youth Mentor)
+        User::updateOrCreate(['id_number' => 'MEN005'], [
+            'first_name'        => 'Vhelan',
+            'last_name'         => 'Mongkareng',
+            'nickname'          => 'Vhelan',
+            'email'             => 'vhelanmongkareng@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1994-12-18',
+            'gender'            => 'female',
+            'phone_number'      => '82315950700',
+            'specialization'    => 'Youth Mentor',
+            'experience'        => 'Youth Mentor',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN006 — Ivon Margaretha Aring (Youth Specialist / Health Worker)
+        User::updateOrCreate(['id_number' => 'MEN006'], [
+            'first_name'        => 'Ivon Margaretha',
+            'last_name'         => 'Aring',
+            'nickname'          => 'Ivon',
+            'email'             => 'ivonmargarethaaring@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1977-03-16',
+            'gender'            => 'female',
+            'phone_number'      => '81341852336',
+            'specialization'    => 'Mentor Youth',
+            'experience'        => 'Youth Specialist/Health Worker',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN007 — Friko Langi (Youth Specialist)
+        User::updateOrCreate(['id_number' => 'MEN007'], [
+            'first_name'        => 'Friko',
+            'last_name'         => 'Langi',
+            'nickname'          => 'Friko',
+            'email'             => 'frikolangi2710@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1989-10-27',
+            'gender'            => 'male',
+            'phone_number'      => '82188797809',
+            'specialization'    => 'Youth Mentoring',
+            'experience'        => 'Youth Specialist',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN008 — Imelda Mussu (Mentor)
+        User::updateOrCreate(['id_number' => 'MEN008'], [
+            'first_name'        => 'Imelda',
+            'last_name'         => 'Mussu',
+            'nickname'          => 'Imelda',
+            'email'             => 'mussuimelda5@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1979-03-19',
+            'gender'            => 'female',
+            'phone_number'      => null,
+            'specialization'    => 'Mentor',
+            'experience'        => null,
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN009 — Fice Tombeg (Mentor)
+        User::updateOrCreate(['id_number' => 'MEN009'], [
+            'first_name'        => 'Fice',
+            'last_name'         => 'Tombeg',
+            'nickname'          => 'Fice',
+            'email'             => 'ficetombeg359@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1959-02-10',
+            'gender'            => 'female',
+            'phone_number'      => null,
+            'specialization'    => 'Mentor',
+            'experience'        => null,
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN010 — Venny Sumilat (Mentor)
+        User::updateOrCreate(['id_number' => 'MEN010'], [
+            'first_name'        => 'Venny',
+            'last_name'         => 'Sumilat',
+            'nickname'          => 'Venny',
+            'email'             => 'vennysumilat@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1968-02-23',
+            'gender'            => 'female',
+            'phone_number'      => '81340700162',
+            'specialization'    => 'Mentor',
+            'experience'        => null,
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN011 — Alce Dien (Mentor)
+        User::updateOrCreate(['id_number' => 'MEN011'], [
+            'first_name'        => 'Alce',
+            'last_name'         => 'Dien',
+            'nickname'          => 'Alce',
+            'email'             => 'alcedien99@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1979-04-01',
+            'gender'            => 'female',
+            'phone_number'      => '85172025922',
+            'specialization'    => 'Mentor',
+            'experience'        => null,
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN012 — Lice Tambuwun (Mentor Homebased)
+        User::updateOrCreate(['id_number' => 'MEN012'], [
+            'first_name'        => 'Lice',
+            'last_name'         => 'Tambuwun',
+            'nickname'          => 'Lice',
+            'email'             => 'licetambuwun4@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1964-05-09',
+            'gender'            => 'female',
+            'phone_number'      => '85757215359',
+            'specialization'    => 'Mentor Homebased',
+            'experience'        => null,
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN013 — Tineke Mumu (Centerbased Mentor)
+        User::updateOrCreate(['id_number' => 'MEN013'], [
+            'first_name'        => 'Tineke',
+            'last_name'         => 'Mumu',
+            'nickname'          => 'Tin',
+            'email'             => 'tinekemumu89@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1964-05-06',
+            'gender'            => 'female',
+            'phone_number'      => '81543415955',
+            'specialization'    => 'Centerbased Mentor',
+            'experience'        => null,
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // MEN014 — Hartaty Zebua (Homebased Mentor)
+        User::updateOrCreate(['id_number' => 'MEN014'], [
+            'first_name'        => 'Hartaty',
+            'last_name'         => 'Zebua',
+            'nickname'          => 'Taty',
+            'email'             => 'hartatysepang1975@gmail.com',
+            'role'              => 'mentor',
+            'date_of_birth'     => '1975-12-19',
+            'gender'            => 'female',
+            'phone_number'      => '81355196571',
+            'specialization'    => 'Homebased Mentor',
+            'experience'        => 'Mentor',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // ADM015 — Heintje Sepang (Staff Perlindungan Anak)
+        User::updateOrCreate(['id_number' => 'ADM015'], [
+            'first_name'        => 'Heintje',
+            'last_name'         => 'Sepang',
+            'nickname'          => 'SPA',
+            'email'             => 'heintjesepang201072@gmail.com',
+            'role'              => 'admin',
+            'date_of_birth'     => '1972-10-20',
+            'gender'            => 'male',
+            'phone_number'      => null,
+            'specialization'    => 'Staff PPA',
+            'experience'        => 'Perlindungan Anak',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // ADM016 — Feybie Tambuwun (Koordinator Tutor-Mentor)
+        User::updateOrCreate(['id_number' => 'ADM016'], [
+            'first_name'        => 'Feybie',
+            'last_name'         => 'Tambuwun',
+            'nickname'          => 'Eby',
+            'email'             => 'tambuwunfeybie4@gmail.com',
+            'role'              => 'admin',
+            'date_of_birth'     => '1982-07-04',
+            'gender'            => 'female',
+            'phone_number'      => '82394301154',
+            'specialization'    => 'Koordinator',
+            'experience'        => 'Tutor-Mentor Coordinator',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // ADM017 — Joan Sepang (Bendahara PPA)
+        User::updateOrCreate(['id_number' => 'ADM017'], [
+            'first_name'        => 'Joan',
+            'last_name'         => 'Sepang',
+            'nickname'          => 'Joan',
+            'email'             => 'jazzen.lee@gmail.com',
+            'role'              => 'admin',
+            'date_of_birth'     => '1991-07-21',
+            'gender'            => 'male',
+            'phone_number'      => '85756676249',
+            'specialization'    => 'Bendahara PPA',
+            'experience'        => 'Staf Keuangan',
+            'is_active'         => true,
+            'email_verified_at' => now(),
+            'password'          => Hash::make('Password1!'),
+        ]);
+
+        // Test participant account
         User::updateOrCreate(['id_number' => 'PARTICIPANT123'], [
-            'first_name' => 'Participant',
-            'last_name' => 'User',
-            'email' => 'chelseacaeryn@gmail.com',
-            'role' => 'participant',
+            'first_name'        => 'Participant',
+            'last_name'         => 'User',
+            'email'             => 'chelseacaeryn@gmail.com',
+            'role'              => 'participant',
+            'is_active'         => true,
             'email_verified_at' => now(),
-            'password' => Hash::make('Password1!'),
+            'password'          => Hash::make('Password1!'),
         ]);
 
         // Imported Participants from Excel
