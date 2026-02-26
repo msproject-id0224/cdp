@@ -9,7 +9,6 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import SelectInput from '@/Components/SelectInput';
-import Pagination from '@/Components/Pagination';
 
 export default function ScheduleTab() {
     const [schedules, setSchedules] = useState([]);
@@ -204,7 +203,7 @@ export default function ScheduleTab() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">{new Date(schedule.date).toLocaleDateString()}</div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)}
+                                                {schedule.start_time?.substring(0, 5) || '-'} - {schedule.end_time?.substring(0, 5) || '-'}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -234,10 +233,10 @@ export default function ScheduleTab() {
                         </tbody>
                     </table>
                 </div>
-                {pagination.links && (
-                     <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                {pagination.links && pagination.links.length > 3 && (
+                    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                         {/* Custom simplified pagination for API response structure */}
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col items-center gap-2">
                             <div className="text-sm text-gray-700 dark:text-gray-400">
                                 {__('Showing')} {pagination.from} {__('to')} {pagination.to} {__('of')} {pagination.total} {__('results')}
                             </div>

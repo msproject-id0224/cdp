@@ -1,20 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
+import { __ } from '@/Utils/lang';
 import TextInput from '@/Components/TextInput';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import axios from 'axios';
 
 export default function CommunicationIndex({ auth }) {
-    const { translations } = usePage().props;
     
-    const __ = (key, replace = {}) => {
-        let translation = translations?.[key] || key;
-        Object.keys(replace).forEach(key => {
-            translation = translation.replace(':' + key, replace[key]);
-        });
-        return translation;
-    };
-
     const user = auth.user;
     const [usersList, setUsersList] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -179,7 +172,13 @@ export default function CommunicationIndex({ auth }) {
                                             className={`p-4 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${chatTarget?.id === u.id ? 'bg-blue-50 dark:bg-blue-900/20 border-r-4 border-blue-500' : ''}`}
                                         >
                                             <div className="relative">
-                                                <img src={u.avatar_url} alt={u.name} className="w-10 h-10 rounded-full" />
+                                                <ProfilePhoto 
+                                                    src={u.avatar_url} 
+                                                    alt={u.name} 
+                                                    className="w-10 h-10 rounded-full object-cover" 
+                                                    fallbackClassName="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold"
+                                                    fallback={(u.name || 'U').charAt(0).toUpperCase()}
+                                                />
                                                 <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${u.is_online ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -207,11 +206,17 @@ export default function CommunicationIndex({ auth }) {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                                 </svg>
                                             </button>
-                                            <img src={chatTarget.avatar_url} alt={chatTarget.name} className="w-10 h-10 rounded-full" />
+                                            <ProfilePhoto 
+                                                src={chatTarget.avatar_url} 
+                                                alt={chatTarget.name} 
+                                                className="w-10 h-10 rounded-full object-cover" 
+                                                fallbackClassName="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold"
+                                                fallback={(chatTarget.name || 'U').charAt(0).toUpperCase()}
+                                            />
                                             <div>
                                                 <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">{chatTarget.name}</h3>
                                                 <p className={`text-[10px] font-medium uppercase ${chatTarget.is_online ? 'text-green-500' : 'text-gray-500'}`}>
-                                                    {chatTarget.is_online ? 'Online' : 'Offline'}
+                                                    {chatTarget.is_online ? __('Online') : __('Offline')}
                                                 </p>
                                             </div>
                                         </div>

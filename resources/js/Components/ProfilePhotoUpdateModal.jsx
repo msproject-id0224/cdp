@@ -3,6 +3,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import { __ } from '@/Utils/lang';
 
 export default function ProfilePhotoUpdateModal({ show, onClose }) {
@@ -82,13 +83,15 @@ export default function ProfilePhotoUpdateModal({ show, onClose }) {
                     <div className="mb-4 relative">
                         <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 shadow-md bg-gray-100 dark:bg-gray-900">
                             {preview ? (
-                                <img src={preview} alt="New Photo Preview" className="w-full h-full object-cover" />
-                            ) : user.profile_photo_url ? (
-                                <img src={user.profile_photo_url} alt="Current Photo" className="w-full h-full object-cover" />
+                                <img src={preview} alt={__('New Photo Preview')} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-4xl font-bold">
-                                    {(user.name || user.first_name || 'U').charAt(0)}
-                                </div>
+                                <ProfilePhoto 
+                                    src={user.profile_photo_url} 
+                                    alt={__('Current Photo')} 
+                                    className="w-full h-full object-cover" 
+                                    fallbackClassName="w-full h-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-4xl font-bold"
+                                    fallback={(user.name || user.first_name || 'U').charAt(0)}
+                                />
                             )}
                         </div>
                         {user.profile_photo_status === 'pending' && !preview && (

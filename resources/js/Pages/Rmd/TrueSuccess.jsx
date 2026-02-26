@@ -29,9 +29,9 @@ export default function TrueSuccess({ auth, trueSuccess }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">{__('Keberhasilan Sejati')}</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">{__('RMD_TRUE_SUCCESS_TITLE')}</h2>}
         >
-            <Head title="Keberhasilan Sejati" />
+            <Head title={__('RMD_TRUE_SUCCESS_TITLE')} />
 
             <div className="py-12">
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
@@ -40,48 +40,48 @@ export default function TrueSuccess({ auth, trueSuccess }) {
                             
                             {/* Header Section */}
                             <div className="text-center">
-                                <h3 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">KEBERHASILAN SEJATI</h3>
+                                <h3 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">{__('RMD_TRUE_SUCCESS_MAIN_TITLE')}</h3>
                                 <div className="w-24 h-1 bg-indigo-500 mx-auto rounded"></div>
                             </div>
 
                             {/* Pembuka */}
                             <section className="prose dark:prose-invert max-w-none">
-                                <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">{__('Pembuka')}</h4>
+                                <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">{__('RMD_OPENING_TITLE')}</h4>
                                 <p className="mb-4 text-gray-700 dark:text-gray-300">
-                                    {__('Bagikanlah cerita tentang orang yang kamu anggap berhasil di depan mentor dan teman-temanmu, sesuai tugas yang diberikan pada pertemuan sebelumnya.')}
+                                    {__('RMD_TRUE_SUCCESS_INTRO_TASK')}
                                 </p>
-                                <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">{__('Apakah keberhasilan itu?')}</h5>
+                                <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">{__('RMD_TRUE_SUCCESS_WHAT_IS')}</h5>
                                 <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">
-                                    {__('Pada bab ini kita akan melihat bersama tentang pengertian keberhasilan atau kesuksesan sejati. Banyak dari kita yang ingin berhasil atau sukses. Ada bermacam-macam hal yang membuat seseorang dikatakan berhasil atau sukses, seperti berbagai cerita yang kamu dengarkan di awal pertemuan ini.')}
-                                </p>
-                                <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">
-                                    {__('Apakah kamu pernah melakukan suatu pekerjaan dan kamu merasa sangat puas dan bahagia dengan hasil dari pekerjaan tersebut? Mungkin kamu berhasil dalam menyelesaikan ujian matematika dan mendapatkan nilai yang terbaik, atau dalam pelajaran kesenian kamu membuat sebuah karya yang dikagumi oleh banyak orang, atau mungkin saat memainkan sebuah game kamu berhasil mencapai level tertentu.')}
+                                    {__('RMD_TRUE_SUCCESS_DESC_1')}
                                 </p>
                                 <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">
-                                    {__('Keberhasilan akan selalu menimbulkan rasa puas dan bahagia, karena kita menggapai apa yang kita harapkan. Demikian juga dengan kehidupan kita. Pernahkah kamu memikirkan sejenak tentang hal terbaik apa yang ingin kamu lakukan atau kamu capai dalam hidupmu?')}
+                                    {__('RMD_TRUE_SUCCESS_DESC_2')}
+                                </p>
+                                <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">
+                                    {__('RMD_TRUE_SUCCESS_DESC_3')}
                                 </p>
                                 <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300 font-medium">
-                                    {__('Menurutmu, seperti apakah hidup yang berhasil atau sukses itu? Cobalah diskusikan bersama teman-temanmu, sampaikan pendapatmu dan dengarkan pula pendapat teman-temanmu. Daftarkanlah hasil temuan kalian di bawah ini.')}
+                                    {__('RMD_TRUE_SUCCESS_DESC_4')}
                                 </p>
 
                                 <div className="space-y-6 mt-6">
                                     <div>
-                                        <InputLabel htmlFor="successful_life_definition" value="Hidup yang berhasil menurutku dan teman-temanku adalah:" />
+                                        <InputLabel htmlFor="successful_life_definition" value={__('RMD_TRUE_SUCCESS_DEFINITION_LABEL')} />
                                         <TextArea
                                             id="successful_life_definition"
                                             value={data.successful_life_definition}
                                             onChange={(e) => setData('successful_life_definition', e.target.value)}
-                                            placeholder="Tuliskan di sini..."
+                                            placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
                                         />
                                         <InputError message={errors.successful_life_definition} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="general_success_measure" value="Apa yang menjadi ukuran keberhasilan hidup menurut orang-orang disekitarmu pada umumnya?" />
+                                        <InputLabel htmlFor="general_success_measure" value={__('RMD_TRUE_SUCCESS_MEASURE_LABEL')} />
                                         <TextArea
                                             id="general_success_measure"
                                             value={data.general_success_measure}
                                             onChange={(e) => setData('general_success_measure', e.target.value)}
-                                            placeholder="Tuliskan di sini..."
+                                            placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
                                         />
                                         <InputError message={errors.general_success_measure} className="mt-2" />
                                     </div>
@@ -90,14 +90,14 @@ export default function TrueSuccess({ auth, trueSuccess }) {
 
                             {/* Apa kata Alkitab */}
                             <section className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 p-6 rounded-lg">
-                                <h4 className="text-xl font-bold mb-4 text-indigo-800 dark:text-indigo-300">{__('Apa kata Alkitab')}</h4>
+                                <h4 className="text-xl font-bold mb-4 text-indigo-800 dark:text-indigo-300">{__('RMD_BIBLE_SAYS_TITLE')}</h4>
                                 <p className="mb-4 text-gray-700 dark:text-gray-300">
-                                    {__('Bacalah Lukas 2:52, Filipi 2:5-10, Matius 3:17 dan diskusikanlah beberapa pertanyaan berikut:')}
+                                    {__('RMD_TRUE_SUCCESS_BIBLE_INTRO')}
                                 </p>
                                 
                                 <div className="space-y-6">
                                     <div>
-                                        <InputLabel htmlFor="luke_2_52_growth" value="Apa saja pertumbuhan yang dialami oleh Yesus menurut Lukas 2:52?" />
+                                        <InputLabel htmlFor="luke_2_52_growth" value={__('RMD_TRUE_SUCCESS_LUKE_QUESTION')} />
                                         <TextArea
                                             id="luke_2_52_growth"
                                             value={data.luke_2_52_growth}
@@ -106,7 +106,7 @@ export default function TrueSuccess({ auth, trueSuccess }) {
                                         <InputError message={errors.luke_2_52_growth} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="philippians_2_5_10_actions" value="Berdasarkan Filipi 2:5-10, apa saja yang dilakukan oleh Yesus dalam hidup-Nya? (Lihat ayat 6-8)." />
+                                        <InputLabel htmlFor="philippians_2_5_10_actions" value={__('RMD_TRUE_SUCCESS_PHILIPPIANS_QUESTION')} />
                                         <TextArea
                                             id="philippians_2_5_10_actions"
                                             value={data.philippians_2_5_10_actions}
@@ -115,7 +115,7 @@ export default function TrueSuccess({ auth, trueSuccess }) {
                                         <InputError message={errors.philippians_2_5_10_actions} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="jesus_success_vs_society" value="Menurutmu, apakah yang Yesus capai dalam hidup-Nya bisa dikatakan berhasil/sukses dalam pandangan masyarakat pada umumnya? Jelaskan!" />
+                                        <InputLabel htmlFor="jesus_success_vs_society" value={__('RMD_TRUE_SUCCESS_JESUS_SUCCESS_QUESTION')} />
                                         <TextArea
                                             id="jesus_success_vs_society"
                                             value={data.jesus_success_vs_society}
@@ -124,7 +124,7 @@ export default function TrueSuccess({ auth, trueSuccess }) {
                                         <InputError message={errors.jesus_success_vs_society} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="god_opinion_on_jesus" value="Apa yang Allah katakan tentang Yesus (Matius 3:17, Filipi 2:9)" />
+                                        <InputLabel htmlFor="god_opinion_on_jesus" value={__('RMD_TRUE_SUCCESS_GOD_OPINION_QUESTION')} />
                                         <TextArea
                                             id="god_opinion_on_jesus"
                                             value={data.god_opinion_on_jesus}
@@ -137,20 +137,20 @@ export default function TrueSuccess({ auth, trueSuccess }) {
 
                             {/* Refleksi / Gambar */}
                             <section className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 p-6 rounded-lg">
-                                <h4 className="text-xl font-bold mb-4 text-yellow-800 dark:text-yellow-300">{__('Refleksi')}</h4>
+                                <h4 className="text-xl font-bold mb-4 text-yellow-800 dark:text-yellow-300">{__('RMD_REFLECTION_TITLE')}</h4>
                                 <div className="space-y-4">
                                     <div>
-                                        <InputLabel htmlFor="new_learning_text" value="Sekarang gambarkan/ tuliskan hal baru yang kamu dapatkan mengenai keberhasilan!" />
+                                        <InputLabel htmlFor="new_learning_text" value={__('RMD_TRUE_SUCCESS_REFLECTION_LABEL')} />
                                         <TextArea
                                             id="new_learning_text"
                                             value={data.new_learning_text}
                                             onChange={(e) => setData('new_learning_text', e.target.value)}
-                                            placeholder="Tuliskan di sini..."
+                                            placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
                                         />
                                         <InputError message={errors.new_learning_text} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel value="Unggah gambar (opsional):" />
+                                        <InputLabel value={__('RMD_UPLOAD_IMAGE_OPTIONAL')} />
                                         <input
                                             type="file"
                                             onChange={(e) => setData('new_learning_image', e.target.files[0])}
@@ -164,7 +164,7 @@ export default function TrueSuccess({ auth, trueSuccess }) {
                                         />
                                         {trueSuccess?.new_learning_image_path && (
                                             <div className="mt-2">
-                                                <p className="text-sm text-gray-500 mb-1">Gambar saat ini:</p>
+                                                <p className="text-sm text-gray-500 mb-1">{__('RMD_CURRENT_IMAGE')}</p>
                                                 <img 
                                                     src={`/storage/${trueSuccess.new_learning_image_path}`} 
                                                     alt="New Learning Drawing" 
@@ -179,30 +179,30 @@ export default function TrueSuccess({ auth, trueSuccess }) {
 
                             {/* Penutup */}
                             <section className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 p-6 rounded-lg">
-                                <h4 className="text-xl font-bold mb-4 text-green-800 dark:text-green-300">{__('Penutup')}</h4>
+                                <h4 className="text-xl font-bold mb-4 text-green-800 dark:text-green-300">{__('RMD_CLOSING_TITLE')}</h4>
                                 <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">
-                                    {__('Kita sudah bersama-sama belajar arti keberhasilan sejati. Mari berdoa bersama supaya kita ditolong untuk mengikuti Yesus yang berhasil taat sampai mati dan memperoleh keberhasilan sejati bersama Allah.')}
+                                    {__('RMD_TRUE_SUCCESS_CLOSING_DESC')}
                                 </p>
                                 <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded border border-green-300 dark:border-green-600">
-                                    <p className="font-bold text-lg text-green-700 dark:text-green-400 mb-2">{__('Selamat, kamu sudah mempelajari:')}</p>
+                                    <p className="font-bold text-lg text-green-700 dark:text-green-400 mb-2">{__('RMD_CONGRATS_LEARNED')}</p>
                                     <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                                        <li>{__('Berbagai macam keberhasilan menurut pendapat orang pada umumnya')}</li>
-                                        <li>{__('Arti keberhasilan sejati menurut Alkitab')}</li>
+                                        <li>{__('RMD_TRUE_SUCCESS_LEARNED_1')}</li>
+                                        <li>{__('RMD_TRUE_SUCCESS_LEARNED_2')}</li>
                                     </ul>
                                 </div>
                             </section>
 
                             {/* Proyek Rame-Rame */}
                             <section className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 p-6 rounded-lg">
-                                <h4 className="text-xl font-bold mb-4 text-orange-800 dark:text-orange-300">{__('Proyek Rame-Rame')}</h4>
+                                <h4 className="text-xl font-bold mb-4 text-orange-800 dark:text-orange-300">{__('RMD_GROUP_PROJECT_TITLE')}</h4>
                                 <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 mb-6">
-                                    <li><span className="font-semibold">{__('Hafalkan bersama-sama Filipi 2:8-9.')}</span></li>
+                                    <li><span className="font-semibold">{__('RMD_TRUE_SUCCESS_PROJECT_TASK_1')}</span></li>
                                     <li>
-                                        {__('Siapkan presentasi singkat tentang dirimu dan hal-hal unik yang kamu miliki untuk disampaikan kepada teman-teman dan mentormu pada pertemuan selanjutnya.')}
+                                        {__('RMD_TRUE_SUCCESS_PROJECT_TASK_2')}
                                     </li>
                                 </ul>
                                 <div className="text-center italic font-serif text-xl text-orange-900 dark:text-orange-200 p-4 border-t-2 border-orange-200 dark:border-orange-700">
-                                    “{__('Keberhasilan sejati adalah kita taat penuh kepada Allah untuk memenuhi tujuan-Nya')}”
+                                    {__('RMD_TRUE_SUCCESS_QUOTE')}
                                 </div>
                             </section>
 
@@ -212,7 +212,7 @@ export default function TrueSuccess({ auth, trueSuccess }) {
                                     href={route('rmd.what-the-bible-says')}
                                     className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150"
                                 >
-                                    &laquo; {__('Kembali')}
+                                    &laquo; {__('RMD_BACK_BUTTON')}
                                 </Link>
 
                                 <div className="flex gap-4">
@@ -225,16 +225,16 @@ export default function TrueSuccess({ auth, trueSuccess }) {
                                         leaveFrom="opacity-100"
                                         leaveTo="opacity-0"
                                     >
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 self-center">{__('Tersimpan.')}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 self-center">{__('RMD_SAVED_MESSAGE')}</p>
                                     </Transition>
 
                                     <PrimaryButton disabled={processing}>
-                                        {processing ? 'Menyimpan...' : __('Simpan Jawaban')}
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
                                     </PrimaryButton>
 
                                     <Link href={route('rmd.the-only-one')}>
                                         <div className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 ml-2">
-                                            {__('Lanjut ke Satu-Satunya')} &raquo;
+                                            {__('RMD_NEXT_THE_ONLY_ONE')} &raquo;
                                         </div>
                                     </Link>
                                 </div>

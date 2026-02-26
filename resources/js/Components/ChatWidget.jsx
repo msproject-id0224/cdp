@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import axios from 'axios';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function ChatWidget({ user }) {
     const { translations } = usePage().props;
@@ -16,10 +17,12 @@ export default function ChatWidget({ user }) {
     };
 
     const [isOpen, setIsOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'users'
+    const [activeTab, setActiveTab] = useState('global'); // 'global' | 'chat' | 'users'
     const [unreadCount, setUnreadCount] = useState(0);
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState([]); // Private messages
+    const [globalMessages, setGlobalMessages] = useState([]); // Global messages
+    const [lastGlobalId, setLastGlobalId] = useState(0);
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [chatTarget, setChatTarget] = useState(null);
@@ -73,6 +76,27 @@ export default function ChatWidget({ user }) {
         }
     };
 
+    const fetchGlobalMessages = async () => {
+        try {
+            const response = await axios.get('/api/chat/global', {
+                params: { after_id: lastGlobalId }
+            });
+            
+            if (response.data.length > 0) {
+                const newMessages = response.data;
+                setGlobalMessages(prev => {
+                    // Filter out duplicates just in case
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const uniqueNew = newMessages.filter(m => !existingIds.has(m.id));
+                    return [...prev, ...uniqueNew];
+                });
+                setLastGlobalId(newMessages[newMessages.length - 1].id);
+            }
+        } catch (error) {
+            console.error('Failed to fetch global messages', error);
+        }
+    };
+
     const sendMessage = async (msgText, targetId, tempId = Date.now()) => {
         if (!isOnline) {
             const offlineMsg = {
@@ -82,9 +106,14 @@ export default function ChatWidget({ user }) {
                 sender_id: user.id,
                 receiver_id: targetId,
                 status: 'offline',
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                sender: user // Add sender info for global chat display
             };
-            setMessages(prev => [...prev, offlineMsg]);
+            if (targetId) {
+                setMessages(prev => [...prev, offlineMsg]);
+            } else {
+                setGlobalMessages(prev => [...prev, offlineMsg]);
+            }
             setOfflineQueue(prev => [...prev, offlineMsg]);
             return;
         }
@@ -95,11 +124,18 @@ export default function ChatWidget({ user }) {
             sender_id: user.id,
             receiver_id: targetId,
             status: 'sending',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            sender: user
         };
 
-        if (!messages.find(m => m.id === tempId)) {
-            setMessages(prev => [...prev, newMessage]);
+        if (targetId) {
+            if (!messages.find(m => m.id === tempId)) {
+                setMessages(prev => [...prev, newMessage]);
+            }
+        } else {
+            if (!globalMessages.find(m => m.id === tempId)) {
+                setGlobalMessages(prev => [...prev, newMessage]);
+            }
         }
 
         setIsSending(true);
@@ -108,9 +144,22 @@ export default function ChatWidget({ user }) {
                 receiver_id: targetId,
                 message: msgText
             });
-            setMessages(prev => prev.map(m => m.id === tempId ? { ...response.data, status: 'sent' } : m));
+            
+            const updateStatus = (prev) => prev.map(m => m.id === tempId ? { ...response.data, status: 'sent', sender: user } : m);
+            
+            if (targetId) {
+                setMessages(updateStatus);
+            } else {
+                setGlobalMessages(updateStatus);
+                setLastGlobalId(response.data.id); // Update last ID to avoid re-fetching
+            }
         } catch (error) {
-            setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m));
+            const failStatus = (prev) => prev.map(m => m.id === tempId ? { ...m, status: 'failed' } : m);
+            if (targetId) {
+                setMessages(failStatus);
+            } else {
+                setGlobalMessages(failStatus);
+            }
             setRetryQueue(prev => [...prev, { ...newMessage, id: tempId }]);
             logChatError(error, 'sendMessage');
         } finally {
@@ -276,21 +325,60 @@ export default function ChatWidget({ user }) {
         return () => clearInterval(interval);
     }, [lastNotificationCount]);
 
+    // WebSocket Subscription for Global Chat
+    useEffect(() => {
+        if (isOpen && activeTab === 'global' && window.Echo) {
+            window.Echo.join('chat.global')
+                .here((_users) => {
+                    // Online users tracked via separate poller
+                })
+                .joining((_user) => {
+                    // User joined event
+                })
+                .leaving((_user) => {
+                    // User left event
+                })
+                .listen('.message.sent', (e) => {
+                    const newMsg = e.message;
+
+                    setGlobalMessages(prev => {
+                        if (prev.find(m => m.id === newMsg.id)) return prev;
+                        return [...prev, newMsg];
+                    });
+
+                    setLastGlobalId(prev => Math.max(prev, newMsg.id));
+                    scrollToBottom();
+                });
+
+            return () => {
+                window.Echo.leave('chat.global');
+            };
+        }
+    }, [isOpen, activeTab]);
+
     // Active chat poller (only active when chat is open)
     useEffect(() => {
         if (isOpen) {
             fetchOnlineUsers(searchQuery);
             
+            // Initial fetch for global messages if active
+            if (activeTab === 'global') {
+                fetchGlobalMessages();
+            }
+
             const interval = setInterval(() => {
                 fetchOnlineUsers(searchQuery);
                 if (chatTarget) {
                     fetchMessages(chatTarget.id);
                 }
+                if (activeTab === 'global') {
+                    fetchGlobalMessages();
+                }
             }, 3000); // Slightly slower for heavy data
             
             return () => clearInterval(interval);
         }
-    }, [isOpen, searchQuery, chatTarget]);
+    }, [isOpen, searchQuery, chatTarget, activeTab]);
 
     const toggleChat = () => {
         if (!isOpen) {
@@ -302,6 +390,7 @@ export default function ChatWidget({ user }) {
     const resetChat = () => {
         setChatTarget(null);
         setMessages([]);
+        setActiveTab('users');
     };
 
     const scrollToBottom = () => {
@@ -309,18 +398,26 @@ export default function ChatWidget({ user }) {
     };
 
     useEffect(() => {
-        if (isOpen && activeTab === 'chat') {
+        if (isOpen && (activeTab === 'chat' || activeTab === 'global')) {
             scrollToBottom();
         }
-    }, [messages, isOpen, activeTab]);
+    }, [messages, globalMessages, isOpen, activeTab]);
 
     const handleSendMessage = async (e) => {
         if (e) e.preventDefault();
-        if (!message.trim() || !chatTarget || isSending) return;
+        if (!message.trim() || isSending) return;
+        
+        // Ensure we have a target for private chat, or just proceed for global
+        if (activeTab === 'chat' && !chatTarget) return;
 
         const msgText = message;
         setMessage('');
-        await sendMessage(msgText, chatTarget.id);
+        
+        if (activeTab === 'global') {
+            await sendMessage(msgText, null);
+        } else {
+            await sendMessage(msgText, chatTarget.id);
+        }
     };
 
     const retryMessage = async (failedMsg) => {
@@ -398,15 +495,24 @@ export default function ChatWidget({ user }) {
                         <div className="flex justify-between items-center p-4 pb-2">
                             <div className="flex items-center gap-2">
                                 {chatTarget && (
-                                    <button 
-                                        onClick={resetChat}
-                                        className="mr-1 hover:bg-blue-700 rounded-full p-1"
-                                        title={__('Back to Support')}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                                        </svg>
-                                    </button>
+                                    <>
+                                        <button 
+                                            onClick={resetChat}
+                                            className="mr-1 hover:bg-blue-700 rounded-full p-1"
+                                            title={__('Back to Support')}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                                            </svg>
+                                        </button>
+                                        <ProfilePhoto 
+                                            src={chatTarget.avatar} 
+                                            alt={chatTarget.name} 
+                                            className="w-8 h-8 rounded-full object-cover border border-white/20" 
+                                            fallbackClassName="w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white text-xs font-bold border border-white/20"
+                                            fallback={(chatTarget.name || 'U').charAt(0).toUpperCase()}
+                                        />
+                                    </>
                                 )}
                                 <h3 className="font-semibold text-sm">
                                     {chatTarget ? chatTarget.name : __('Live Chat')}
@@ -439,14 +545,14 @@ export default function ChatWidget({ user }) {
                         {!chatTarget && (
                             <div className="flex px-4 space-x-4">
                                 <button
-                                    onClick={() => setActiveTab('chat')}
+                                    onClick={() => setActiveTab('global')}
                                     className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
-                                        activeTab === 'chat' 
+                                        activeTab === 'global' 
                                             ? 'border-white text-white' 
                                             : 'border-transparent text-blue-200 hover:text-white'
                                     }`}
                                 >
-                                    {__('Messages')}
+                                    {__('All Message')}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('users')}
@@ -468,7 +574,82 @@ export default function ChatWidget({ user }) {
                     {/* Content Area */}
                     <div className="flex-1 overflow-hidden relative flex flex-col bg-gray-50 dark:bg-gray-900">
                         
-                        {/* Tab: Chat */}
+                        {/* Tab: Global Chat */}
+                        {activeTab === 'global' && (
+                            <>
+                                <div className="flex-1 overflow-y-auto p-4 flex flex-col space-y-3">
+                                    {globalMessages.length === 0 && (
+                                        <div className="text-center text-gray-500 text-xs mt-4">
+                                            {__('Welcome to Global Chat!')}
+                                        </div>
+                                    )}
+                                    {globalMessages.map((msg) => (
+                                        <div 
+                                            key={msg.id} 
+                                            className={`flex flex-col max-w-[85%] ${msg.sender_id === user.id ? 'self-end items-end' : 'self-start items-start'}`}
+                                        >
+                                            {msg.sender_id !== user.id && (
+                                                <span className="text-[10px] text-gray-500 mb-1 ml-1 flex items-center gap-1">
+                                                    <span className="font-semibold">{msg.sender?.name || 'Unknown'}</span>
+                                                    {msg.sender?.role && (
+                                                        <span className="bg-gray-200 dark:bg-gray-700 px-1 rounded text-[9px]">{msg.sender.role}</span>
+                                                    )}
+                                                </span>
+                                            )}
+                                            <div 
+                                                className={`px-4 py-2 rounded-lg text-sm relative group ${
+                                                    msg.sender_id === user.id 
+                                                        ? 'bg-blue-600 text-white rounded-br-none' 
+                                                        : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200'
+                                                } ${msg.status === 'failed' ? 'border-red-500' : ''} ${msg.status === 'offline' ? 'border-dashed border-gray-400 opacity-70' : ''}`}
+                                            >
+                                                {msg.message}
+                                                
+                                                {msg.status === 'failed' && msg.sender_id === user.id && (
+                                                    <button 
+                                                        onClick={() => retryMessage(msg)}
+                                                        className="absolute -left-8 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700"
+                                                        title={__('Retry')}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                                <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                                    <div className="flex space-x-2">
+                                        <TextInput
+                                            type="text"
+                                            value={message}
+                                            onChange={(e) => setMessage(e.target.value)}
+                                            placeholder={__('Type your message...')}
+                                            className="w-full text-sm"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={!message.trim()}
+                                            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
+
+                        {/* Tab: Chat (Private) */}
                         {activeTab === 'chat' && (
                             <>
                                 <div className="flex-1 overflow-y-auto p-4 flex flex-col space-y-3">
@@ -598,7 +779,13 @@ export default function ChatWidget({ user }) {
                                                     className="flex items-center space-x-3 p-3 hover:bg-white dark:hover:bg-gray-800 transition-colors cursor-pointer"
                                                 >
                                                     <div className="relative">
-                                                        <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full object-cover" />
+                                                        <ProfilePhoto 
+                                                            src={u.avatar} 
+                                                            alt={u.name} 
+                                                            className="w-10 h-10 rounded-full object-cover" 
+                                                            fallbackClassName="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-xs"
+                                                            fallback={(u.name || 'U').charAt(0).toUpperCase()}
+                                                        />
                                                         <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-50 dark:border-gray-900 ${
                                                             u.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
                                                         }`}></span>

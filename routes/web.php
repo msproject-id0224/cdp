@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Auth\OtpController;
@@ -16,6 +17,8 @@ use App\Http\Controllers\OnlineUserController;
 use App\Http\Controllers\ScheduleMessageController;
 use App\Http\Controllers\ChatMessageController;
 use App\Http\Controllers\RmdController;
+use App\Http\Controllers\MentorScheduleController;
+use App\Http\Controllers\AdminScheduleController;
 
 Route::post('/language/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'id'])) {
@@ -44,7 +47,8 @@ Route::get('/dashboard', function () {
         ->get();
 
     $photoRequests = [];
-    if (auth()->user() && auth()->user()->role === 'admin') {
+    $user = Auth::user();
+    if ($user && $user->role === \App\Models\User::ROLE_ADMIN) {
         $photoRequests = ProfilePhotoRequest::with('user')
             ->where('status', 'pending')
             ->latest()
@@ -121,6 +125,15 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::patch('/api/admins/{user}', [App\Http\Controllers\AdminController::class, 'update'])->name('api.admins.update');
     Route::delete('/api/admins/{user}', [App\Http\Controllers\AdminController::class, 'destroy'])->name('api.admins.destroy');
     Route::patch('/api/admins/{user}/toggle-status', [App\Http\Controllers\AdminController::class, 'toggleStatus'])->name('api.admins.toggle-status');
+
+    // Admin Schedule Approval Routes
+    Route::get('/admin/schedule-approval', [AdminScheduleController::class, 'index'])->name('admin.schedule-approval.index');
+    Route::get('/api/admin/schedules/pending', [AdminScheduleController::class, 'getPendingSchedules'])->name('api.admin.schedules.pending');
+    Route::post('/api/admin/schedules/{meeting}/approve', [AdminScheduleController::class, 'approve'])->name('api.admin.schedules.approve');
+    Route::post('/api/admin/schedules/{meeting}/reject', [AdminScheduleController::class, 'reject'])->name('api.admin.schedules.reject');
+    Route::post('/api/admin/schedules/{meeting}/request-modification', [AdminScheduleController::class, 'requestModification'])->name('api.admin.schedules.request-modification');
+    Route::post('/api/admin/schedules/bulk-approve', [AdminScheduleController::class, 'bulkApprove'])->name('api.admin.schedules.bulk-approve');
+    Route::post('/api/admin/schedules/bulk-reject', [AdminScheduleController::class, 'bulkReject'])->name('api.admin.schedules.bulk-reject');
 });
 
 Route::middleware(['auth', 'verified', 'role:admin,mentor'])->group(function () {
@@ -138,9 +151,21 @@ Route::middleware(['auth', 'verified', 'role:admin,mentor'])->group(function () 
 Route::middleware(['auth', 'verified', 'role:participant'])->group(function () {
     Route::get('/participant/communication', [CommunicationController::class, 'participantIndex'])->name('participant.communication.index');
     Route::post('/participant/profile-photo/request', [ProfilePhotoController::class, 'userRequestUpload'])->name('participant.profile-photo.request');
+    Route::get('/participant/notes', [ParticipantController::class, 'myNotes'])->name('participant.notes');
+    Route::get('/participant/schedule', [ParticipantController::class, 'mySchedule'])->name('participant.schedule');
 });
 
 Route::middleware('auth')->group(function () {
+    // Mentor Schedule Routes
+    Route::get('/mentor-schedule', [MentorScheduleController::class, 'index'])->name('mentor.schedule');
+    Route::get('/api/mentor-schedules', [MentorScheduleController::class, 'getSchedules'])->name('api.mentor-schedules');
+    Route::post('/api/mentor-availability', [MentorScheduleController::class, 'storeAvailability'])->name('api.mentor-availability.store');
+    Route::delete('/api/mentor-availability/{availability}', [MentorScheduleController::class, 'deleteAvailability'])->name('api.mentor-availability.destroy');
+    Route::post('/api/mentor-meetings', [MentorScheduleController::class, 'storeMeeting'])->name('api.mentor-meetings.store');
+    Route::patch('/api/mentor-meetings/{meeting}', [MentorScheduleController::class, 'updateMeeting'])->name('api.mentor-meetings.update');
+    Route::delete('/api/mentor-meetings/{meeting}', [MentorScheduleController::class, 'destroyMeeting'])->name('api.mentor-meetings.destroy');
+    Route::get('/api/mentor-schedules/export', [MentorScheduleController::class, 'exportSchedule'])->name('api.mentor-schedules.export');
+
     Route::get('/api/schedules', [ScheduleController::class, 'getSchedules'])->name('api.schedules');
     Route::patch('/api/schedules/{schedule}/priority', [ScheduleController::class, 'updatePriority'])->name('api.schedules.update-priority');
     Route::post('/api/schedule-messages', [ScheduleMessageController::class, 'store'])->name('api.schedule-messages.store');
@@ -149,8 +174,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/users/search', [CommunicationController::class, 'searchUsers'])->name('api.users.search');
     
     // General Chat Routes
+    Route::get('/api/chat/global', [ChatMessageController::class, 'indexGlobal'])->name('api.chat.global');
     Route::get('/api/chat/{user}', [ChatMessageController::class, 'index'])->name('api.chat.index');
-    Route::post('/api/chat', [ChatMessageController::class, 'store'])->name('api.chat.store');
+    Route::post('/api/chat', [ChatMessageController::class, 'store'])
+        ->middleware('throttle:60,1')
+        ->name('api.chat.store');
     Route::post('/api/chat/typing', [ChatMessageController::class, 'typing'])->name('api.chat.typing');
     Route::patch('/api/chat/{message}/flag', [ChatMessageController::class, 'flagMessage'])->name('api.chat.flag');
     Route::patch('/api/chat/{user}/read', [ChatMessageController::class, 'markAsRead'])->name('api.chat.read');

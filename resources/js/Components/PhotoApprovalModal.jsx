@@ -1,6 +1,7 @@
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import { __ } from '@/Utils/lang';
 
 export default function PhotoApprovalModal({ 
@@ -25,22 +26,28 @@ export default function PhotoApprovalModal({
 
                 <div className="flex flex-col items-center mb-6">
                     <div className="mb-4 relative group">
-                        <img 
+                        <ProfilePhoto 
                             src={request.photo_url} 
                             alt={request.user.name} 
                             className="w-32 h-32 rounded-full object-cover border-4 border-gray-100 dark:border-gray-700 shadow-lg transition-transform transform group-hover:scale-105 duration-300"
+                            fallbackClassName="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 border-4 border-gray-100 dark:border-gray-700 shadow-lg transition-transform transform group-hover:scale-105 duration-300"
+                            fallback={
+                                <span className="text-4xl font-bold text-gray-500 dark:text-gray-400">
+                                    {(request.user?.name || 'U').charAt(0).toUpperCase()}
+                                </span>
+                            }
                         />
                         <div className="absolute inset-0 rounded-full border border-gray-200 dark:border-gray-600 pointer-events-none"></div>
                     </div>
-                    
+
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                        {request.user.name}
+                        {request.user?.name || 'User'}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {request.user.email}
+                        {request.user?.email || '-'}
                     </p>
                     <span className="mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 capitalize">
-                        {__(request.user.role)}
+                        {__(request.user?.role || 'participant')}
                     </span>
                 </div>
 

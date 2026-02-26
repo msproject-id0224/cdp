@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePage, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
+import axios from 'axios';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -8,6 +9,7 @@ import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import { useForm } from '@inertiajs/react';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function AdminList() {
     const [admins, setAdmins] = useState({ data: [] });
@@ -119,17 +121,17 @@ export default function AdminList() {
         <section className="space-y-6">
             <header>
                 <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    {__('Daftar Admin')}
+                    {__('Admin List')}
                 </h2>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {__('Kelola administrator yang terdaftar.')}
+                    {__('Manage registered administrators.')}
                 </p>
             </header>
 
             <div className="flex justify-between items-center">
                 <div className="w-full max-w-sm">
                     <TextInput
-                        placeholder={__('Cari admin...')}
+                        placeholder={__('Search admin...')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full"
@@ -141,12 +143,12 @@ export default function AdminList() {
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" className="px-6 py-3">{__('Nama')}</th>
+                            <th scope="col" className="px-6 py-3">{__('Name')}</th>
                             <th scope="col" className="px-6 py-3">{__('Email')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Jabatan')}</th>
+                            <th scope="col" className="px-6 py-3">{__('Job Title')}</th>
                             <th scope="col" className="px-6 py-3">{__('Status')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Terdaftar')}</th>
-                            <th scope="col" className="px-6 py-3 text-right">{__('Aksi')}</th>
+                            <th scope="col" className="px-6 py-3">{__('Registered')}</th>
+                            <th scope="col" className="px-6 py-3 text-right">{__('Actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -156,14 +158,25 @@ export default function AdminList() {
                             </tr>
                         ) : admins.data.length === 0 ? (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center">{__('Tidak ada admin ditemukan.')}</td>
+                                <td colSpan="6" className="px-6 py-4 text-center">{__('No admins found.')}</td>
                             </tr>
                         ) : (
                             admins.data.map((admin) => (
                                 <tr key={admin.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                                        {admin.name}
-                                        {admin.id === auth.user.id && <span className="ml-2 text-xs text-indigo-600 dark:text-indigo-400">({__('Anda')})</span>}
+                                        <div className="flex items-center space-x-2">
+                                            <ProfilePhoto 
+                                                src={admin.profile_photo_url} 
+                                                alt={admin.name} 
+                                                className="w-8 h-8 rounded-full object-cover" 
+                                                fallbackClassName="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-xs"
+                                                fallback={(admin.name || 'A').charAt(0).toUpperCase()}
+                                            />
+                                            <span>
+                                                {admin.name}
+                                                {admin.id === auth.user.id && <span className="ml-2 text-xs text-indigo-600 dark:text-indigo-400">({__('You')})</span>}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">{admin.email}</td>
                                     <td className="px-6 py-4">{admin.job_title || '-'}</td>
@@ -173,7 +186,7 @@ export default function AdminList() {
                                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
                                                 : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                                         }`}>
-                                            {admin.is_active ? __('Aktif') : __('Nonaktif')}
+                                            {admin.is_active ? __('Active') : __('Inactive')}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
@@ -192,13 +205,13 @@ export default function AdminList() {
                                                     onClick={() => toggleStatus(admin)}
                                                     className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
                                                 >
-                                                    {admin.is_active ? __('Nonaktifkan') : __('Aktifkan')}
+                                                    {admin.is_active ? __('Deactivate') : __('Activate')}
                                                 </button>
                                                 <button 
                                                     onClick={() => deleteUser(admin)}
                                                     className="font-medium text-red-600 dark:text-red-500 hover:underline"
                                                 >
-                                                    {__('Hapus')}
+                                                    {__('Delete')}
                                                 </button>
                                             </>
                                         )}
@@ -236,7 +249,7 @@ export default function AdminList() {
 
                     <div className="mt-6 space-y-6">
                         <div>
-                            <InputLabel htmlFor="edit_first_name" value={__('Nama Depan')} />
+                            <InputLabel htmlFor="edit_first_name" value={__('First Name')} />
                             <TextInput
                                 id="edit_first_name"
                                 value={data.first_name}
@@ -248,7 +261,7 @@ export default function AdminList() {
                         </div>
 
                         <div>
-                            <InputLabel htmlFor="edit_last_name" value={__('Nama Belakang')} />
+                            <InputLabel htmlFor="edit_last_name" value={__('Last Name')} />
                             <TextInput
                                 id="edit_last_name"
                                 value={data.last_name}
@@ -272,7 +285,7 @@ export default function AdminList() {
                         </div>
 
                         <div>
-                            <InputLabel htmlFor="edit_job_title" value={__('Jabatan')} />
+                            <InputLabel htmlFor="edit_job_title" value={__('Job Title')} />
                             <TextInput
                                 id="edit_job_title"
                                 value={data.job_title}
@@ -283,7 +296,7 @@ export default function AdminList() {
                         </div>
 
                         <div>
-                            <InputLabel htmlFor="edit_phone_number" value={__('Nomor Telepon')} />
+                            <InputLabel htmlFor="edit_phone_number" value={__('Phone Number')} />
                             <TextInput
                                 id="edit_phone_number"
                                 value={data.phone_number}
@@ -296,11 +309,11 @@ export default function AdminList() {
 
                     <div className="mt-6 flex justify-end">
                         <SecondaryButton onClick={closeEditModal}>
-                            {__('Batal')}
+                            {__('Cancel')}
                         </SecondaryButton>
 
                         <PrimaryButton className="ml-3" disabled={processing}>
-                            {__('Simpan')}
+                            {__('Save')}
                         </PrimaryButton>
                     </div>
                 </form>

@@ -43,23 +43,40 @@ use Illuminate\Support\Facades\Auth;
  */
 class ChatMessageController extends Controller
 {
-    public function index(User $user)
+    public function index(User $user, Request $request)
     {
-        $messages = ChatMessage::where(function($query) use ($user) {
+        $query = ChatMessage::where(function($query) use ($user) {
             $query->where('sender_id', Auth::id())
                   ->where('receiver_id', $user->id);
         })->orWhere(function($query) use ($user) {
             $query->where('sender_id', $user->id)
                   ->where('receiver_id', Auth::id());
-        })
-        ->with(['sender', 'receiver'])
-        ->orderBy('created_at', 'asc')
-        ->get();
+        });
 
-        \Log::info('Fetched messages for user ' . Auth::id() . ' with target ' . $user->id, [
-            'count' => $messages->count(),
-            'first_message' => $messages->first() ? $messages->first()->message : null
-        ]);
+        if ($request->has('after_id')) {
+            $query->where('id', '>', $request->after_id);
+        }
+        
+        $messages = $query->with(['sender', 'receiver'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json($messages);
+    }
+
+    public function indexGlobal(Request $request)
+    {
+        $query = ChatMessage::whereNull('receiver_id')
+            ->with(['sender:id,first_name,last_name,role,profile_photo_path'])
+            ->orderBy('created_at', 'asc');
+
+        if ($request->has('after_id')) {
+            $query->where('id', '>', $request->after_id);
+        } else {
+            $query->take(100); // Limit to last 100 messages for initial load
+        }
+
+        $messages = $query->get();
 
         return response()->json($messages);
     }
@@ -67,8 +84,8 @@ class ChatMessageController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'receiver_id' => 'required|exists:users,id',
-            'message' => 'nullable|string',
+            'receiver_id' => 'nullable|exists:users,id',
+            'message' => 'nullable|string|max:5000',
             'file' => 'nullable|file|max:10240', // Max 10MB
         ]);
 
@@ -79,23 +96,29 @@ class ChatMessageController extends Controller
 
                 if ($request->hasFile('file')) {
                     $file = $request->file('file');
-                    $attachmentPath = $file->store('chat-attachments', 'public');
-                    $attachmentType = $file->getClientMimeType();
+                    $attachmentPath = $file->store('chat_attachments', 'public');
+                    $attachmentType = $file->getMimeType();
                 }
 
-                $message = ChatMessage::create([
+                $messageContent = trim(strip_tags($request->message ?? ''));
+                if (empty($messageContent) && !$attachmentPath) {
+                     return response()->json(['error' => 'Message cannot be empty'], 422);
+                }
+
+                $chatMessage = ChatMessage::create([
                     'sender_id' => Auth::id(),
                     'receiver_id' => $request->receiver_id,
-                    'message' => $request->message ?? '',
-                    'status' => 'sent',
+                    'message' => $messageContent,
                     'attachment_path' => $attachmentPath,
                     'attachment_type' => $attachmentType,
+                    'status' => 'sent',
+                    'is_read' => false,
                 ]);
 
                 // Dispatch event for real-time support
-                event(new MessageSent($message));
+                event(new MessageSent($chatMessage));
 
-                return response()->json($message, 201);
+                return response()->json($chatMessage, 201);
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Failed to send message', 'details' => $e->getMessage()], 500);
             }

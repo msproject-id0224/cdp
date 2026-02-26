@@ -5,6 +5,7 @@ import Pagination from '@/Components/Pagination';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import { useState, useEffect, useRef } from 'react';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function ParticipantIndex({ auth, participants, filters, mentors }) {
     const { locale } = usePage().props;
@@ -215,18 +216,27 @@ export default function ParticipantIndex({ auth, participants, filters, mentors 
                                         participants.data.map((participant) => (
                                             <tr key={participant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150 ease-in-out">
                                                 <td className="px-4 py-2 whitespace-nowrap">
-                                                    <div className="flex flex-col">
-                                                        <Link 
-                                                            href={route('participants.show', participant.id)}
-                                                            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
-                                                        >
-                                                            {participant.first_name} {participant.last_name}
-                                                        </Link>
-                                                        {participant.nickname && (
-                                                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                                ({participant.nickname})
-                                                            </span>
-                                                        )}
+                                                    <div className="flex items-center space-x-2">
+                                                        <ProfilePhoto 
+                                                            src={participant.profile_photo_url} 
+                                                            alt={participant.first_name} 
+                                                            className="w-8 h-8 rounded-full object-cover" 
+                                                            fallbackClassName="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-xs"
+                                                            fallback={(participant.first_name || 'P').charAt(0).toUpperCase()}
+                                                        />
+                                                        <div className="flex flex-col">
+                                                            <Link 
+                                                                href={route('participants.show', participant.id)}
+                                                                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                                            >
+                                                                {participant.first_name} {participant.last_name}
+                                                            </Link>
+                                                            {participant.nickname && (
+                                                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                                    ({participant.nickname})
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">

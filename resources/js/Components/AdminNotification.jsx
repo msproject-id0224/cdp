@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Dropdown from '@/Components/Dropdown';
 import { __ } from '@/Utils/lang';
 import { router } from '@inertiajs/react';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function AdminNotificationComponent() {
     const [unreadCount, setUnreadCount] = useState(0);
@@ -115,10 +116,21 @@ export default function AdminNotificationComponent() {
                                     onClick={() => handlePhotoRequestClick(req)}
                                 >
                                     <div className="flex justify-between items-start gap-2">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 truncate">{__('New Photo Request')}</p>
-                                            <p className="text-sm text-gray-900 dark:text-gray-100 truncate">{req.user?.name}</p>
-                                            <p className="text-xs text-gray-500 mt-1">{new Date(req.created_at).toLocaleString()}</p>
+                                        <div className="flex-1 min-w-0 flex items-start gap-2">
+                                            <div className="shrink-0">
+                                                <ProfilePhoto 
+                                                    src={req.user?.profile_photo_url} 
+                                                    alt={req.user?.name} 
+                                                    className="w-8 h-8 rounded-full object-cover" 
+                                                    fallbackClassName="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-xs"
+                                                    fallback={(req.user?.name || 'U').charAt(0).toUpperCase()}
+                                                />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 truncate">{__('New Photo Request')}</p>
+                                                <p className="text-sm text-gray-900 dark:text-gray-100 truncate">{req.user?.name}</p>
+                                                <p className="text-xs text-gray-500 mt-1">{new Date(req.created_at).toLocaleString()}</p>
+                                            </div>
                                         </div>
                                         <div className="shrink-0">
                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">

@@ -23,6 +23,9 @@ class MessageSent implements ShouldBroadcast
      */
     public function __construct(ChatMessage $message)
     {
+        if (is_null($message->receiver_id)) {
+            $message->load('sender:id,first_name,last_name,role,profile_photo_path');
+        }
         $this->message = $message;
     }
 
@@ -33,6 +36,12 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
+        if (is_null($this->message->receiver_id)) {
+            return [
+                new PresenceChannel('chat.global'),
+            ];
+        }
+
         return [
             new PrivateChannel('chat.' . $this->message->receiver_id),
             new PrivateChannel('chat.' . $this->message->sender_id),

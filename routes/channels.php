@@ -14,3 +14,7 @@ Broadcast::channel('chat.{userId}', function (User $user, $userId) {
 Broadcast::channel('admin.notifications', function (User $user) {
     return $user->role === User::ROLE_ADMIN;
 });
+
+Broadcast::channel('chat.global', function (User $user) {
+    return ['id' => $user->id, 'name' => $user->name, 'role' => $user->role];
+});

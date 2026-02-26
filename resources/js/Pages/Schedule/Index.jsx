@@ -9,6 +9,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
+import ScheduleApprovalList from '@/Components/ScheduleApprovalList';
 
 export default function ScheduleIndex({ auth, schedules }) {
     const { locale } = usePage().props;
@@ -282,6 +283,10 @@ export default function ScheduleIndex({ auth, schedules }) {
 
                         </div>
                     </div>
+
+                    {auth.user.role === 'admin' && (
+                        <ScheduleApprovalList />
+                    )}
                 </div>
             </div>
 

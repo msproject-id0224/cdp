@@ -135,9 +135,9 @@ export default function MentorCreate({ auth }) {
                                         onChange={(e) => setData('role', e.target.value)}
                                         required
                                     >
-                                        <option value="" disabled>{__('Pilih Role')}</option>
-                                        <option value="admin">admin</option>
-                                        <option value="mentor">Mentor</option>
+                                        <option value="" disabled>{__('Select Role')}</option>
+                                        <option value="admin">{__('Admin')}</option>
+                                        <option value="mentor">{__('Mentor')}</option>
                                     </select>
                                     <InputError className="mt-2" message={errors.role} />
                                 </div>

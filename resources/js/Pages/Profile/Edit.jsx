@@ -9,6 +9,7 @@ import TextInput from '@/Components/TextInput';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import AdminList from '../Admin/Partials/AdminList';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import { useState } from 'react';
 
 const EditableInfoRow = ({ label, value, field, user, onUpdate }) => {
@@ -63,10 +64,10 @@ const EditableInfoRow = ({ label, value, field, user, onUpdate }) => {
                             autoFocus
                         />
                         <PrimaryButton onClick={handleSave} disabled={processing} className="px-3 py-1 text-xs">
-                            {__('Simpan')}
+                            {__('Save')}
                         </PrimaryButton>
                         <SecondaryButton onClick={handleCancel} disabled={processing} className="px-3 py-1 text-xs">
-                            {__('Batal')}
+                            {__('Cancel')}
                         </SecondaryButton>
                     </div>
                 ) : (
@@ -137,7 +138,7 @@ export default function Edit({ mustVerifyEmail, status }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {isAdmin ? __('Informasi Admin') : __('Profile')}
+                    {isAdmin ? __('Admin Information') : __('Profile')}
                 </h2>
             }
         >
@@ -152,19 +153,17 @@ export default function Edit({ mustVerifyEmail, status }) {
                                 
                                 <div className="flex flex-col md:flex-row md:items-start md:space-x-6 space-y-4 md:space-y-0">
                                     <div className="flex-shrink-0">
-                                        {user.profile_photo_path ? (
-                                            <img 
-                                                src={user.profile_photo_url} 
-                                                alt={user.name} 
-                                                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
-                                            />
-                                        ) : (
-                                            <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 border-2 border-gray-200 dark:border-gray-700">
+                                        <ProfilePhoto 
+                                            src={user.profile_photo_url} 
+                                            alt={user.name} 
+                                            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
+                                            fallbackClassName="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 border-2 border-gray-200 dark:border-gray-700"
+                                            fallback={
                                                 <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                 </svg>
-                                            </div>
-                                        )}
+                                            }
+                                        />
                                     </div>
                                     
                                     <div className="flex-grow max-w-xl">
@@ -202,7 +201,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                                                     </div>
                                                 )}
                                                 
-                                                <InputLabel htmlFor="photo" value={isAdmin ? __('Ubah Foto Profil') : __('Request Photo Update')} />
+                                                <InputLabel htmlFor="photo" value={isAdmin ? __('Change Profile Photo') : __('Request Photo Update')} />
                                                 <div className="flex items-center gap-4 mt-2">
                                                     <input 
                                                         type="file" 
@@ -212,7 +211,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                                                         accept="image/*"
                                                     />
                                                     <PrimaryButton disabled={photoProcessing}>
-                                                        {isAdmin ? __('Simpan Foto') : __('Submit Request')}
+                                                        {isAdmin ? __('Save Photo') : __('Submit Request')}
                                                     </PrimaryButton>
                                                 </div>
                                                 <InputError message={photoErrors.photo} className="mt-2" />
@@ -224,20 +223,20 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                             <div className="px-4 sm:px-0 mb-6">
                                 <h3 className="text-base font-semibold leading-7 text-gray-900 dark:text-gray-100">
-                                    {isAdmin ? __('Informasi Admin') : __('Participant Information')}
+                                    {isAdmin ? __('Admin Information') : __('Participant Information')}
                                 </h3>
                                 <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500 dark:text-gray-400">
-                                    {isAdmin ? __('Detail informasi akun administrator.') : __('Personal details and membership status.')}
+                                    {isAdmin ? __('Administrator account information details.') : __('Personal details and membership status.')}
                                 </p>
                             </div>
                             <dl className="divide-y divide-gray-100 dark:divide-gray-700">
                                 {isAdmin ? (
                                     <>
-                                        <EditableInfoRow label={__('Nama Depan')} value={user.first_name} field="first_name" user={user} />
-                                        <EditableInfoRow label={__('Nama Belakang')} value={user.last_name} field="last_name" user={user} />
+                                        <EditableInfoRow label={__('First Name')} value={user.first_name} field="first_name" user={user} />
+                                        <EditableInfoRow label={__('Last Name')} value={user.last_name} field="last_name" user={user} />
                                         <EditableInfoRow label={__('Email')} value={user.email} field="email" user={user} />
-                                        <EditableInfoRow label={__('Nomor Telepon')} value={user.phone_number} field="phone_number" user={user} />
-                                        <EditableInfoRow label={__('Jabatan')} value={user.job_title} field="job_title" user={user} />
+                                        <EditableInfoRow label={__('Phone Number')} value={user.phone_number} field="phone_number" user={user} />
+                                        <EditableInfoRow label={__('Job Title')} value={user.job_title} field="job_title" user={user} />
                                     </>
                                 ) : (
                                     <>
@@ -267,7 +266,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                         </div>
                     )}
 
-                    {!isAdmin && (
+                    {!isAdmin && user.role !== 'participant' && (
                         <div className="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg mt-6">
                             <DeleteUserForm className="max-w-xl" />
                         </div>

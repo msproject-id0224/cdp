@@ -7,8 +7,10 @@ import ChatWidget from '@/Components/ChatWidget';
 import AdminNotificationComponent from '@/Components/AdminNotification';
 import Modal from '@/Components/Modal';
 import ProfilePhotoUpdateModal from '@/Components/ProfilePhotoUpdateModal';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
+import Footer from '@/Components/Footer';
 import { useTheme } from '@/Hooks/useTheme';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
@@ -51,7 +53,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const { theme, toggleTheme } = useTheme();
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
             <nav className="border-b border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
@@ -70,12 +72,26 @@ export default function AuthenticatedLayout({ header, children }) {
                                     {__('Dashboard')}
                                 </NavLink>
                                 {user.role === 'participant' && (
-                                    <NavLink
-                                        href={route('rmd.index')}
-                                        active={route().current('rmd.*')}
-                                    >
-                                        {__('RMD')}
-                                    </NavLink>
+                                    <>
+                                        <NavLink
+                                            href={route('rmd.index')}
+                                            active={route().current('rmd.*')}
+                                        >
+                                            {__('RMD')}
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('participant.schedule')}
+                                            active={route().current('participant.schedule')}
+                                        >
+                                            {__('My Schedule')}
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('participant.notes')}
+                                            active={route().current('participant.notes')}
+                                        >
+                                            {__('Notes')}
+                                        </NavLink>
+                                    </>
                                 )}
                                 {user.role === 'admin' && (
                                     <NavLink
@@ -102,6 +118,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                             {__('Schedule')}
                                         </NavLink>
                                     </>
+                                )}
+                                {user.role === 'mentor' && (
+                                    <NavLink
+                                        href={route('mentor.schedule')}
+                                        active={route().current('mentor.schedule')}
+                                    >
+                                        {__('Schedule')}
+                                    </NavLink>
                                 )}
                                 {(user.role === 'admin' || user.role === 'mentor') && (
                                     <NavLink
@@ -136,7 +160,16 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 type="button"
                                                 className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                                             >
-                                                {user?.first_name_display || user?.name || __('User')}
+                                                <div className="flex items-center">
+                                                    <ProfilePhoto 
+                                                        src={user.profile_photo_url} 
+                                                        alt={user.name} 
+                                                        className="h-8 w-8 rounded-full object-cover mr-2" 
+                                                        fallbackClassName="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 mr-2 text-xs font-bold"
+                                                        fallback={(user.first_name_display || user.name || 'U').charAt(0)}
+                                                    />
+                                                    {user?.first_name_display || user?.name || __('User')}
+                                                </div>
 
                                                 <svg
                                                     className="-me-0.5 ms-2 h-4 w-4"
@@ -190,7 +223,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                             onClick={() => localStorage.setItem('locale', 'id')}
                                         >
                                             <div className="flex items-center justify-between">
-                                                <span>Indonesia</span>
+                                                <span>{__('Bahasa')}</span>
                                                 {locale === 'id' && (
                                                     <span className="text-green-500">
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -210,7 +243,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                             onClick={() => localStorage.setItem('locale', 'en')}
                                         >
                                             <div className="flex items-center justify-between">
-                                                <span>English</span>
+                                                <span>{__('English')}</span>
                                                 {locale === 'en' && (
                                                     <span className="text-green-500">
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -295,12 +328,26 @@ export default function AuthenticatedLayout({ header, children }) {
                             {__('Dashboard')}
                         </ResponsiveNavLink>
                         {user.role === 'participant' && (
-                            <ResponsiveNavLink
-                                href={route('rmd.index')}
-                                active={route().current('rmd.*')}
-                            >
-                                {__('RMD')}
-                            </ResponsiveNavLink>
+                            <>
+                                <ResponsiveNavLink
+                                    href={route('rmd.index')}
+                                    active={route().current('rmd.*')}
+                                >
+                                    {__('RMD')}
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('participant.schedule')}
+                                    active={route().current('participant.schedule')}
+                                >
+                                    {__('My Schedule')}
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('participant.notes')}
+                                    active={route().current('participant.notes')}
+                                >
+                                    {__('Notes')}
+                                </ResponsiveNavLink>
+                            </>
                         )}
                         {user.role === 'admin' && (
                             <ResponsiveNavLink
@@ -308,6 +355,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 active={route().current('mentors.index')}
                             >
                                 {__('Mentors')}
+                            </ResponsiveNavLink>
+                        )}
+                        {user.role === 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('admin.schedule-approval.index')}
+                                active={route().current('admin.schedule-approval.index')}
+                            >
+                                {__('Schedule Approval')}
                             </ResponsiveNavLink>
                         )}
                         {(user.role === 'admin' || user.role === 'mentor') && (
@@ -339,6 +394,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                     {__('RMD Report')}
                                 </ResponsiveNavLink>
                             </>
+                        )}
+                        {user.role === 'mentor' && (
+                            <ResponsiveNavLink
+                                href={route('mentor.schedule')}
+                                active={route().current('mentor.schedule')}
+                            >
+                                {__('Schedule')}
+                            </ResponsiveNavLink>
                         )}
                     </div>
 

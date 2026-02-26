@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import axios from 'axios';
 
 export default function ParticipantShow({ auth, participant, notes, tasks, meetings, messages, metrics, analytics }) {
@@ -152,21 +153,17 @@ export default function ParticipantShow({ auth, participant, notes, tasks, meeti
                     <div className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
-                                    {(participant.first_name?.[0] || 'P').toUpperCase()}
-                                </div>
+                                <ProfilePhoto 
+                                    src={participant.profile_photo_url} 
+                                    alt={participant.first_name} 
+                                    className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold object-cover"
+                                    fallbackClassName="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold"
+                                    fallback={(participant.first_name?.[0] || 'P').toUpperCase()}
+                                />
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                         {participant.first_name} {participant.last_name || ''}
-<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-    {participant.first_name} {participant.last_name || ''}
-    {/* Logika baru ditambahkan di sini: */}
-    {participant.nickname && (
-        <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
-            ({participant.nickname})
-        </span>
-    )}
-</h3>                                        {participant.nickname && (
+                                        {participant.nickname && (
                                             <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
                                                 ({participant.nickname})
                                             </span>

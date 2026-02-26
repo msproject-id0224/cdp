@@ -2,6 +2,7 @@ import Modal from '@/Components/Modal';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { __ } from '@/Utils/lang';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function RmdDetailModal({ show, onClose, userId }) {
     const [loading, setLoading] = useState(false);
@@ -80,7 +81,16 @@ export default function RmdDetailModal({ show, onClose, userId }) {
                 ) : data ? (
                     <div className="space-y-6">
                         {/* Participant Info */}
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 grid grid-cols-2 gap-4 text-sm">
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 grid grid-cols-2 gap-4 text-sm relative">
+                            <div className="absolute top-4 right-4">
+                                <ProfilePhoto 
+                                    src={data.user.profile_photo_url} 
+                                    alt={data.user.name} 
+                                    className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-gray-600 shadow-sm" 
+                                    fallbackClassName="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 font-bold text-2xl border-2 border-white dark:border-gray-600 shadow-sm"
+                                    fallback={(data?.user?.name || 'P').charAt(0).toUpperCase()}
+                                />
+                            </div>
                             <div>
                                 <span className="block text-gray-500 dark:text-gray-400">{__('Nama Lengkap')}</span>
                                 <span className="font-medium text-gray-900 dark:text-gray-100">{data.user.name}</span>

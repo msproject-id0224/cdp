@@ -627,4 +627,44 @@ class ParticipantController extends Controller
 
         return response()->json($meeting, 201);
     }
+
+    public function myNotes(): Response
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) {
+            abort(403);
+        }
+
+        $notes = ParticipantNote::where('participant_id', $user->id)
+            ->with('mentor')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return Inertia::render('Participant/Notes', [
+            'notes' => $notes,
+        ]);
+    }
+
+    public function mySchedule(): Response
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) {
+            abort(403);
+        }
+
+        $meetings = ParticipantMeeting::query()
+            ->with(['mentor', 'participants'])
+            ->where(function ($query) use ($user) {
+                $query->whereHas('participants', function ($q) use ($user) {
+                      $q->where('users.id', $user->id);
+                  })
+                  ->orWhere('participant_id', $user->id);
+            })
+            ->orderByDesc('scheduled_at')
+            ->get();
+
+        return Inertia::render('Participant/Schedule', [
+            'meetings' => $meetings,
+        ]);
+    }
 }

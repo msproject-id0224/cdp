@@ -69,6 +69,30 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's mentor availabilities.
+     */
+    public function availabilities(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MentorAvailability::class, 'mentor_id');
+    }
+
+    /**
+     * Get the user's mentor meetings.
+     */
+    public function mentorMeetings(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ParticipantMeeting::class, 'mentor_id');
+    }
+
+    /**
+     * Get the user's participant meetings.
+     */
+    public function participantMeetings(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ParticipantMeeting::class, 'participant_id');
+    }
+
+    /**
      * Get the user's profile photo URL.
      */
     public function getProfilePhotoUrlAttribute()

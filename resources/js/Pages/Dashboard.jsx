@@ -1,18 +1,18 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import MentorScheduleTable from '@/Components/MentorScheduleTable';
 import { __ } from '@/Utils/lang';
 import { useState } from 'react';
-import ScheduleTab from '@/Components/Dashboard/ScheduleTab';
 import PhotoRequestsTab from '@/Components/Dashboard/PhotoRequestsTab';
+import ProfilePhoto from '@/Components/ProfilePhoto';
+import ScheduleTab from '@/Components/Dashboard/ScheduleTab';
 
-export default function Dashboard({ auth, schedules, photoRequests }) {
+export default function Dashboard({ auth, photoRequests }) {
     const user = auth.user;
     const role = user?.role ? String(user.role) : 'participant';
     const [activeTab, setActiveTab] = useState('overview');
 
     // Safe access helpers
-    const getUserName = () => user?.name || user?.first_name || 'User';
+    const getUserName = () => user?.name || user?.first_name || __('User');
     const getUserInitials = () => getUserName().charAt(0).toUpperCase();
     const getRoleDisplay = () => role.charAt(0).toUpperCase() + role.slice(1);
 
@@ -24,7 +24,7 @@ export default function Dashboard({ auth, schedules, photoRequests }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {__('Dashboard')} {getRoleDisplay()}
+                    {__('Dashboard')} {__(user?.role)}
                 </h2>
             }
         >
@@ -38,21 +38,17 @@ export default function Dashboard({ auth, schedules, photoRequests }) {
                             <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
                                 <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
                                     <div className="relative">
-                                        {user.profile_photo_url ? (
-                                            <img 
-                                                src={user.profile_photo_url} 
-                                                alt={getUserName()} 
-                                                className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-md"
-                                            />
-                                        ) : (
-                                            <div className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl font-bold border-4 border-white dark:border-gray-800 shadow-md">
-                                                {getUserInitials()}
-                                            </div>
-                                        )}
+                                        <ProfilePhoto 
+                                            src={user.profile_photo_url} 
+                                            alt={getUserName()} 
+                                            className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-md"
+                                            fallbackClassName="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl font-bold border-4 border-white dark:border-gray-800 shadow-md"
+                                            fallback={getUserInitials()}
+                                        />
                                         <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 shadow-sm ${
                                             user.profile_photo_status === 'active' ? 'bg-green-500' :
                                             user.profile_photo_status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                                        }`} title={__(`Photo Status: ${user.profile_photo_status}`)}></div>
+                                        }`} title={`${__('Photo Status')}: ${__(user.profile_photo_status)}`}></div>
                                     </div>
                                     
                                     <div className="flex-1 text-center md:text-left">
@@ -160,23 +156,47 @@ export default function Dashboard({ auth, schedules, photoRequests }) {
                             )}
                             {role === 'mentor' && (
                                 <div>
-                                    <h3 className="text-lg font-bold mb-4">{__('Mentor/Implementer Panel')}</h3>
-                                    <p className="mb-6">{__('Welcome, Mentor. You can manage participants and programs.')}</p>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                                        <Link
-                                            href={route('participants.index')}
-                                            className="p-6 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition shadow-sm dark:bg-green-900/20 dark:border-green-800 dark:hover:bg-green-900/30"
-                                        >
-                                            <h4 className="font-semibold text-green-700 dark:text-green-400">{__('Participant List')}</h4>
-                                            <p className="text-sm text-green-600 mt-2 dark:text-green-500">{__('Manage and view all registered participants.')}</p>
-                                        </Link>
+                                    {/* Tabs Navigation for Mentor */}
+                                    <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+                                        <nav className="-mb-px flex space-x-8 overflow-x-auto">
+                                            <button
+                                                onClick={() => setActiveTab('overview')}
+                                                className={`${
+                                                    activeTab === 'overview'
+                                                        ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                                            >
+                                                {__('Overview')}
+                                            </button>
+                                        </nav>
                                     </div>
 
-                                    <div className="mt-8">
-                                        <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">{__('Schedule')}</h4>
-                                        <MentorScheduleTable />
-                                    </div>
+                                    {/* Tab Content */}
+                                    {activeTab === 'overview' && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                                            {/* Quick Actions */}
+                                            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                                                <div className="p-6">
+                                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{__('Quick Actions')}</h3>
+                                                    <div className="space-y-4">
+                                                        <Link
+                                                            href={route('participants.index')}
+                                                            className="block w-full text-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                                        >
+                                                            {__('Manage Participants')}
+                                                        </Link>
+                                                        <Link
+                                                            href={route('mentor.schedule')}
+                                                            className="block w-full text-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
+                                                        >
+                                                            {__('Manage Schedule')}
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             {role === 'participant' && (

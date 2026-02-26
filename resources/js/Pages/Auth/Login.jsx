@@ -44,7 +44,7 @@ export default function Login({ status, canResetPassword }) {
             if (response.status === 200 && response.data.success && response.data.nextScreen === 'otp') {
                 router.visit(route('otp.view'));
             } else {
-                setClientError('Unexpected response from server.');
+                setClientError(__('Unexpected response from server.'));
             }
         } catch (error) {
             console.error('Login error:', error);
@@ -57,11 +57,11 @@ export default function Login({ status, canResetPassword }) {
                     });
                 } else {
                     // Other server errors
-                    setClientError(error.response.data.message || 'An error occurred. Please try again.');
+                    setClientError(error.response.data.message || __('An error occurred. Please try again.'));
                 }
             } else {
                 // Network errors
-                setClientError('Network error. Please check your connection.');
+                setClientError(__('Network error. Please check your connection.'));
             }
         } finally {
             setIsSubmitting(false);

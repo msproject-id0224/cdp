@@ -8,6 +8,7 @@ import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function PhotoRequestsTab({ initialRequests }) {
     const [requests, setRequests] = useState(initialRequests || []);
@@ -95,15 +96,21 @@ export default function PhotoRequestsTab({ initialRequests }) {
                     {filteredRequests.map((request) => (
                         <div key={request.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center shadow-sm hover:shadow-md transition-shadow">
                             <div className="mb-4 relative group">
-                                <img 
+                                <ProfilePhoto 
                                     src={request.photo_url} 
                                     alt={request.user?.name || request.user?.first_name || 'User'} 
                                     className="w-32 h-32 rounded-full object-cover border-4 border-gray-100 dark:border-gray-700 group-hover:border-indigo-100 dark:group-hover:border-indigo-900 transition-colors"
+                                    fallbackClassName="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 border-4 border-gray-100 dark:border-gray-700"
+                                    fallback={
+                                        <span className="text-4xl font-bold text-gray-500 dark:text-gray-400">
+                                            {(request.user?.name || request.user?.first_name || 'U').charAt(0).toUpperCase()}
+                                        </span>
+                                    }
                                 />
                                 <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity"></div>
                             </div>
                             <div className="text-center mb-4 flex-1">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{request.user?.name || request.user?.first_name || 'User'}</h4>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{request.user?.name || request.user?.first_name || __('User')}</h4>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">{request.user?.email}</p>
                                 <span className={`inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full capitalize ${
                                     request.user?.role === 'mentor' 
@@ -145,7 +152,7 @@ export default function PhotoRequestsTab({ initialRequests }) {
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {__('Please provide a reason for rejecting the photo for :name', { name: rejectingRequest?.user?.name || rejectingRequest?.user?.first_name || 'User' })}
+                        {__('Please provide a reason for rejecting the photo for :name', { name: rejectingRequest?.user?.name || rejectingRequest?.user?.first_name || __('User') })}
                     </p>
 
                     <div className="mt-6">

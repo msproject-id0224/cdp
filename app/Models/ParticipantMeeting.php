@@ -10,13 +10,23 @@ class ParticipantMeeting extends Model
         'participant_id',
         'mentor_id',
         'scheduled_at',
+        'end_time',
         'location',
+        'meeting_link',
         'agenda',
+        'notes',
         'status',
+        'max_participants',
+        'rejection_reason',
+        'approved_at',
+        'approved_by',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'end_time' => 'datetime',
+        'max_participants' => 'integer',
+        'approved_at' => 'datetime',
     ];
 
     public function participant()
@@ -24,8 +34,20 @@ class ParticipantMeeting extends Model
         return $this->belongsTo(User::class, 'participant_id');
     }
 
+    public function participants()
+    {
+        return $this->belongsToMany(User::class, 'meeting_participants', 'participant_meeting_id', 'user_id')
+                    ->withPivot('status')
+                    ->withTimestamps();
+    }
+
     public function mentor()
     {
         return $this->belongsTo(User::class, 'mentor_id');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

@@ -5,6 +5,7 @@ import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function MentorScheduleTable() {
     const [schedules, setSchedules] = useState([]);
@@ -134,10 +135,7 @@ export default function MentorScheduleTable() {
                 message: messageContent
             });
             setMessageContent('');
-            // Refresh messages or close modal
-            // setIsMessageModalOpen(false);
-            // alert('Message sent successfully!');
-            fetchMessages(selectedScheduleId); // Refresh list
+            fetchMessages(selectedScheduleId);
         } catch (error) {
             console.error('Error sending message:', error);
             alert('Failed to send message.');
@@ -336,11 +334,20 @@ export default function MentorScheduleTable() {
                                 <div className="space-y-3">
                                     {messages.map((msg) => (
                                         <div key={msg.id} className="flex flex-col">
-                                            <div className="flex justify-between items-baseline">
-                                                <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{msg.user?.name}</span>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <div className="flex items-center gap-2">
+                                                    <ProfilePhoto 
+                                                        src={msg.user?.profile_photo_url} 
+                                                        alt={msg.user?.name} 
+                                                        className="w-6 h-6 rounded-full object-cover" 
+                                                        fallbackClassName="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-[10px]"
+                                                        fallback={(msg.user?.name || 'U').charAt(0).toUpperCase()}
+                                                    />
+                                                    <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{msg.user?.name}</span>
+                                                </div>
                                                 <span className="text-xs text-gray-500">{new Date(msg.created_at).toLocaleString()}</span>
                                             </div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{msg.message}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap pl-8">{msg.message}</p>
                                         </div>
                                     ))}
                                 </div>

@@ -122,7 +122,7 @@ export default function VerifyOtp() {
                         onChange={handleChange}
                         className={`w-full text-center text-3xl font-mono tracking-[0.5em] py-4 rounded-lg bg-white/50 dark:bg-gray-800/50 shadow-sm focus:ring-2 transition-all outline-none ${borderColorClass}`}
                         placeholder="••••••"
-                        aria-label="OTP Code"
+                        aria-label={__('OTP Code')}
                         aria-invalid={hasError}
                         autoComplete="one-time-code"
                     />

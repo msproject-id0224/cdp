@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -57,6 +58,21 @@ export default function UpdateProfileInformation({
             </header>
 
             <form onSubmit={confirmProfileUpdate} className="mt-6 space-y-6">
+                {/* Profile Photo Display */}
+                <div className="flex items-center space-x-4 mb-4">
+                    <ProfilePhoto 
+                        src={user.profile_photo_url} 
+                        alt={user.name} 
+                        className="h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
+                        fallbackClassName="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-2xl font-bold border-2 border-gray-200 dark:border-gray-700"
+                        fallback={(user.name || 'U').charAt(0).toUpperCase()}
+                    />
+                    <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                    </div>
+                </div>
+
                 <div>
                     <InputLabel htmlFor="first_name" value={__('First Name')} />
 

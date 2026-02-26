@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import { __ } from '@/Utils/lang';
 import { useState } from 'react';
 
@@ -53,7 +54,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
         e.preventDefault();
         
         // Remove browser confirmation
-        // if (!confirm(__('Apakah Anda yakin ingin menyimpan perubahan profil ini?'))) {
+        // if (!confirm(__('Are you sure you want to save these profile changes?'))) {
         //     return;
         // }
 
@@ -64,16 +65,16 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                 setModalState({
                     show: true,
                     type: 'success',
-                    title: __('Berhasil!'),
-                    message: __('Data profil Anda telah berhasil disimpan.')
+                    title: __('RMD_PROFILE_SUCCESS_TITLE'),
+                    message: __('RMD_PROFILE_SUCCESS_MSG')
                 });
             },
             onError: (errors) => {
                 setModalState({
                     show: true,
                     type: 'error',
-                    title: __('Gagal!'),
-                    message: __('Terjadi kesalahan saat menyimpan data. Silakan periksa kembali inputan Anda.')
+                    title: __('RMD_PROFILE_ERROR_TITLE'),
+                    message: __('RMD_PROFILE_ERROR_MSG')
                 });
             }
         });
@@ -113,9 +114,9 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
     return (
         <AuthenticatedLayout
             user={user}
-            header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">{__('Profil Pribadiku')}</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">{__('RMD_PROFILE_TITLE')}</h2>}
         >
-            <Head title="Profil Pribadiku" />
+            <Head title={__('RMD_PROFILE_TITLE')} />
 
             <div className="py-12">
                 <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
@@ -126,9 +127,9 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                             
                             <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{__('PROFIL PRIBADIKU')}</h3>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{__('RMD_PROFILE_TITLE').toUpperCase()}</h3>
                                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 max-w-xl">
-                                        {__('Isilah profil pribadi ini sesuai dengan keadaanmu yang sesungguhnya.')}
+                                        {__('RMD_PROFILE_SUBTITLE')}
                                     </p>
                                 </div>
                                 {!isEditing && (
@@ -136,7 +137,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                         </svg>
-                                        {__('Edit Profil')}
+                                        {__('RMD_PROFILE_EDIT')}
                                     </PrimaryButton>
                                 )}
                             </div>
@@ -148,10 +149,13 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                     {/* Profile Photo */}
                                     <div className="flex flex-col items-center mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                         <div className="relative w-32 h-32 mb-4 group">
-                                            <img 
-                                                src={photoPreview || 'https://ui-avatars.com/api/?name=' + user.name} 
-                                                alt="Profile" 
+                                            <ProfilePhoto 
+                                                key={photoPreview} // Reset state when preview changes
+                                                src={photoPreview} 
+                                                alt={__('RMD_PROFILE_TITLE')} 
                                                 className="w-full h-full rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
+                                                fallbackClassName="w-full h-full rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-4xl font-bold border-4 border-white dark:border-gray-600 shadow-lg"
+                                                fallback={(user.name || 'U').charAt(0).toUpperCase()}
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,7 +165,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                             </div>
                                         </div>
                                         <label htmlFor="profile_photo" className="cursor-pointer text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium text-sm">
-                                            {__('Klik untuk mengubah foto')}
+                                            {__('RMD_PROFILE_CHANGE_PHOTO')}
                                         </label>
                                         <input
                                             type="file"
@@ -176,7 +180,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                     {/* Personal Data Form */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <InputLabel htmlFor="first_name" value={__('Nama Depan')} />
+                                            <InputLabel htmlFor="first_name" value={__('RMD_PROFILE_FIRST_NAME')} />
                                             <TextInput
                                                 id="first_name"
                                                 value={data.first_name}
@@ -187,7 +191,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                             <InputError message={errors.first_name} className="mt-2" />
                                         </div>
                                         <div>
-                                            <InputLabel htmlFor="last_name" value={__('Nama Belakang')} />
+                                            <InputLabel htmlFor="last_name" value={__('RMD_PROFILE_LAST_NAME')} />
                                             <TextInput
                                                 id="last_name"
                                                 value={data.last_name}
@@ -199,7 +203,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="email" value={__('Email')} />
+                                        <InputLabel htmlFor="email" value={__('RMD_PROFILE_EMAIL')} />
                                         <TextInput
                                             id="email"
                                             type="email"
@@ -208,11 +212,11 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                             readOnly
                                             disabled
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">{__('Email tidak dapat diubah.')}</p>
+                                        <p className="text-xs text-gray-500 mt-1">{__('RMD_PROFILE_EMAIL_LOCKED')}</p>
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="phone_number" value={__('Nomor Telepon')} />
+                                        <InputLabel htmlFor="phone_number" value={__('RMD_PROFILE_PHONE')} />
                                         <TextInput
                                             id="phone_number"
                                             value={data.phone_number}
@@ -223,7 +227,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="address" value={__('Alamat')} />
+                                        <InputLabel htmlFor="address" value={__('RMD_PROFILE_ADDRESS')} />
                                         <TextInput
                                             id="address"
                                             value={data.address}
@@ -235,7 +239,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <InputLabel htmlFor="date_of_birth" value={__('Tanggal Lahir')} />
+                                            <InputLabel htmlFor="date_of_birth" value={__('RMD_PROFILE_DOB')} />
                                             <TextInput
                                                 id="date_of_birth"
                                                 type="date"
@@ -246,37 +250,37 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                             <InputError message={errors.date_of_birth} className="mt-2" />
                                         </div>
                                         <div>
-                                            <InputLabel htmlFor="gender" value={__('Jenis Kelamin')} />
+                                            <InputLabel htmlFor="gender" value={__('RMD_PROFILE_GENDER')} />
                                             <SelectInput
                                                 id="gender"
                                                 value={data.gender}
                                                 onChange={(e) => setData('gender', e.target.value)}
                                                 className="mt-1 block w-full"
                                             >
-                                                <option value="">{__('Pilih Jenis Kelamin')}</option>
-                                                <option value="Male">{__('Laki-laki')}</option>
-                                                <option value="Female">{__('Perempuan')}</option>
+                                                <option value="">{__('RMD_PROFILE_SELECT_GENDER')}</option>
+                                                <option value="Male">{__('RMD_PROFILE_MALE')}</option>
+                                                <option value="Female">{__('RMD_PROFILE_FEMALE')}</option>
                                             </SelectInput>
                                             <InputError message={errors.gender} className="mt-2" />
                                         </div>
                                     </div>
 
                                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-100 dark:border-blue-800">
-                                        <InputLabel value={__('Tanggal Rencana Kelulusan PPA (21 Tahun)')} className="text-blue-800 dark:text-blue-300" />
+                                        <InputLabel value={__('RMD_PROFILE_GRADUATION_DATE')} className="text-blue-800 dark:text-blue-300" />
                                         <div className="mt-1 text-lg font-bold text-blue-900 dark:text-blue-200">
                                             {dynamicGraduationDate ? formatDate(dynamicGraduationDate.toISOString()) : '-'}
                                         </div>
                                         <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                                            {__('*Otomatis dihitung berdasarkan tanggal lahir + 21 tahun')}
+                                            {__('RMD_PROFILE_AUTO_CALC')}
                                         </p>
                                     </div>
 
                                     <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                        <h4 className="font-semibold mb-4 text-lg text-gray-800 dark:text-gray-200">{__('Data Pengisian Awal')}</h4>
+                                        <h4 className="font-semibold mb-4 text-lg text-gray-800 dark:text-gray-200">{__('RMD_PROFILE_INITIAL_ENTRY')}</h4>
                                         
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
-                                                <InputLabel htmlFor="first_filled_at" value={__('Tanggal Pengisian')} />
+                                                <InputLabel htmlFor="first_filled_at" value={__('RMD_PROFILE_ENTRY_DATE')} />
                                                 <TextInput
                                                     id="first_filled_at"
                                                     type="date"
@@ -287,7 +291,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                                 <InputError message={errors.first_filled_at} className="mt-2" />
                                             </div>
                                             <div>
-                                                <InputLabel htmlFor="first_filled_age" value={__('Usia')} />
+                                                <InputLabel htmlFor="first_filled_age" value={__('RMD_PROFILE_AGE')} />
                                                 <TextInput
                                                     id="first_filled_age"
                                                     type="number"
@@ -298,7 +302,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                                 <InputError message={errors.first_filled_age} className="mt-2" />
                                             </div>
                                             <div>
-                                                <InputLabel htmlFor="first_filled_education" value={__('Pendidikan')} />
+                                                <InputLabel htmlFor="first_filled_education" value={__('RMD_PROFILE_EDUCATION')} />
                                                 <TextInput
                                                     id="first_filled_education"
                                                     value={data.first_filled_education}
@@ -312,7 +316,7 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
 
                                     <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                                         <SecondaryButton onClick={cancelEdit} disabled={processing}>
-                                            {__('Batal')}
+                                            {__('RMD_PROFILE_CANCEL')}
                                         </SecondaryButton>
                                         <PrimaryButton disabled={processing} className={processing ? 'opacity-75 cursor-wait' : ''}>
                                             {processing && (
@@ -321,98 +325,102 @@ export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
                                             )}
-                                            {__('Simpan Perubahan')}
+                                            {__('RMD_PROFILE_SAVE')}
                                         </PrimaryButton>
                                     </div>
                                 </form>
                             ) : (
-                                <div className="space-y-8 animate-fade-in">
+                                <div className="space-y-8 animate-fade-in-up">
                                     {/* View Mode */}
                                     
-                                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                                        {/* Profile Photo Display */}
-                                        <div className="flex-shrink-0 w-full md:w-auto flex justify-center">
-                                            <div className="relative w-40 h-40">
-                                                <img 
-                                                    src={user.profile_photo_url || 'https://ui-avatars.com/api/?name=' + user.name} 
-                                                    alt="Profile" 
-                                                    className="w-full h-full rounded-full object-cover border-4 border-gray-200 dark:border-gray-700 shadow-md"
-                                                />
+                                    {/* Profile Header */}
+                                    <div className="flex flex-col md:flex-row items-center md:items-start md:space-x-8 pb-8 border-b border-gray-100 dark:border-gray-700">
+                                        <div className="relative w-32 h-32 mb-4 md:mb-0">
+                                            <ProfilePhoto 
+                                                src={user.profile_photo_url} 
+                                                alt={user.name} 
+                                                className="w-full h-full rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
+                                                fallbackClassName="w-full h-full rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-500 dark:text-indigo-300 flex items-center justify-center text-4xl font-bold border-4 border-white dark:border-gray-600 shadow-lg"
+                                                fallback={(user.name || 'U').charAt(0).toUpperCase()}
+                                            />
+                                        </div>
+                                        <div className="text-center md:text-left flex-1">
+                                            <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{user.name}</h4>
+                                            <p className="text-indigo-600 dark:text-indigo-400 font-medium mb-2">{user.email}</p>
+                                            <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs font-medium">
+                                                    {user.gender || '-'}
+                                                </span>
+                                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs font-medium">
+                                                    {user.age ? `${user.age} ${__('Years Old')}` : '-'}
+                                                </span>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        {/* Details Grid */}
-                                        <div className="flex-grow w-full grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                                            <div className="col-span-1 md:col-span-2 pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
-                                                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{__('Informasi Pribadi')}</h4>
-                                            </div>
-
-                                            <InfoRow label={__('Nama Lengkap')} value={`${data.first_name} ${data.last_name}`} />
-                                            <InfoRow label={__('Email')} value={data.email} />
-                                            <InfoRow label={__('Nomor Telepon')} value={data.phone_number} />
-                                            <InfoRow label={__('Jenis Kelamin')} value={data.gender === 'Male' ? __('Laki-laki') : (data.gender === 'Female' ? __('Perempuan') : '-')} />
-                                            <InfoRow label={__('Tanggal Lahir')} value={formatDate(data.date_of_birth)} />
-                                            <InfoRow label={__('Alamat')} value={data.address} />
-                                            
-                                            <div className="col-span-1 md:col-span-2 mt-4 pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
-                                                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{__('Rencana Masa Depan')}</h4>
-                                            </div>
-
-                                            <InfoRow label={__('Tanggal Rencana Kelulusan (21 Th)')} value={dynamicGraduationDate ? formatDate(dynamicGraduationDate.toISOString()) : '-'} />
-                                            <InfoRow label={__('Pendidikan Saat Awal')} value={data.first_filled_education} />
-                                            <InfoRow label={__('Usia Saat Awal')} value={`${data.first_filled_age || '-'} Tahun`} />
-                                            <InfoRow label={__('Tanggal Pengisian Awal')} value={formatDate(data.first_filled_at)} />
+                                    {/* Details Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                        <div>
+                                            <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">{__('Personal Information')}</h5>
+                                            <dl>
+                                                <InfoRow label={__('RMD_PROFILE_FIRST_NAME')} value={user.first_name} />
+                                                <InfoRow label={__('RMD_PROFILE_LAST_NAME')} value={user.last_name} />
+                                                <InfoRow label={__('RMD_PROFILE_PHONE')} value={user.phone_number} />
+                                                <InfoRow label={__('RMD_PROFILE_ADDRESS')} value={user.address} />
+                                                <InfoRow label={__('RMD_PROFILE_DOB')} value={formatDate(user.date_of_birth)} />
+                                            </dl>
                                         </div>
+                                        
+                                        <div>
+                                            <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">{__('RMD_PROFILE_INITIAL_ENTRY')}</h5>
+                                            <dl>
+                                                <InfoRow label={__('RMD_PROFILE_ENTRY_DATE')} value={formatDate(rmdProfile?.first_filled_at)} />
+                                                <InfoRow label={__('RMD_PROFILE_AGE')} value={rmdProfile?.first_filled_age} />
+                                                <InfoRow label={__('RMD_PROFILE_EDUCATION')} value={rmdProfile?.first_filled_education} />
+                                                <InfoRow label={__('RMD_PROFILE_GRADUATION_DATE')} value={formatDate(graduationPlanDate)} />
+                                            </dl>
+                                        </div>
+                                    </div>
+
+                                    {/* Navigation Button */}
+                                    <div className="flex justify-end pt-8 border-t border-gray-100 dark:border-gray-700 mt-8">
+                                        <Link
+                                            href={route('rmd.gods-purpose')}
+                                            className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                                        >
+                                            {__('RMD_PROFILE_NEXT')} &raquo;
+                                        </Link>
                                     </div>
                                 </div>
                             )}
-                            
-                            {!isEditing && (
-                                <div className="flex justify-end mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                    <Link
-                                        href={route('rmd.gods-purpose')}
-                                        className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
-                                    >
-                                        {__('Lanjut: Tujuan Tuhan Bagimu')} &raquo;
-                                    </Link>
-                                </div>
-                            )}
+
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Custom Confirmation Modal */}
-            <Modal show={modalState.show} onClose={closeModal} maxWidth="sm">
+            <Modal show={modalState.show} onClose={closeModal}>
                 <div className="p-6">
-                    <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${modalState.type === 'success' ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${modalState.type === 'success' ? 'bg-green-100' : 'bg-red-100'} mb-4`}>
                         {modalState.type === 'success' ? (
-                            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
                         ) : (
-                            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         )}
                     </div>
-                    <div className="mt-3 text-center sm:mt-5">
-                        <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100" id="modal-title">
-                            {modalState.title}
-                        </h3>
-                        <div className="mt-2">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {modalState.message}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-5 sm:mt-6">
-                        <PrimaryButton
-                            type="button"
-                            className="w-full justify-center"
-                            onClick={closeModal}
-                        >
-                            {__('Tutup')}
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 text-center mb-2">
+                        {modalState.title}
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+                        {modalState.message}
+                    </p>
+                    <div className="flex justify-center">
+                        <PrimaryButton onClick={closeModal}>
+                            {__('OK')}
                         </PrimaryButton>
                     </div>
                 </div>

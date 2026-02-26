@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class UserSeeder extends Seeder
@@ -19,22 +20,25 @@ class UserSeeder extends Seeder
             'email' => 'id224ms.portal1a@gmail.com',
             'role' => 'admin',
             'email_verified_at' => now(),
+            'password' => Hash::make('Password1!'),
         ]);
 
         User::updateOrCreate(['id_number' => 'ADMIN123'], [
             'first_name' => 'Christine',
             'last_name' => 'User',
-            'email' => 'id0224ms.sekretaris@gmail.com',
+            'email' => 'id0224ms.sekretariat@gmail.com',
             'role' => 'admin',
             'email_verified_at' => now(),
+            'password' => Hash::make('Password1!'),
         ]);
 
         User::updateOrCreate(['id_number' => 'MENTOR123'], [
             'first_name' => 'Mentor',
             'last_name' => 'User',
-            'email' => 'mentor@example.com',
+            'email' => 'jamiemax71@gmail.com',
             'role' => 'mentor',
             'email_verified_at' => now(),
+            'password' => Hash::make('Password1!'),
         ]);
 
         User::updateOrCreate(['id_number' => 'PARTICIPANT123'], [
@@ -43,6 +47,7 @@ class UserSeeder extends Seeder
             'email' => 'chelseacaeryn@gmail.com',
             'role' => 'participant',
             'email_verified_at' => now(),
+            'password' => Hash::make('Password1!'),
         ]);
 
         // Imported Participants from Excel

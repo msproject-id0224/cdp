@@ -3,11 +3,13 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { __ } from '@/Utils/lang';
 
 export default function ParticipantEdit({ auth, participant }) {
+
     const { data: photoData, setData: setPhotoData, post: postPhoto, processing: photoProcessing, errors: photoErrors, reset: resetPhoto } = useForm({
         photo: null,
     });
@@ -71,37 +73,37 @@ export default function ParticipantEdit({ auth, participant }) {
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                         <div className="p-6 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700">
                             <h3 className="text-lg font-medium mb-4">{__('Profile Photo')}</h3>
-                            <form onSubmit={submitPhoto} className="flex flex-col md:flex-row md:items-start md:space-x-6 space-y-4 md:space-y-0">
+                            <div className="flex flex-col md:flex-row md:items-start md:space-x-6 space-y-4 md:space-y-0">
                                 <div className="flex-shrink-0">
-                                    {participant.profile_photo_path ? (
-                                        <img 
-                                            src={participant.profile_photo_url} 
-                                            alt={participant.name} 
-                                            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
-                                        />
-                                    ) : (
-                                        <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 border-2 border-gray-200 dark:border-gray-700">
-                                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </div>
-                                    )}
+                                    <ProfilePhoto 
+                                        src={participant.profile_photo_url} 
+                                        alt={participant.name} 
+                                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
+                                        fallbackClassName="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 border-2 border-gray-200 dark:border-gray-700"
+                                        fallback={
+                                            <span className="text-2xl font-bold text-gray-500 dark:text-gray-400">
+                                                {participant.name.charAt(0).toUpperCase()}
+                                            </span>
+                                        }
+                                    />
                                 </div>
                                 <div className="flex-grow max-w-xl">
-                                    <InputLabel htmlFor="photo" value={__('Upload New Photo')} />
-                                    <input 
-                                        type="file" 
-                                        id="photo" 
-                                        onChange={e => setPhotoData('photo', e.target.files[0])}
-                                        className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900 dark:file:text-indigo-300"
-                                        accept="image/*"
-                                    />
-                                    <InputError message={photoErrors.photo} className="mt-2" />
-                                    <div className="mt-4">
-                                        <PrimaryButton disabled={photoProcessing}>{__('Update Photo')}</PrimaryButton>
-                                    </div>
+                                    <form onSubmit={submitPhoto}>
+                                        <InputLabel htmlFor="photo" value={__('Upload New Photo')} />
+                                        <input 
+                                            type="file" 
+                                            id="photo" 
+                                            onChange={e => setPhotoData('photo', e.target.files[0])}
+                                            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900 dark:file:text-indigo-300"
+                                            accept="image/*"
+                                        />
+                                        <InputError message={photoErrors.photo} className="mt-2" />
+                                        <div className="mt-4">
+                                            <PrimaryButton disabled={photoProcessing}>{__('Update Photo')}</PrimaryButton>
+                                        </div>
+                                    </form>
                                 </div>
-                            </form>
+                            </div>
                         </div>
 
                         <div className="p-6 text-gray-900 dark:text-gray-100">

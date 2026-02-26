@@ -5,6 +5,7 @@ import DangerButton from '@/Components/DangerButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
 import PhotoApprovalModal from '@/Components/PhotoApprovalModal';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -16,7 +17,7 @@ export default function ProfilePhotoRequests({ auth, requests }) {
     const [rejectingRequest, setRejectingRequest] = useState(null);
     const [approvingRequest, setApprovingRequest] = useState(null);
     const [showBulkModal, setShowBulkModal] = useState(false);
-    
+
     const { data, setData, post, processing, errors, reset } = useForm({
         reason: '',
     });
@@ -99,10 +100,16 @@ export default function ProfilePhotoRequests({ auth, requests }) {
                                     {requests.data.map((request) => (
                                         <div key={request.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center">
                                             <div className="mb-4">
-                                                <img 
+                                                <ProfilePhoto 
                                                     src={request.photo_url} 
                                                     alt={request.user.name} 
                                                     className="w-32 h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                                                    fallbackClassName="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 border-2 border-gray-200 dark:border-gray-700"
+                                                    fallback={
+                                                        <span className="text-4xl font-bold text-gray-500 dark:text-gray-400">
+                                                            {request.user.name.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    }
                                                 />
                                             </div>
                                             <div className="text-center mb-4">

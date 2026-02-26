@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
+import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function MentorIndex({ auth, mentors }) {
     const { locale } = usePage().props;
@@ -87,7 +88,16 @@ export default function MentorIndex({ auth, mentors }) {
                                             mentors.map((mentor) => (
                                                 <tr key={mentor.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {mentor.first_name}
+                                                        <div className="flex items-center space-x-2">
+                                                            <ProfilePhoto 
+                                                                src={mentor.profile_photo_url} 
+                                                                alt={mentor.first_name} 
+                                                                className="w-8 h-8 rounded-full object-cover" 
+                                                                fallbackClassName="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-xs"
+                                                                fallback={(mentor.first_name || 'M').charAt(0).toUpperCase()}
+                                                            />
+                                                            <span>{mentor.first_name}</span>
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                                         {mentor.last_name || '-'}
