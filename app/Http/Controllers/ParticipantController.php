@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AttendanceSession;
 use App\Models\ChatMessage;
 use App\Models\ParticipantNote;
 use App\Models\ParticipantTask;
 use App\Models\ParticipantMeeting;
 use App\Models\AuditLog;
+use Illuminate\Support\Str;
+use App\Services\RmdProgressService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\RedirectResponse;
@@ -163,6 +166,24 @@ class ParticipantController extends Controller
         $lastMessageAt = $messagesQuery->max('created_at');
         $lastMeetingAt = ParticipantMeeting::where('participant_id', $participant->id)->max('scheduled_at');
 
+        // RMD Progress per module
+        $rmdModules = RmdProgressService::getModules();
+        $rmdProgress = collect($rmdModules)->map(function ($modelClass, $moduleName) use ($participant) {
+            return array_merge(
+                ['name' => $moduleName],
+                RmdProgressService::calculateProgress($participant, $moduleName, $modelClass)
+            );
+        })->values();
+
+        $rmdFilledCount = $rmdProgress->where('percentage', '>', 0)->count();
+        $rmdTotalModules = $rmdProgress->count();
+        $rmdOverallStatus = 'Belum Mulai';
+        $rmdOverallPercentage = 0;
+        if ($rmdFilledCount > 0) {
+            $rmdOverallStatus = $rmdFilledCount === $rmdTotalModules ? 'Selesai' : 'Sedang Mengisi';
+            $rmdOverallPercentage = round(($rmdFilledCount / $rmdTotalModules) * 100);
+        }
+
         return Inertia::render('Participant/Show', [
             'participant' => $participant,
             'notes' => $notes,
@@ -180,6 +201,13 @@ class ParticipantController extends Controller
             'analytics' => [
                 'last_message_at' => $lastMessageAt,
                 'last_meeting_at' => $lastMeetingAt,
+            ],
+            'rmdProgress' => [
+                'modules' => $rmdProgress,
+                'filled_count' => $rmdFilledCount,
+                'total_modules' => $rmdTotalModules,
+                'overall_status' => $rmdOverallStatus,
+                'overall_percentage' => $rmdOverallPercentage,
             ],
         ]);
     }
@@ -618,11 +646,19 @@ class ParticipantController extends Controller
 
         $meeting = ParticipantMeeting::create([
             'participant_id' => $participant->id,
-            'mentor_id' => Auth::id(),
-            'scheduled_at' => $validated['scheduled_at'],
-            'location' => $validated['location'] ?? null,
-            'agenda' => $validated['agenda'] ?? null,
-            'status' => 'scheduled',
+            'mentor_id'      => Auth::id(),
+            'scheduled_at'   => $validated['scheduled_at'],
+            'location'       => $validated['location'] ?? null,
+            'agenda'         => $validated['agenda'] ?? null,
+            'status'         => 'scheduled',
+        ]);
+
+        // Auto-create AttendanceSession — scheduler will send QR email 10 min before start
+        AttendanceSession::create([
+            'participant_meeting_id' => $meeting->id,
+            'token'                  => Str::random(48),
+            'is_active'              => false,
+            'email_sent'             => false,
         ]);
 
         return response()->json($meeting, 201);

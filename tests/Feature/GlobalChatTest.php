@@ -15,7 +15,9 @@ class GlobalChatTest extends TestCase
 
     public function test_can_fetch_global_messages()
     {
+        /** @var \App\Models\User $user */
         $user = User::factory()->create();
+        /** @var \App\Models\User $otherUser */
         $otherUser = User::factory()->create();
 
         // Create some global messages
@@ -54,6 +56,7 @@ class GlobalChatTest extends TestCase
     {
         Event::fake();
 
+        /** @var \App\Models\User $user */
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson(route('api.chat.store'), [
@@ -78,6 +81,7 @@ class GlobalChatTest extends TestCase
     {
         Event::fake();
         
+        /** @var \App\Models\User $user */
         $user = User::factory()->create();
         
         $this->actingAs($user)->postJson(route('api.chat.store'), [
@@ -92,6 +96,7 @@ class GlobalChatTest extends TestCase
 
     public function test_empty_message_validation()
     {
+        /** @var \App\Models\User $user */
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson(route('api.chat.store'), [

@@ -18,7 +18,13 @@ use App\Http\Controllers\ScheduleMessageController;
 use App\Http\Controllers\ChatMessageController;
 use App\Http\Controllers\RmdController;
 use App\Http\Controllers\MentorScheduleController;
+use App\Http\Controllers\Admin\MentorPerformanceController;
 use App\Http\Controllers\AdminScheduleController;
+use App\Http\Controllers\AdminAttendanceController;
+use App\Http\Controllers\AttendanceController;
+
+use App\Http\Controllers\HealthScreeningController;
+use App\Http\Controllers\GiftController;
 
 Route::post('/language/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'id'])) {
@@ -36,30 +42,11 @@ Route::get('/', function () {
 Route::get('/verify-otp', [OtpController::class, 'show'])->name('otp.view');
 Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
 
-use App\Models\Schedule;
-use App\Models\ProfilePhotoRequest;
+use App\Http\Controllers\DashboardController;
 
-Route::get('/dashboard', function () {
-    $schedules = Schedule::where('date', '>=', now()->toDateString())
-        ->orderBy('date', 'asc')
-        ->orderBy('start_time', 'asc')
-        ->take(10)
-        ->get();
-
-    $photoRequests = [];
-    $user = Auth::user();
-    if ($user && $user->role === \App\Models\User::ROLE_ADMIN) {
-        $photoRequests = ProfilePhotoRequest::with('user')
-            ->where('status', 'pending')
-            ->latest()
-            ->get();
-    }
-
-    return Inertia::render('Dashboard', [
-        'schedules' => $schedules,
-        'photoRequests' => $photoRequests,
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'rmd.access'])->group(function () {
     Route::get('/rmd', [RmdController::class, 'index'])->name('rmd.index');
@@ -75,9 +62,43 @@ Route::middleware(['auth', 'verified', 'rmd.access'])->group(function () {
     Route::post('/rmd/the-only-one', [RmdController::class, 'storeTheOnlyOne'])->name('rmd.the-only-one.store');
     Route::get('/rmd/the-only-one-meeting-2', [RmdController::class, 'theOnlyOneMeeting2'])->name('rmd.the-only-one-meeting-2');
     Route::post('/rmd/the-only-one-meeting-2', [RmdController::class, 'storeTheOnlyOneMeeting2'])->name('rmd.the-only-one-meeting-2.store');
+    Route::get('/rmd/the-only-one-meeting-3', [RmdController::class, 'theOnlyOneMeeting3'])->name('rmd.the-only-one-meeting-3');
+    Route::post('/rmd/the-only-one-meeting-3', [RmdController::class, 'storeTheOnlyOneMeeting3'])->name('rmd.the-only-one-meeting-3.store');
+    Route::get('/rmd/career-exploration', [RmdController::class, 'careerExploration'])->name('rmd.career-exploration');
+    Route::post('/rmd/career-exploration', [RmdController::class, 'storeCareerExploration'])->name('rmd.career-exploration.store');
+    Route::get('/rmd/career-exploration-p2', [RmdController::class, 'careerExplorationP2'])->name('rmd.career-exploration-p2');
+    Route::post('/rmd/career-exploration-p2', [RmdController::class, 'storeCareerExplorationP2'])->name('rmd.career-exploration-p2.store');
+    Route::get('/rmd/preparation-dream-island', [RmdController::class, 'preparationDreamIsland'])->name('rmd.preparation-dream-island');
+    Route::post('/rmd/preparation-dream-island', [RmdController::class, 'storePreparationDreamIsland'])->name('rmd.preparation-dream-island.store');
+    Route::post('/rmd/meeting-files', [RmdController::class, 'uploadMeetingFile'])->name('rmd.files.upload');
     Route::get('/rmd/chapters', [RmdController::class, 'chapters'])->name('rmd.chapters');
 });
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware('role:admin,mentor')->group(function () {
+        // Admin & Mentor Shared Routes
+        Route::get('/api/admin/schedules', [MentorScheduleController::class, 'index'])->name('api.admin.schedules.index');
+        
+        // RMD Dashboard (Summary)
+        Route::get('/rmd/dashboard', [RmdController::class, 'dashboard'])->name('rmd.dashboard');
+
+        // Health Screening Routes
+        Route::resource('health-screenings', HealthScreeningController::class);
+        Route::get('/api/health-screenings/participants', [HealthScreeningController::class, 'participants'])->name('api.health-screenings.participants');
+        Route::get('/health-screenings/{health_screening}/export-pdf', [HealthScreeningController::class, 'exportPdf'])->name('health-screenings.export-pdf');
+    });
+
+    // Notification Routes
+    Route::post('/notifications/{id}/read', function ($id) {
+        $notification = auth()->user()->notifications()->find($id);
+        if ($notification) {
+            $notification->markAsRead();
+        }
+        return back();
+    })->name('notifications.read');
+}); // End of auth, verified group
+
+// Admin Only Routes
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/mentors', [MentorController::class, 'index'])->name('mentors.index');
     Route::get('/mentors/create', [MentorController::class, 'create'])->name('mentors.create');
@@ -88,6 +109,15 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/participants/create', [ParticipantController::class, 'create'])->name('participants.create');
     Route::post('/participants', [ParticipantController::class, 'store'])->name('participants.store');
     Route::get('/participants/{participant}/edit', [ParticipantController::class, 'edit'])->name('participants.edit');
+    
+    // Admin Attendance Routes
+    Route::get('/admin/attendance/sessions', [AdminAttendanceController::class, 'sessions'])->name('admin.attendance.sessions');
+    Route::post('/api/admin/attendance/sessions/{session}/deactivate', [AdminAttendanceController::class, 'deactivateSession'])->name('api.admin.attendance.deactivate');
+    Route::post('/api/admin/attendance/sessions/{session}/resend-email', [AdminAttendanceController::class, 'resendEmail'])->name('api.admin.attendance.resend-email');
+    Route::get('/admin/attendance/qr-display', [AdminAttendanceController::class, 'qrDisplay'])->name('admin.attendance.qr-display');
+    Route::get('/api/admin/attendance/active-sessions', [AdminAttendanceController::class, 'getActiveSessions'])->name('api.admin.attendance.active-sessions');
+    Route::get('/admin/attendance/monitor', [AdminAttendanceController::class, 'monitor'])->name('admin.attendance.monitor');
+
     Route::patch('/participants/{participant}', [ParticipantController::class, 'update'])->name('participants.update');
     Route::patch('/participants/{participant}/toggle-status', [ParticipantController::class, 'toggleStatus'])->name('participants.toggle-status');
     Route::patch('/participants/{participant}/assign-mentor', [ParticipantController::class, 'assignMentor'])->name('participants.assign-mentor');
@@ -97,11 +127,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/schedule', [ScheduleController::class, 'store'])->name('schedule.store');
     Route::patch('/schedule/{schedule}', [ScheduleController::class, 'update'])->name('schedule.update');
     Route::delete('/schedule/{schedule}', [ScheduleController::class, 'destroy'])->name('schedule.destroy');
-    Route::get('/rmd-report', [RmdReportController::class, 'index'])->name('rmd-report.index');
     Route::get('/rmd-report/export/excel', [RmdReportController::class, 'exportExcel'])->name('rmd-report.export.excel');
+
+    // Mentor Performance Assessment
+    Route::get('/admin/mentor-performance', [MentorPerformanceController::class, 'index'])->name('admin.mentor-performance.index');
     Route::get('/rmd-report/export/pdf', [RmdReportController::class, 'exportPdf'])->name('rmd-report.export.pdf');
     Route::get('/rmd-report/export/analytics', [RmdReportController::class, 'exportAnalytics'])->name('rmd-report.export.analytics');
-    Route::get('/rmd-report/participant/{user}', [RmdReportController::class, 'getParticipantDetails'])->name('rmd-report.participant.details');
 
     // Profile Photo Admin Routes
     Route::get('/admin/profile-photos', [ProfilePhotoController::class, 'index'])->name('admin.profile-photos.index');
@@ -129,14 +160,37 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Admin Schedule Approval Routes
     Route::get('/admin/schedule-approval', [AdminScheduleController::class, 'index'])->name('admin.schedule-approval.index');
     Route::get('/api/admin/schedules/pending', [AdminScheduleController::class, 'getPendingSchedules'])->name('api.admin.schedules.pending');
+    Route::get('/api/admin/schedules/all', [AdminScheduleController::class, 'getAllMeetings'])->name('api.admin.schedules.all');
     Route::post('/api/admin/schedules/{meeting}/approve', [AdminScheduleController::class, 'approve'])->name('api.admin.schedules.approve');
     Route::post('/api/admin/schedules/{meeting}/reject', [AdminScheduleController::class, 'reject'])->name('api.admin.schedules.reject');
     Route::post('/api/admin/schedules/{meeting}/request-modification', [AdminScheduleController::class, 'requestModification'])->name('api.admin.schedules.request-modification');
     Route::post('/api/admin/schedules/bulk-approve', [AdminScheduleController::class, 'bulkApprove'])->name('api.admin.schedules.bulk-approve');
     Route::post('/api/admin/schedules/bulk-reject', [AdminScheduleController::class, 'bulkReject'])->name('api.admin.schedules.bulk-reject');
+    Route::get('/api/admin/notifications/schedule-approvals', [AdminScheduleController::class, 'getScheduleApprovalNotifications'])->name('api.admin.notifications.schedule-approvals');
+    Route::patch('/api/admin/notifications/{notificationId}/read', [AdminScheduleController::class, 'markNotificationRead'])->name('api.admin.notifications.read');
+    Route::get('/api/admin/schedules/deletion-requests', [AdminScheduleController::class, 'getDeletionRequests'])->name('api.admin.schedules.deletion-requests');
+    Route::post('/api/admin/schedules/{meeting}/approve-deletion', [AdminScheduleController::class, 'approveDeletion'])->name('api.admin.schedules.approve-deletion');
+    Route::post('/api/admin/schedules/{meeting}/reject-deletion', [AdminScheduleController::class, 'rejectDeletion'])->name('api.admin.schedules.reject-deletion');
+
+    // API Polling Notifications
+    Route::get('/api/notifications/unread', function () {
+        return response()->json([
+            'unread_notifications' => auth()->user()->unreadNotifications()->limit(10)->get(),
+            'unread_count' => auth()->user()->unreadNotifications()->count(),
+        ]);
+    })->name('api.notifications.unread');
+
+    // Gift Routes (Admin)
+    Route::post('/gifts/{gift}/verify', [GiftController::class, 'verify'])->name('gifts.verify');
+    Route::post('/gifts/{gift}/log-view', [GiftController::class, 'logView'])->name('gifts.log-view');
+    Route::resource('gifts', GiftController::class)->except(['index', 'show']);
 });
 
 Route::middleware(['auth', 'verified', 'role:admin,mentor'])->group(function () {
+    // Shared Gift Routes
+    Route::get('/gifts', [GiftController::class, 'index'])->name('gifts.index');
+    Route::post('/gifts/{gift}/proof', [GiftController::class, 'uploadProof'])->name('gifts.upload-proof');
+
     Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
     Route::get('/participants/{participant}', [ParticipantController::class, 'show'])->name('participants.show');
     Route::patch('/participants/{participant}/status', [ParticipantController::class, 'updateStatus'])->name('participants.status.update');
@@ -146,6 +200,8 @@ Route::middleware(['auth', 'verified', 'role:admin,mentor'])->group(function () 
     Route::post('/participants/{participant}/meetings', [ParticipantController::class, 'storeMeeting'])->name('participants.meetings.store');
     Route::get('/communication', [CommunicationController::class, 'index'])->name('communication.index');
     Route::post('/mentor/profile-photo/request', [ProfilePhotoController::class, 'userRequestUpload'])->name('mentor.profile-photo.request');
+    Route::get('/rmd-report', [RmdReportController::class, 'index'])->name('rmd-report.index');
+    Route::get('/rmd-report/participant/{user}', [RmdReportController::class, 'getParticipantDetails'])->name('rmd-report.participant.details');
 });
 
 Route::middleware(['auth', 'verified', 'role:participant'])->group(function () {
@@ -184,6 +240,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/api/chat/{user}/read', [ChatMessageController::class, 'markAsRead'])->name('api.chat.read');
     Route::get('/api/chat-unread', [ChatMessageController::class, 'getUnreadCount'])->name('api.chat.unread-count');
     Route::post('/api/log-error', [ChatMessageController::class, 'logError'])->name('api.log-error');
+
+    Route::get('/rmd/meeting-files/{file}/download', [RmdController::class, 'downloadMeetingFile'])->name('rmd.files.download');
+    Route::delete('/rmd/meeting-files/{file}', [RmdController::class, 'deleteMeetingFile'])->name('rmd.files.delete');
+
+    // Mentor Attendance Routes
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
+    Route::post('/attendance/{attendance}/documentation', [AttendanceController::class, 'uploadDocumentation'])->name('attendance.documentation');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

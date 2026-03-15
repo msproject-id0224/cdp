@@ -17,6 +17,7 @@ class ScheduleApprovalTest extends TestCase
     {
         Notification::fake();
 
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $admin = User::factory()->create(['role' => 'admin']);
         $participant = User::factory()->create(['role' => 'participant']);

@@ -145,7 +145,7 @@ export default function Edit({ mustVerifyEmail, status }) {
             <Head title={__('Profile')} />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg dark:bg-gray-800 transition-colors duration-200">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="px-4 sm:px-0 mb-6 border-b border-gray-200 dark:border-gray-700 pb-6">

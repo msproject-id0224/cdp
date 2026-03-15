@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import idLocale from '@fullcalendar/core/locales/id';
 import { useForm, usePage } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
@@ -16,6 +17,7 @@ import Checkbox from '@/Components/Checkbox';
 import { __ } from '@/Utils/lang';
 import axios from 'axios';
 import ProfilePhoto from '@/Components/ProfilePhoto';
+import { QRCodeCanvas } from 'qrcode.react';
 
 export default function MentorScheduleTab() {
     const { auth } = usePage().props;
@@ -23,6 +25,8 @@ export default function MentorScheduleTab() {
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [qrData, setQrData] = useState(null);
     const [modalMode, setModalMode] = useState('create_availability'); // create_availability, create_meeting, edit_meeting, view_event
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -54,12 +58,28 @@ export default function MentorScheduleTab() {
         end_time: '',
         location: '',
         meeting_link: '',
+        agenda_type: '',
         agenda: '',
+        tools_materials: '',
         notes: '',
         status: 'scheduled',
     });
 
     const [participantSearch, setParticipantSearch] = useState('');
+    const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', onConfirm: null, onCancel: null });
+    const [notification, setNotification] = useState(null); // { type: 'success'|'error', message }
+
+    const showConfirm = (title, message, onConfirm, onCancel = null) => {
+        setConfirmDialog({ open: true, title, message, onConfirm, onCancel });
+    };
+    const closeConfirm = (confirmed = false) => {
+        if (!confirmed) confirmDialog.onCancel?.();
+        setConfirmDialog({ open: false, title: '', message: '', onConfirm: null, onCancel: null });
+    };
+    const showNotification = (type, message) => {
+        setNotification({ type, message });
+        setTimeout(() => setNotification(null), 3500);
+    };
 
     useEffect(() => {
         fetchSchedules();
@@ -104,9 +124,10 @@ export default function MentorScheduleTab() {
             // Process Meetings
             meetings.forEach(meeting => {
                 let color = '#3B82F6'; // Blue (scheduled)
-                if (meeting.status === 'confirmed') color = '#10B981';
-                if (meeting.status === 'cancelled') color = '#EF4444';
-                if (meeting.status === 'pending') color = '#F59E0B';
+                if (meeting.status === 'confirmed')          color = '#10B981';
+                if (meeting.status === 'cancelled')          color = '#6B7280';
+                if (meeting.status === 'pending')            color = '#F59E0B';
+                if (meeting.status === 'deletion_requested') color = '#EF4444';
 
                 // Assume meeting times are UTC
                 const start = meeting.scheduled_at.endsWith('Z') ? meeting.scheduled_at : meeting.scheduled_at + 'Z';
@@ -138,6 +159,11 @@ export default function MentorScheduleTab() {
             '-' + pad(date.getDate()) +
             'T' + pad(date.getHours()) +
             ':' + pad(date.getMinutes());
+    };
+
+    const handleShowQr = (id) => {
+        setQrData(id);
+        setIsQrModalOpen(true);
     };
 
     const handleDateSelect = (selectInfo) => {
@@ -174,7 +200,9 @@ export default function MentorScheduleTab() {
             end_time: endStr,
             location: '',
             meeting_link: '',
+            agenda_type: '',
             agenda: '',
+            tools_materials: '',
             notes: '',
             status: 'scheduled',
         });
@@ -205,10 +233,12 @@ export default function MentorScheduleTab() {
                 max_participants: data.max_participants || 1,
                 scheduled_at: toDateTimeLocal(utcStart),
                 end_time: toDateTimeLocal(utcEnd),
-                location: data.location,
-                meeting_link: data.meeting_link,
-                agenda: data.agenda,
-                notes: data.notes,
+                location: data.location || '',
+                meeting_link: data.meeting_link || '',
+                agenda_type: data.agenda_type || '',
+                agenda: data.agenda || '',
+                tools_materials: data.tools_materials || '',
+                notes: data.notes || '',
                 status: data.status,
             });
             setParticipantSearch('');
@@ -223,12 +253,13 @@ export default function MentorScheduleTab() {
     const submitAvailability = (e) => {
         e.preventDefault();
         availabilityForm.clearErrors();
-        
+
         axios.post(route('api.mentor-availability.store'), availabilityForm.data)
             .then(() => {
                 setIsModalOpen(false);
-                fetchSchedules();
                 availabilityForm.reset();
+                showNotification('success', __('Availability saved successfully.'));
+                fetchSchedules();
             })
             .catch(error => {
                 if (error.response?.status === 422) {
@@ -237,20 +268,40 @@ export default function MentorScheduleTab() {
                     });
                 } else {
                     console.error('Error saving availability:', error);
-                    alert(__('Failed to save availability. Please try again.'));
+                    showNotification('error', __('Failed to save availability. Please try again.'));
                 }
             });
+    };
+
+    // Build a FullCalendar event object from a meeting record (avoids full re-fetch after save)
+    const buildMeetingEvent = (meeting) => {
+        let color = '#3B82F6'; // scheduled
+        if (meeting.status === 'confirmed')          color = '#10B981';
+        if (meeting.status === 'cancelled')          color = '#6B7280';
+        if (meeting.status === 'pending')            color = '#F59E0B';
+        if (meeting.status === 'deletion_requested') color = '#EF4444';
+        const start = (meeting.scheduled_at || '').endsWith('Z') ? meeting.scheduled_at : meeting.scheduled_at + 'Z';
+        const end   = (meeting.end_time     || '').endsWith('Z') ? meeting.end_time     : meeting.end_time + 'Z';
+        return {
+            id:              `meeting-${meeting.id}`,
+            title:           `${__('Meeting')} (${meeting.participants?.length ?? 0}/${meeting.max_participants})`,
+            start,
+            end,
+            backgroundColor: color,
+            borderColor:     color,
+            extendedProps:   { type: 'meeting', data: meeting },
+        };
     };
 
     const submitMeeting = (e) => {
         e.preventDefault();
         meetingForm.clearErrors();
-        
+
         const isEdit = modalMode === 'edit_meeting';
-        const url = isEdit 
-            ? route('api.mentor-meetings.update', selectedEvent.data.id) 
+        const url = isEdit
+            ? route('api.mentor-meetings.update', selectedEvent.data.id)
             : route('api.mentor-meetings.store');
-        
+
         const method = isEdit ? 'patch' : 'post';
 
         const payload = {
@@ -262,10 +313,21 @@ export default function MentorScheduleTab() {
         axios[method](url, payload)
             .then((response) => {
                 setIsModalOpen(false);
-                fetchSchedules();
                 meetingForm.reset();
-                if (response.data.message) {
-                    alert(response.data.message);
+                showNotification('success', response.data.message || __('Meeting saved successfully.'));
+
+                // Optimistic update: update only the affected event in state instead of
+                // re-fetching all schedules (which is expensive).
+                const meeting = response.data.meeting;
+                if (meeting) {
+                    const newEvent = buildMeetingEvent(meeting);
+                    if (isEdit) {
+                        setEvents(prev => prev.map(e => e.id === newEvent.id ? newEvent : e));
+                    } else {
+                        setEvents(prev => [...prev, newEvent]);
+                    }
+                } else {
+                    fetchSchedules(); // fallback if server didn't return meeting data
                 }
             })
             .catch(error => {
@@ -275,101 +337,113 @@ export default function MentorScheduleTab() {
                             meetingForm.setError(key, error.response.data.errors[key][0]);
                         });
                     } else if (error.response.data.message) {
-                        // Handle generic 422 message (like overlap)
                         meetingForm.setError('scheduled_at', error.response.data.message);
                     }
                 } else {
                     console.error('Error saving meeting:', error);
-                    alert(__('Failed to save meeting. Please try again.'));
+                    showNotification('error', __('Failed to save meeting. Please try again.'));
                 }
             });
     };
     
     const deleteAvailability = () => {
         if (!selectedEvent || selectedEvent.type !== 'availability') return;
-        if (confirm(__('Are you sure you want to delete this availability slot?'))) {
-             axios.delete(route('api.mentor-availability.destroy', selectedEvent.data.id))
-                .then(() => {
-                    setIsModalOpen(false);
-                    fetchSchedules();
-                });
-        }
+        showConfirm(
+            __('Delete Availability'),
+            __('Are you sure you want to delete this availability slot?'),
+            () => {
+                axios.delete(route('api.mentor-availability.destroy', selectedEvent.data.id))
+                    .then(() => {
+                        setIsModalOpen(false);
+                        showNotification('success', __('Availability deleted.'));
+                        fetchSchedules();
+                    })
+                    .catch(() => showNotification('error', __('Failed to delete availability.')));
+            }
+        );
     };
 
     const deleteMeeting = () => {
         if (!selectedEvent || selectedEvent.type !== 'meeting') return;
-        if (confirm(__('Are you sure you want to delete this meeting?'))) {
-             axios.delete(route('api.mentor-meetings.destroy', selectedEvent.data.id))
-                .then(() => {
-                    setIsModalOpen(false);
-                    fetchSchedules();
-                })
-                .catch(error => {
-                    console.error('Error deleting meeting:', error);
-                    alert(__('Failed to delete meeting.'));
-                });
+        const meeting = selectedEvent.data;
+
+        if (meeting.status === 'deletion_requested') {
+            showNotification('error', __('Deletion request is already pending admin approval.'));
+            return;
         }
+
+        showConfirm(
+            __('Request Meeting Deletion'),
+            __('This will send a deletion request to admin for approval. The meeting will be removed once admin approves.'),
+            () => {
+                axios.delete(route('api.mentor-meetings.destroy', meeting.id))
+                    .then((response) => {
+                        setIsModalOpen(false);
+                        showNotification('success', response.data.message || __('Deletion request submitted.'));
+                        const updatedMeeting = response.data.meeting;
+                        if (updatedMeeting) {
+                            const newEvent = buildMeetingEvent(updatedMeeting);
+                            setEvents(prev => prev.map(e => e.id === newEvent.id ? newEvent : e));
+                        } else {
+                            fetchSchedules();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error requesting meeting deletion:', error);
+                        showNotification('error', error.response?.data?.message || __('Failed to submit deletion request.'));
+                    });
+            }
+        );
     };
 
     const handleEventDrop = (dropInfo) => {
         const { event } = dropInfo;
         const { type, data } = event.extendedProps;
-        
+
         if (type !== 'meeting') {
             dropInfo.revert();
             return;
         }
 
-        if (!confirm(__('Are you sure you want to reschedule this meeting?'))) {
-            dropInfo.revert();
-            return;
-        }
-
-        // FullCalendar updates the event object in place
-        // In dayGridMonth, dropping often results in an all-day event or 00:00 time
-        // We want to preserve the original time of day
-        
+        // Compute new times before reverting (values change after revert)
         let newStart = new Date(event.start);
-        
-        // If it became allDay or time is 00:00 (and it wasn't before), restore original time
-        // We assume meetings are not usually at exactly midnight unless specified
         if (event.allDay || (newStart.getHours() === 0 && newStart.getMinutes() === 0)) {
-             const oldStart = dropInfo.oldEvent.start;
-             if (oldStart) {
-                 newStart.setHours(oldStart.getHours());
-                 newStart.setMinutes(oldStart.getMinutes());
-             }
+            const oldStart = dropInfo.oldEvent.start;
+            if (oldStart) {
+                newStart.setHours(oldStart.getHours());
+                newStart.setMinutes(oldStart.getMinutes());
+            }
         }
-        
         const start = newStart.toISOString();
-
-        // Calculate end time based on original duration
-        let end;
         const oldStart = dropInfo.oldEvent.start;
-        const oldEnd = dropInfo.oldEvent.end;
-        
+        const oldEnd   = dropInfo.oldEvent.end;
+        let end;
         if (oldStart && oldEnd) {
-             const duration = oldEnd.getTime() - oldStart.getTime();
-             end = new Date(newStart.getTime() + duration).toISOString();
+            end = new Date(newStart.getTime() + (oldEnd.getTime() - oldStart.getTime())).toISOString();
         } else if (event.end) {
-             end = event.end.toISOString();
+            end = event.end.toISOString();
         } else {
-             // Fallback default 1 hour if no duration info
-             end = new Date(newStart.getTime() + 60 * 60 * 1000).toISOString();
+            end = new Date(newStart.getTime() + 60 * 60 * 1000).toISOString();
         }
 
-        axios.patch(route('api.mentor-meetings.update', data.id), {
-            scheduled_at: start,
-            end_time: end,
-        })
-        .then(() => {
-            fetchSchedules(); 
-        })
-        .catch(error => {
-            console.error('Error rescheduling meeting:', error);
-            alert(__('Failed to reschedule meeting.'));
-            dropInfo.revert();
-        });
+        // Revert visual position immediately — modal will confirm actual reschedule
+        dropInfo.revert();
+
+        showConfirm(
+            __('Reschedule Meeting'),
+            __('Are you sure you want to reschedule this meeting?'),
+            () => {
+                axios.patch(route('api.mentor-meetings.update', data.id), { scheduled_at: start, end_time: end })
+                    .then(() => {
+                        showNotification('success', __('Meeting rescheduled successfully.'));
+                        fetchSchedules();
+                    })
+                    .catch(error => {
+                        console.error('Error rescheduling meeting:', error);
+                        showNotification('error', __('Failed to reschedule meeting.'));
+                    });
+            }
+        );
     };
 
     const filteredEvents = events.filter(event => {
@@ -432,6 +506,57 @@ export default function MentorScheduleTab() {
         window.location.href = route('api.mentor-schedules.export');
     };
 
+    // Derived values for meeting form date/time display
+    const scheduledDate = meetingForm.data.scheduled_at ? meetingForm.data.scheduled_at.split('T')[0] : '';
+    const scheduledTime = meetingForm.data.scheduled_at ? (meetingForm.data.scheduled_at.split('T')[1] || '') : '';
+    const endTimePart   = meetingForm.data.end_time     ? (meetingForm.data.end_time.split('T')[1]     || '') : '';
+    const allParticipantsSelected = participants.length > 0 &&
+        participants.every(p => meetingForm.data.participant_ids.includes(p.id));
+
+    // ── Date → meeting status map for cell coloring ────────────────────────
+    const dateMeetingMap = useMemo(() => {
+        const map = {};
+        events.forEach(event => {
+            if (event.extendedProps?.type !== 'meeting') return;
+            const status = event.extendedProps.data?.status;
+            const start  = event.start;
+            if (!start || !status) return;
+            // Convert UTC event start to local YYYY-MM-DD
+            const dateStr = new Date(start).toLocaleDateString('en-CA');
+            if (!map[dateStr]) map[dateStr] = { pending: 0, approved: 0, total: 0 };
+            map[dateStr].total++;
+            if (['pending', 'modification_requested'].includes(status)) map[dateStr].pending++;
+            else if (['scheduled', 'confirmed'].includes(status)) map[dateStr].approved++;
+        });
+        return map;
+    }, [events]);
+
+    const getDayCellClassNames = (arg) => {
+        const dateStr = arg.date.toLocaleDateString('en-CA');
+        const day = dateMeetingMap[dateStr];
+        if (!day) return [];
+        if (day.pending > 0) return ['fc-day-meeting-pending'];
+        if (day.total > 0)   return ['fc-day-meeting-approved'];
+        return [];
+    };
+
+    const AGENDA_OPTIONS = [
+        { value: 'pengisian_rmd',  label: __('Pengisian RMD') },
+        { value: 'pertemuan_umum', label: __('Pertemuan Umum') },
+        { value: 'rapat_youth',    label: __('Rapat Youth') },
+        { value: 'lainnya',        label: __('Lainnya') },
+    ];
+
+    const STATUS_LABELS = {
+        scheduled:              __('Scheduled'),
+        pending:                __('Pending Approval'),
+        confirmed:              __('Confirmed'),
+        cancelled:              __('Cancelled'),
+        completed:              __('Completed'),
+        modification_requested: __('Modification Requested'),
+        rejected:               __('Rejected'),
+    };
+
     return (
         <div className="space-y-6">
             <div className="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-6">
@@ -469,6 +594,7 @@ export default function MentorScheduleTab() {
 
                 <FullCalendar
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                    locale={idLocale}
                     headerToolbar={{
                         left: 'prev,next today',
                         center: 'title',
@@ -484,6 +610,7 @@ export default function MentorScheduleTab() {
                     select={handleDateSelect}
                     eventClick={handleEventClick}
                     eventDrop={handleEventDrop}
+                    dayCellClassNames={getDayCellClassNames}
                     height="auto"
                     eventTimeFormat={{
                         hour: '2-digit',
@@ -491,6 +618,14 @@ export default function MentorScheduleTab() {
                         hour12: false
                     }}
                 />
+                <style>{`
+                    .fc-day-meeting-pending  { background-color: #FED7AA !important; }
+                    .fc-day-meeting-pending  .fc-daygrid-day-number { color: #C2410C; font-weight: 700; }
+                    .fc-day-meeting-approved { background-color: #BBF7D0 !important; }
+                    .fc-day-meeting-approved .fc-daygrid-day-number { color: #15803D; font-weight: 700; }
+                    .fc-day-meeting-pending:hover,
+                    .fc-day-meeting-approved:hover { filter: brightness(0.94); }
+                `}</style>
             </div>
 
             {/* List View */}
@@ -577,22 +712,25 @@ export default function MentorScheduleTab() {
                                     return (
                                         <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                <div className="font-medium">{date.toLocaleDateString()}</div>
+                                                <div className="font-medium">{date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
                                                 <div className="text-gray-500 text-xs">
-                                                    {date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                    {endDate && ` - ${endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+                                                    {date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}
+                                                    {endDate && ` – ${endDate.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}`}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {auth.user.name}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 capitalize">
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                     ${type === 'meeting' ? 'bg-purple-100 text-purple-800' : 'bg-teal-100 text-teal-800'}`}>
-                                                    {type}
+                                                    {type === 'meeting' ? __('Meeting') : __('Availability')}
                                                 </span>
-                                                {type === 'meeting' && data.agenda && (
-                                                    <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">{data.agenda}</div>
+                                                {type === 'meeting' && data.agenda_type && (
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {AGENDA_OPTIONS.find(o => o.value === data.agenda_type)?.label || data.agenda_type}
+                                                        {data.agenda_type === 'lainnya' && data.agenda && `: ${data.agenda}`}
+                                                    </div>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
@@ -620,12 +758,13 @@ export default function MentorScheduleTab() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {type === 'meeting' ? (
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                        ${data.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                                          data.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                                          data.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                        ${data.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                          data.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                          data.status === 'cancelled' || data.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                          data.status === 'modification_requested' ? 'bg-orange-100 text-orange-800' :
                                                           'bg-blue-100 text-blue-800'}`}>
-                                                        {data.status === 'pending' ? __('Pending Approval') : __(data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Scheduled')}
+                                                        {STATUS_LABELS[data.status] ?? data.status}
                                                     </span>
                                                 ) : (
                                                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -634,6 +773,18 @@ export default function MentorScheduleTab() {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                {type === 'meeting' && (
+                                                    <button
+                                                        onClick={() => handleShowQr(data.id)}
+                                                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4"
+                                                        title={__('Show QR Code')}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 inline-block">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75zM16.5 19.5h.75v.75h-.75v-.75zM19.5 16.5h.75v.75h-.75v-.75z" />
+                                                        </svg>
+                                                    </button>
+                                                )}
                                                 <button 
                                                     onClick={() => handleEventClick({ event: { extendedProps: { type, data } } })}
                                                     className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -660,6 +811,55 @@ export default function MentorScheduleTab() {
                     </table>
                 </div>
             </div>
+
+            {/* ── Toast Notification ── */}
+            {notification && (
+                <div className={`fixed top-5 right-5 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium border transition-all animate-fade-in ${
+                    notification.type === 'success'
+                        ? 'bg-green-50 dark:bg-green-900/80 text-green-800 dark:text-green-100 border-green-200 dark:border-green-700'
+                        : 'bg-red-50 dark:bg-red-900/80 text-red-800 dark:text-red-100 border-red-200 dark:border-red-700'
+                }`}>
+                    {notification.type === 'success' ? (
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    ) : (
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    )}
+                    {notification.message}
+                </div>
+            )}
+
+            {/* ── Confirmation Dialog ── */}
+            <Modal show={confirmDialog.open} onClose={() => closeConfirm(false)} maxWidth="sm">
+                <div className="p-6">
+                    <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                            <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                {confirmDialog.title}
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                {confirmDialog.message}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-5 flex justify-end gap-3">
+                        <SecondaryButton onClick={() => closeConfirm(false)}>
+                            {__('Cancel')}
+                        </SecondaryButton>
+                        <DangerButton onClick={() => { confirmDialog.onConfirm?.(); closeConfirm(true); }}>
+                            {__('Confirm')}
+                        </DangerButton>
+                    </div>
+                </div>
+            </Modal>
 
             <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <div className="p-6">
@@ -732,137 +932,241 @@ export default function MentorScheduleTab() {
                     )}
 
                     {(modalMode === 'create_meeting' || modalMode === 'edit_meeting') && (
-                        <form onSubmit={submitMeeting} className="space-y-4">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        <form onSubmit={submitMeeting} className="space-y-5 max-h-[80vh] overflow-y-auto pr-1">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 sticky top-0 bg-white dark:bg-gray-800 pb-2 border-b border-gray-100 dark:border-gray-700">
                                 {modalMode === 'create_meeting' ? __('Schedule Meeting') : __('Edit Meeting')}
                             </h2>
 
-                            {/* Participant Management */}
+                            {/* ── Date & Time ── */}
                             <div>
-                                <InputLabel value={__('Participants')} />
-                                
-                                {/* Dropdown Selection */}
-                                <div className="mt-1">
-                                    <SelectInput
-                                        className="w-full"
-                                        value=""
-                                        onChange={(e) => {
-                                            const selectedId = parseInt(e.target.value);
-                                            if (selectedId) {
-                                                const newIds = [...meetingForm.data.participant_ids, selectedId];
-                                                meetingForm.setData({
-                                                    ...meetingForm.data,
-                                                    participant_ids: newIds,
-                                                    max_participants: Math.max(meetingForm.data.max_participants, newIds.length)
-                                                });
-                                            }
-                                        }}
-                                    >
-                                        <option value="">{__('Select Participant')}</option>
-                                        {participants
-                                            .filter(p => !meetingForm.data.participant_ids.includes(p.id))
-                                            .map(p => (
-                                                <option key={p.id} value={p.id}>
-                                                    {p.first_name} {p.last_name} ({p.nickname || 'N/A'})
-                                                </option>
-                                            ))
-                                        }
-                                    </SelectInput>
+                                <InputLabel value={__('Date & Time')} />
+                                <div className="mt-1 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                                    <div className="text-sm font-semibold text-indigo-800 dark:text-indigo-200 mb-3">
+                                        {scheduledDate
+                                            ? new Date(scheduledDate + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                                            : __('No date selected')}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <InputLabel value={__('Start Time')} />
+                                            <TextInput
+                                                type="time"
+                                                className="w-full mt-1"
+                                                value={scheduledTime}
+                                                onChange={e => meetingForm.setData('scheduled_at', `${scheduledDate}T${e.target.value}`)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <InputLabel value={__('End Time')} />
+                                            <TextInput
+                                                type="time"
+                                                className="w-full mt-1"
+                                                value={endTimePart}
+                                                onChange={e => meetingForm.setData('end_time', `${scheduledDate}T${e.target.value}`)}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <InputError message={meetingForm.errors.participant_ids} />
+                                <InputError message={meetingForm.errors.scheduled_at} />
+                                <InputError message={meetingForm.errors.end_time} />
+                            </div>
 
-                                {/* Selected Participants List */}
-                                <div className="mt-3 space-y-2">
-                                    {meetingForm.data.participant_ids.map(id => {
-                                        const p = participants.find(part => part.id === id);
-                                        if (!p) return null;
-                                        return (
-                                            <div key={id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
-                                                <div className="flex items-center gap-3">
-                                                    <ProfilePhoto 
-                                                        src={p.profile_photo_url} 
-                                                        alt={p.first_name} 
-                                                        className="w-8 h-8 rounded-full object-cover" 
+                            {/* ── Participants ── */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <InputLabel value={__('Participants')} />
+                                    <button
+                                        type="button"
+                                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                                        onClick={() => meetingForm.setData(
+                                            'participant_ids',
+                                            allParticipantsSelected ? [] : participants.map(p => p.id)
+                                        )}
+                                    >
+                                        {allParticipantsSelected ? __('Deselect All') : __('Select All')}
+                                    </button>
+                                </div>
+
+                                <TextInput
+                                    placeholder={__('Search participants...')}
+                                    className="w-full mb-2"
+                                    value={participantSearch}
+                                    onChange={e => setParticipantSearch(e.target.value)}
+                                />
+
+                                <div className="max-h-44 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
+                                    {participants
+                                        .filter(p => {
+                                            if (!participantSearch) return true;
+                                            const s = participantSearch.toLowerCase();
+                                            return (p.first_name + ' ' + p.last_name + ' ' + (p.nickname || '')).toLowerCase().includes(s);
+                                        })
+                                        .map(p => {
+                                            const checked = meetingForm.data.participant_ids.includes(p.id);
+                                            return (
+                                                <label
+                                                    key={p.id}
+                                                    className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
+                                                        checked ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                        checked={checked}
+                                                        onChange={e => {
+                                                            if (e.target.checked) {
+                                                                meetingForm.setData('participant_ids', [...meetingForm.data.participant_ids, p.id]);
+                                                            } else {
+                                                                meetingForm.setData('participant_ids', meetingForm.data.participant_ids.filter(id => id !== p.id));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <ProfilePhoto
+                                                        src={p.profile_photo_url}
+                                                        alt={p.first_name}
+                                                        className="w-7 h-7 rounded-full object-cover shrink-0"
                                                         fallback={(p.first_name?.[0] || 'P').toUpperCase()}
                                                     />
-                                                    <span className="text-gray-900 dark:text-gray-100 font-medium">
+                                                    <span className="text-sm text-gray-800 dark:text-gray-100 leading-tight">
                                                         {p.first_name} {p.last_name}
+                                                        {p.nickname && <span className="text-xs text-gray-400 ml-1">({p.nickname})</span>}
                                                     </span>
-                                                </div>
-                                                <button 
-                                                    type="button"
-                                                    className="text-red-500 hover:text-red-700 p-1"
-                                                    onClick={() => {
-                                                        meetingForm.setData('participant_ids', meetingForm.data.participant_ids.filter(pid => pid !== id));
-                                                    }}
-                                                    title={__('Remove')}
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
-                                    {meetingForm.data.participant_ids.length === 0 && (
-                                        <div className="p-2 text-sm text-gray-500 italic border border-dashed border-gray-300 rounded-md text-center">
-                                            {__('No participants selected')}
-                                        </div>
+                                                </label>
+                                            );
+                                        })
+                                    }
+                                    {participants.length === 0 && (
+                                        <div className="p-3 text-sm text-gray-500 italic text-center">{__('No participants assigned')}</div>
                                     )}
                                 </div>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    {meetingForm.data.participant_ids.length} {__('selected')}
+                                </p>
+                                <InputError message={meetingForm.errors.participant_ids} />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <InputLabel value={__('Start')} />
-                                    <TextInput 
-                                        type="datetime-local" 
-                                        className="w-full mt-1"
-                                        value={meetingForm.data.scheduled_at}
-                                        onChange={e => meetingForm.setData('scheduled_at', e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <InputLabel value={__('End')} />
-                                    <TextInput 
-                                        type="datetime-local" 
-                                        className="w-full mt-1"
-                                        value={meetingForm.data.end_time}
-                                        onChange={e => meetingForm.setData('end_time', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            
+                            {/* ── Meeting Agenda ── */}
                             <div>
-                                <InputLabel value={__('Agenda')} />
-                                <TextInput 
+                                <InputLabel value={__('Meeting Agenda')} />
+                                <div className="mt-2 space-y-2">
+                                    {AGENDA_OPTIONS.map(opt => (
+                                        <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="agenda_type"
+                                                value={opt.value}
+                                                checked={meetingForm.data.agenda_type === opt.value}
+                                                onChange={() => meetingForm.setData('agenda_type', opt.value)}
+                                                className="text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">{opt.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {meetingForm.data.agenda_type === 'lainnya' && (
+                                    <div className="mt-2">
+                                        <InputLabel value={__('Description')} />
+                                        <textarea
+                                            className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                            rows={2}
+                                            placeholder={__('Describe the agenda...')}
+                                            value={meetingForm.data.agenda}
+                                            onChange={e => meetingForm.setData('agenda', e.target.value)}
+                                        />
+                                    </div>
+                                )}
+                                <InputError message={meetingForm.errors.agenda_type} />
+                            </div>
+
+                            {/* ── Tools & Materials ── */}
+                            <div>
+                                <InputLabel value={__('Tools & Materials')} />
+                                <textarea
+                                    className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                    rows={2}
+                                    placeholder={__('e.g. Alkitab, buku catatan, pena...')}
+                                    value={meetingForm.data.tools_materials}
+                                    onChange={e => meetingForm.setData('tools_materials', e.target.value)}
+                                />
+                                <InputError message={meetingForm.errors.tools_materials} />
+                            </div>
+
+                            {/* ── Location ── */}
+                            <div>
+                                <InputLabel value={__('Location')} />
+                                <TextInput
                                     className="w-full mt-1"
-                                    value={meetingForm.data.agenda}
-                                    onChange={e => meetingForm.setData('agenda', e.target.value)}
+                                    placeholder={__('e.g. Ruang Meeting A, Online...')}
+                                    value={meetingForm.data.location}
+                                    onChange={e => meetingForm.setData('location', e.target.value)}
                                 />
                             </div>
 
-                             <div>
-                                <InputLabel value={__('Status')} />
-                                <SelectInput
+                            {/* ── Meeting Link ── */}
+                            <div>
+                                <InputLabel value={__('Meeting Link')} />
+                                <TextInput
                                     className="w-full mt-1"
-                                    value={meetingForm.data.status}
-                                    onChange={e => meetingForm.setData('status', e.target.value)}
-                                >
-                                    <option value="scheduled">Scheduled</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="confirmed">Confirmed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                    <option value="completed">Completed</option>
-                                </SelectInput>
+                                    placeholder="https://..."
+                                    value={meetingForm.data.meeting_link}
+                                    onChange={e => meetingForm.setData('meeting_link', e.target.value)}
+                                />
                             </div>
 
-                            <div className="flex items-center justify-between mt-4">
+                            {/* ── Status (edit only) ── */}
+                            {modalMode === 'edit_meeting' && (
+                                <div>
+                                    <InputLabel value={__('Status')} />
+                                    {meetingForm.data.status === 'deletion_requested' ? (
+                                        <div className="mt-1 flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-400">
+                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                            </svg>
+                                            {__('Deletion Pending Admin Approval')}
+                                        </div>
+                                    ) : (
+                                        <SelectInput
+                                            className="w-full mt-1"
+                                            value={meetingForm.data.status}
+                                            onChange={e => meetingForm.setData('status', e.target.value)}
+                                        >
+                                            <option value="scheduled">{__('Scheduled')}</option>
+                                            <option value="pending">{__('Pending Approval')}</option>
+                                            <option value="confirmed">{__('Confirmed')}</option>
+                                            <option value="cancelled">{__('Cancelled')}</option>
+                                            <option value="completed">{__('Completed')}</option>
+                                        </SelectInput>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* ── Notes ── */}
+                            <div>
+                                <InputLabel value={__('Notes')} />
+                                <textarea
+                                    className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                    rows={2}
+                                    value={meetingForm.data.notes}
+                                    onChange={e => meetingForm.setData('notes', e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
                                 {modalMode === 'edit_meeting' ? (
-                                    <DangerButton type="button" onClick={deleteMeeting}>{__('Delete')}</DangerButton>
-                                ) : <div></div>}
+                                    selectedEvent?.data?.status === 'deletion_requested' ? (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700">
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {__('Deletion Pending Approval')}
+                                        </span>
+                                    ) : (
+                                        <DangerButton type="button" onClick={deleteMeeting}>{__('Request Deletion')}</DangerButton>
+                                    )
+                                ) : <div />}
                                 <div className="flex gap-2">
-                                    <SecondaryButton onClick={() => setIsModalOpen(false)}>{__('Cancel')}</SecondaryButton>
+                                    <SecondaryButton type="button" onClick={() => setIsModalOpen(false)}>{__('Cancel')}</SecondaryButton>
                                     <PrimaryButton disabled={meetingForm.processing}>{__('Save')}</PrimaryButton>
                                 </div>
                             </div>
@@ -884,6 +1188,31 @@ export default function MentorScheduleTab() {
                             </div>
                         </div>
                     )}
+                </div>
+            </Modal>
+
+            {/* ── QR Code Modal ── */}
+            <Modal show={isQrModalOpen} onClose={() => setIsQrModalOpen(false)}>
+                <div className="p-6 text-center">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                        {__('Attendance QR Code')}
+                    </h2>
+                    <div className="flex justify-center mb-4">
+                        {qrData && (
+                            <QRCodeCanvas
+                                value={qrData.toString()}
+                                size={256}
+                                level={"H"}
+                                includeMargin={true}
+                            />
+                        )}
+                    </div>
+                    <p className="text-sm text-gray-500 mb-6">
+                        {__('Scan this QR code to check in/out for the meeting.')}
+                    </p>
+                    <SecondaryButton onClick={() => setIsQrModalOpen(false)}>
+                        {__('Close')}
+                    </SecondaryButton>
                 </div>
             </Modal>
         </div>

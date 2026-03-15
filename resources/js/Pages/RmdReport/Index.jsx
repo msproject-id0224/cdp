@@ -34,7 +34,7 @@ ChartJS.register(
     ArcElement
 );
 
-export default function RmdReportIndex({ auth, reports, filters, chartData, totalParticipants }) {
+export default function RmdReportIndex({ auth, reports, filters, chartData, totalParticipants, userRole }) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [isLoading, setIsLoading] = useState(false);
@@ -264,9 +264,20 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
             />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
-                    
-                    {renderCharts()}
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+
+                    {userRole === 'mentor' && (
+                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 flex items-center gap-3">
+                            <svg className="w-5 h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                                {__('Menampilkan progres RMD partisipan yang ditugaskan kepada Anda.')}
+                            </p>
+                        </div>
+                    )}
+
+                    {userRole !== 'mentor' && renderCharts()}
 
                     {/* Table Section */}
                     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
@@ -307,27 +318,29 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                     </div>
                                 </div>
                                 
-                                <div className="flex gap-2 shrink-0">
-                                    <a
-                                        href={route('rmd-report.export.excel', filters)}
-                                        className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
-                                    >
-                                        Excel
-                                    </a>
-                                    <a
-                                        href={route('rmd-report.export.pdf', filters)}
-                                        className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
-                                    >
-                                        PDF
-                                    </a>
-                                    <a
-                                        href={route('rmd-report.export.analytics')}
-                                        className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
-                                        title={__('Download Data Analisis Lengkap')}
-                                    >
-                                        {__('Data Analisis')}
-                                    </a>
-                                </div>
+                                {userRole !== 'mentor' && (
+                                    <div className="flex gap-2 shrink-0">
+                                        <a
+                                            href={route('rmd-report.export.excel', filters)}
+                                            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                                        >
+                                            Excel
+                                        </a>
+                                        <a
+                                            href={route('rmd-report.export.pdf', filters)}
+                                            className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                                        >
+                                            PDF
+                                        </a>
+                                        <a
+                                            href={route('rmd-report.export.analytics')}
+                                            className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                                            title={__('Download Data Analisis Lengkap')}
+                                        >
+                                            {__('Data Analisis')}
+                                        </a>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Table */}
@@ -365,14 +378,15 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                     <tbody>
                                         {reports.data.length > 0 ? (
                                             reports.data.map((item, index) => (
-                                                <tr key={item.user_id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                <tr
+                                                    key={item.user_id}
+                                                    onClick={() => handleUserClick(item.user_id)}
+                                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
+                                                >
                                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                        <button 
-                                                            onClick={() => handleUserClick(item.user_id)}
-                                                            className="text-indigo-600 hover:text-indigo-900 hover:underline focus:outline-none dark:text-indigo-400 dark:hover:text-indigo-300 text-left"
-                                                        >
+                                                        <span className="text-indigo-600 dark:text-indigo-400">
                                                             {item.user_name}
-                                                        </button>
+                                                        </span>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         {item.user_id_number || '-'}
@@ -385,6 +399,10 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                             <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-right">
                                                                 {item.filled_modules_count} / {item.total_modules}
                                                             </span>
+                                                            <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title={__('Klik untuk detail')}>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                            </svg>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">

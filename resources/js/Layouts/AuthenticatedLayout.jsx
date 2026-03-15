@@ -4,7 +4,7 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import ThemeToggle from '@/Components/ThemeToggle';
 import ChatWidget from '@/Components/ChatWidget';
-import AdminNotificationComponent from '@/Components/AdminNotification';
+import NotificationBell from '@/Components/NotificationBell';
 import Modal from '@/Components/Modal';
 import ProfilePhotoUpdateModal from '@/Components/ProfilePhotoUpdateModal';
 import ProfilePhoto from '@/Components/ProfilePhoto';
@@ -127,12 +127,28 @@ export default function AuthenticatedLayout({ header, children }) {
                                         {__('Schedule')}
                                     </NavLink>
                                 )}
+                                {user.role === 'mentor' && (
+                                    <NavLink
+                                        href={route('attendance.index')}
+                                        active={route().current('attendance.index')}
+                                    >
+                                        {__('Attendance')}
+                                    </NavLink>
+                                )}
                                 {(user.role === 'admin' || user.role === 'mentor') && (
                                     <NavLink
                                         href={route('communication.index')}
                                         active={route().current('communication.index')}
                                     >
                                         {__('Communication')}
+                                    </NavLink>
+                                )}
+                                {(user.role === 'admin' || user.role === 'mentor') && (
+                                    <NavLink
+                                        href={route('rmd.dashboard')}
+                                        active={route().current('rmd.dashboard')}
+                                    >
+                                        {__('RMD Dashboard')}
                                     </NavLink>
                                 )}
                                 {user.role === 'admin' && (
@@ -143,16 +159,22 @@ export default function AuthenticatedLayout({ header, children }) {
                                         {__('RMD Report')}
                                     </NavLink>
                                 )}
+                                {user.role === 'admin' && (
+                                    <NavLink
+                                        href={route('admin.mentor-performance.index')}
+                                        active={route().current('admin.mentor-performance.index')}
+                                    >
+                                        {__('Kinerja Mentor')}
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            {(user.role === 'admin' || user.role === 'mentor') && <AdminNotificationComponent />}
-                            
-                            {/* Theme Switcher */}
-                            <ThemeToggle theme={theme} toggleTheme={toggleTheme} className="ms-3" />
-
-                            <div className="relative ms-3">
+                            <div className="relative ms-3 flex items-center gap-3">
+                                {/* Notification Bell for all roles */}
+                                <NotificationBell />
+                                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">
@@ -270,6 +292,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
                         <div className="-me-2 flex items-center sm:hidden">
                             {/* Theme Switcher Mobile */}
+                            <NotificationBell />
                             <ThemeToggle theme={theme} toggleTheme={toggleTheme} className="me-3" />
                             
                             <button
@@ -387,13 +410,31 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     {__('Communication')}
                                 </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route('rmd-report.index')}
-                                    active={route().current('rmd-report.index')}
-                                >
-                                    {__('RMD Report')}
-                                </ResponsiveNavLink>
                             </>
+                        )}
+                        {(user.role === 'admin' || user.role === 'mentor') && (
+                            <ResponsiveNavLink
+                                href={route('rmd.dashboard')}
+                                active={route().current('rmd.dashboard')}
+                            >
+                                {__('RMD Dashboard')}
+                            </ResponsiveNavLink>
+                        )}
+                        {user.role === 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('rmd-report.index')}
+                                active={route().current('rmd-report.index')}
+                            >
+                                {__('RMD Report')}
+                            </ResponsiveNavLink>
+                        )}
+                        {user.role === 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('admin.mentor-performance.index')}
+                                active={route().current('admin.mentor-performance.index')}
+                            >
+                                {__('Kinerja Mentor')}
+                            </ResponsiveNavLink>
                         )}
                         {user.role === 'mentor' && (
                             <ResponsiveNavLink
@@ -401,6 +442,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 active={route().current('mentor.schedule')}
                             >
                                 {__('Schedule')}
+                            </ResponsiveNavLink>
+                        )}
+                        {user.role === 'mentor' && (
+                            <ResponsiveNavLink
+                                href={route('attendance.index')}
+                                active={route().current('attendance.index')}
+                            >
+                                {__('Attendance')}
                             </ResponsiveNavLink>
                         )}
                     </div>
@@ -462,7 +511,9 @@ export default function AuthenticatedLayout({ header, children }) {
             )}
 
             <main>{children}</main>
-            
+
+            <Footer />
+
             <ChatWidget user={user} />
 
             <Modal show={confirmingLogout} onClose={() => setConfirmingLogout(false)}>

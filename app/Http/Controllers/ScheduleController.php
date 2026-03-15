@@ -100,10 +100,10 @@ class ScheduleController extends Controller
             'status' => 'nullable|in:scheduled,ongoing,completed,cancelled',
         ]);
 
-        // Set default status if not provided
-        if (!isset($validated['status'])) {
-            $validated['status'] = 'scheduled';
-        }
+        // Guard nullable fields against DB NOT NULL constraint (ConvertEmptyStringsToNull middleware)
+        $validated['description'] = $validated['description'] ?? '';
+        $validated['location']    = $validated['location'] ?? '';
+        $validated['status']      = $validated['status'] ?? 'scheduled';
 
         Schedule::create($validated);
 
@@ -126,6 +126,10 @@ class ScheduleController extends Controller
             'location' => 'nullable|string|max:255',
             'status' => 'nullable|in:scheduled,ongoing,completed,cancelled',
         ]);
+
+        $validated['description'] = $validated['description'] ?? '';
+        $validated['location']    = $validated['location'] ?? '';
+        $validated['status']      = $validated['status'] ?? 'scheduled';
 
         $schedule->update($validated);
 

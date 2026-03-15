@@ -17,6 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class RmdReportController extends Controller
@@ -26,35 +27,44 @@ class RmdReportController extends Controller
      */
     public function index(Request $request): Response
     {
+        $currentUser = Auth::user();
+        $isMentor = $currentUser->isMentor();
+
         $chartService = new RmdChartService();
         $chartData = [];
 
-        try {
-            $chartData = [
-                'age_distribution' => $chartService->getAgeDistributionAllParticipants(),
-                'participation_rate' => $chartService->getRmdParticipationRate(),
-                'progress_distribution' => $chartService->getRmdFillingProgressDistribution(),
-            ];
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error fetching RMD chart data: ' . $e->getMessage());
-            $chartData = [
-                'error' => 'Gagal memuat data grafik: ' . $e->getMessage()
-            ];
+        if (!$isMentor) {
+            try {
+                $chartData = [
+                    'age_distribution' => $chartService->getAgeDistributionAllParticipants(),
+                    'participation_rate' => $chartService->getRmdParticipationRate(),
+                    'progress_distribution' => $chartService->getRmdFillingProgressDistribution(),
+                ];
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error fetching RMD chart data: ' . $e->getMessage());
+                $chartData = [
+                    'error' => 'Gagal memuat data grafik: ' . $e->getMessage()
+                ];
+            }
         }
 
-        // 2. Table Data: List of participants > 12 with summary status
+        // Table Data: List of participants with summary status
         $paginatedItems = $this->getParticipantSummaryData($request);
 
-        // Get total participants count (12+ years old)
-        $totalParticipants = User::where('role', 'participant')
-            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
-            ->count();
+        // Get total participants count (filtered by mentor if applicable)
+        $totalQuery = User::where('role', 'participant')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString());
+        if ($isMentor) {
+            $totalQuery->where('mentor_id', $currentUser->id);
+        }
+        $totalParticipants = $totalQuery->count();
 
         return Inertia::render('RmdReport/Index', [
             'reports' => $paginatedItems,
             'chartData' => $chartData,
             'filters' => $request->only(['search', 'status', 'date_start', 'date_end', 'sort', 'direction']),
             'totalParticipants' => $totalParticipants,
+            'userRole' => $currentUser->role,
         ]);
     }
 
@@ -101,6 +111,11 @@ class RmdReportController extends Controller
         $query = User::query()
             ->where('role', 'participant')
             ->where('date_of_birth', '<=', now()->subYears(12)->toDateString());
+
+        // If current user is a mentor, only show their assigned participants
+        if (Auth::user()->isMentor()) {
+            $query->where('mentor_id', Auth::id());
+        }
 
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -243,6 +258,11 @@ class RmdReportController extends Controller
         // Ensure user is a participant
         if ($user->role !== 'participant') {
              return response()->json(['error' => 'User is not a participant'], 400);
+        }
+
+        // If current user is a mentor, only allow access to their assigned participants
+        if (Auth::user()->isMentor() && $user->mentor_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         $modules = RmdProgressService::getModules();

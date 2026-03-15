@@ -11,6 +11,24 @@ import { Transition } from '@headlessui/react';
 import { EyeIcon, SpeakerWaveIcon, HandRaisedIcon } from '@heroicons/react/24/outline';
 
 export default function TheOnlyOne({ auth, theOnlyOne }) {
+    // Normalise checklist: PHP may encode sequential arrays as [1,2,...] (not {"0":1,...}).
+    // Convert both flat-number arrays and {index,score}-object arrays to {idx: value}.
+    const normaliseChecklist = (raw) => {
+        if (!raw) return {};
+        if (Array.isArray(raw)) {
+            if (raw.length === 0) return {};
+            // Legacy format: [{index, score}, ...]
+            if (typeof raw[0] === 'object' && raw[0] !== null) {
+                return raw.reduce((acc, curr) => ({ ...acc, [curr.index]: curr.score }), {});
+            }
+            // PHP sequential array [1,2,3,...] — convert index→value
+            const obj = {};
+            raw.forEach((val, idx) => { obj[idx] = val; });
+            return obj;
+        }
+        return raw;
+    };
+
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         unique_traits: theOnlyOne?.unique_traits || '',
         current_education_level: theOnlyOne?.current_education_level || '',
@@ -22,15 +40,9 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
         highest_score_value: theOnlyOne?.highest_score_value || '',
         lowest_score_subject: theOnlyOne?.lowest_score_subject || '',
         lowest_score_value: theOnlyOne?.lowest_score_value || '',
-        visual_checklist: Array.isArray(theOnlyOne?.visual_checklist) && typeof theOnlyOne?.visual_checklist[0] === 'object' 
-            ? theOnlyOne?.visual_checklist.reduce((acc, curr) => ({...acc, [curr.index]: curr.score}), {}) 
-            : (typeof theOnlyOne?.visual_checklist === 'object' && !Array.isArray(theOnlyOne?.visual_checklist) ? theOnlyOne?.visual_checklist : {}),
-        auditory_checklist: Array.isArray(theOnlyOne?.auditory_checklist) && typeof theOnlyOne?.auditory_checklist[0] === 'object'
-            ? theOnlyOne?.auditory_checklist.reduce((acc, curr) => ({...acc, [curr.index]: curr.score}), {})
-            : (typeof theOnlyOne?.auditory_checklist === 'object' && !Array.isArray(theOnlyOne?.auditory_checklist) ? theOnlyOne?.auditory_checklist : {}),
-        kinesthetic_checklist: Array.isArray(theOnlyOne?.kinesthetic_checklist) && typeof theOnlyOne?.kinesthetic_checklist[0] === 'object'
-            ? theOnlyOne?.kinesthetic_checklist.reduce((acc, curr) => ({...acc, [curr.index]: curr.score}), {})
-            : (typeof theOnlyOne?.kinesthetic_checklist === 'object' && !Array.isArray(theOnlyOne?.kinesthetic_checklist) ? theOnlyOne?.kinesthetic_checklist : {}),
+        visual_checklist: normaliseChecklist(theOnlyOne?.visual_checklist),
+        auditory_checklist: normaliseChecklist(theOnlyOne?.auditory_checklist),
+        kinesthetic_checklist: normaliseChecklist(theOnlyOne?.kinesthetic_checklist),
         learned_aspects: theOnlyOne?.learned_aspects || '',
         aspects_to_improve: theOnlyOne?.aspects_to_improve || '',
     });
@@ -111,8 +123,20 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
         >
             <Head title={__('RMD_THE_ONLY_ONE_TITLE')} />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen relative">
+                {/* RMD Background */}
+                <div
+                    className="absolute inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: "url('/images/rmd-backgrounds/latar-_7_.svg')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundAttachment: 'fixed',
+                        opacity: 0.08,
+                    }}
+                />
+                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 relative z-10">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             
@@ -154,6 +178,11 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
                                         <p>
                                             {__('RMD_OPENING_TEXT_3')}
                                         </p>
+                                    </div>
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
                                     </div>
                                 </section>
 
@@ -283,6 +312,11 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
                                             <span dangerouslySetInnerHTML={{ __html: __("RMD_THE_ONLY_ONE_NOTE_2") }}></span>
                                         </p>
                                     </div>
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
+                                    </div>
                                 </section>
 
                                 {/* Gaya Belajar Intro */}
@@ -369,6 +403,11 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
                                     <div className="mt-4 text-right font-bold text-lg text-yellow-700 dark:text-yellow-400">
                                         {__('RMD_TOTAL_SCORE_VISUAL')} {calculateTotalScore(data.visual_checklist)}
                                     </div>
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
+                                    </div>
                                 </section>
 
                                 {/* Auditory Quiz */}
@@ -412,6 +451,11 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
                                     </div>
                                     <div className="mt-4 text-right font-bold text-lg text-red-700 dark:text-red-400">
                                         {__('RMD_TOTAL_SCORE_AUDITORY')} {calculateTotalScore(data.auditory_checklist)}
+                                    </div>
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
                                     </div>
                                 </section>
 
@@ -457,6 +501,11 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
                                     </div>
                                     <div className="mt-4 text-right font-bold text-lg text-green-700 dark:text-green-400">
                                         {__('RMD_TOTAL_SCORE_KINESTHETIC')} {calculateTotalScore(data.kinesthetic_checklist)}
+                                    </div>
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
                                     </div>
                                 </section>
 
@@ -591,6 +640,11 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
                                             <li className="pl-2"><span className="font-bold">{__('RMD_GROUP_PROJECT_ITEM_1')}</span></li>
                                             <li className="pl-2">{__('RMD_GROUP_PROJECT_ITEM_2')}</li>
                                         </ul>
+                                    </div>
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
                                     </div>
                                 </section>
 

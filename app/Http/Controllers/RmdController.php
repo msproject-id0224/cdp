@@ -6,6 +6,7 @@ use App\Models\RmdProfile;
 use App\Models\RmdBibleReflection;
 use App\Models\RmdTrueSuccess;
 use App\Models\RmdTheOnlyOne;
+use App\Services\RmdProgressService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,8 +14,96 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
+use App\Models\User;
+
 class RmdController extends Controller
 {
+    /**
+     * Menampilkan Dashboard Rekapitulasi RMD untuk Mentor/Admin
+     */
+    public function dashboard(Request $request)
+    {
+        // Validasi Role: Hanya Admin & Mentor
+        if (!Auth::user()->isMentor() && !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        // Hitung Data Statistik
+        // Asumsi: Umur dihitung dari date_of_birth
+        $now = Carbon::now();
+        
+        // Query Participants (Role: participant)
+        // Group 12-14
+        $count12_14 = User::where('role', 'participant')
+            ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 12 AND 14")
+            ->count();
+
+        // Group 15-18
+        $count15_18 = User::where('role', 'participant')
+            ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 15 AND 18")
+            ->count();
+
+        // Group 19+
+        $count19_plus = User::where('role', 'participant')
+            ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 19")
+            ->count();
+
+        // Count Mentors
+        $mentorCount = User::where('role', 'mentor')->count();
+
+        // Placeholder Group RMD Data (Sementara hardcode/random karena belum ada tabel group)
+        $groups12_14 = 8; // Placeholder
+        $groups15_18 = 11; // Placeholder
+        $groups19_plus = 0; // Placeholder
+        $totalGroups = $groups12_14 + $groups15_18 + $groups19_plus;
+        
+        // Placeholder Attendance (Sementara kosong)
+        $attendance = [
+            '12_14' => null,
+            '15_18' => null,
+            '19_plus' => null
+        ];
+
+        // Daftar Partisipan > 12 Tahun
+        $participantsQuery = User::where('role', 'participant')
+            ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) > 12");
+
+        if ($request->search) {
+            $participantsQuery->where(function($q) use ($request) {
+                $q->where('first_name', 'like', "%{$request->search}%")
+                  ->orWhere('last_name', 'like', "%{$request->search}%")
+                  ->orWhere('id_number', 'like', "%{$request->search}%");
+            });
+        }
+
+        $participants = $participantsQuery->paginate(10)->withQueryString();
+
+        return Inertia::render('Rmd/Dashboard', [
+            'stats' => [
+                'count_12_14' => $count12_14,
+                'count_15_18' => $count15_18,
+                'count_19_plus' => $count19_plus,
+                'total_teens' => $count12_14 + $count15_18 + $count19_plus,
+                'mentor_count' => $mentorCount,
+                'groups_12_14' => $groups12_14,
+                'groups_15_18' => $groups15_18,
+                'groups_19_plus' => $groups19_plus,
+                'total_groups' => $totalGroups,
+                'attendance' => $attendance,
+            ],
+            'participants' => $participants,
+            'filters' => $request->only(['search']),
+            'ppaInfo' => [
+                'fiscal_year' => 'FY 2025',
+                'church_name' => 'Gpdi Mawar Saron Tompaso Baru',
+                'ppa_id' => 'ID 0224',
+                'cluster' => 'Minahasa Selatan',
+                'rmd_period' => 'Mei 2025 - Juni 2025',
+                'pic_name' => 'Friko (KTM)',
+            ]
+        ]);
+    }
+
     public function index()
     {
         return Inertia::render('Rmd/Index');
@@ -98,7 +187,7 @@ class RmdController extends Controller
             );
         });
 
-        return back()->with('success', 'Profil berhasil diperbarui.');
+        return $this->redirectToFirstIncomplete('Profil berhasil diperbarui.');
     }
 
     public function chapters()
@@ -157,7 +246,7 @@ class RmdController extends Controller
 
         $reflection->save();
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function trueSuccess()
@@ -196,7 +285,7 @@ class RmdController extends Controller
 
         $trueSuccess->save();
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function theOnlyOne()
@@ -233,7 +322,7 @@ class RmdController extends Controller
             $data
         );
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function theOnlyOneMeeting2()
@@ -306,7 +395,7 @@ class RmdController extends Controller
             $data
         );
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function preparationDreamIsland()
@@ -335,7 +424,7 @@ class RmdController extends Controller
             $data
         );
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function storeCareerExploration(Request $request)
@@ -375,7 +464,7 @@ class RmdController extends Controller
             $data
         );
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function storeTheOnlyOneMeeting3(Request $request)
@@ -423,7 +512,7 @@ class RmdController extends Controller
             $data
         );
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function storeTheOnlyOneMeeting2(Request $request)
@@ -463,7 +552,7 @@ class RmdController extends Controller
             ]
         );
 
-        return back()->with('success', 'Jawaban berhasil disimpan.');
+        return $this->redirectToFirstIncomplete();
     }
 
     public function uploadMeetingFile(Request $request)
@@ -486,6 +575,32 @@ class RmdController extends Controller
         ]);
 
         return back()->with('success', 'File berhasil diunggah.');
+    }
+
+    private function redirectToFirstIncomplete(string $message = 'Jawaban berhasil disimpan.')
+    {
+        $user = Auth::user();
+
+        $moduleRoutes = [
+            'Profil RMD'             => 'rmd.profile',
+            'Refleksi Alkitab'       => 'rmd.what-the-bible-says',
+            'Sukses Sejati'          => 'rmd.true-success',
+            'The Only One'           => 'rmd.the-only-one',
+            'Kecerdasan Majemuk'     => 'rmd.the-only-one-meeting-2',
+            'Sosial Emosional'       => 'rmd.the-only-one-meeting-3',
+            'Eksplorasi Karir'       => 'rmd.career-exploration',
+            'Eksplorasi Karir P2'    => 'rmd.career-exploration-p2',
+            'Persiapan Pulau Impian' => 'rmd.preparation-dream-island',
+        ];
+
+        foreach (RmdProgressService::getModules() as $name => $modelClass) {
+            $progress = RmdProgressService::calculateProgress($user, $name, $modelClass);
+            if ($progress['percentage'] < 100) {
+                return redirect()->route($moduleRoutes[$name])->with('success', $message);
+            }
+        }
+
+        return redirect()->route('rmd.chapters')->with('success', 'Semua modul RMD telah selesai diisi!');
     }
 
     public function downloadMeetingFile(\App\Models\RmdMeetingFile $file)

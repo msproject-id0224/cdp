@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
@@ -5,8 +6,61 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import { Transition } from '@headlessui/react';
+import BibleVerseModal from '@/Components/BibleVerseModal';
+
+const BIBLE_VERSES = {
+    jeremiah: {
+        reference: 'Yeremia 29:11',
+        text: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu, demikianlah firman TUHAN, yaitu rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.',
+        translation: 'TB',
+        color: 'indigo',
+    },
+    ephesians: {
+        reference: 'Efesus 2:10',
+        text: 'Karena kita ini buatan Allah, diciptakan dalam Kristus Yesus untuk melakukan pekerjaan baik, yang dipersiapkan Allah sebelumnya. Ia mau, supaya kita hidup di dalamnya.',
+        translation: 'TB',
+        color: 'indigo',
+    },
+    genesis: {
+        reference: 'Kejadian 1:26-28',
+        text: 'Berfirmanlah Allah: "Baiklah Kita menjadikan manusia menurut gambar dan rupa Kita, supaya mereka berkuasa atas ikan-ikan di laut dan burung-burung di udara dan atas ternak dan atas seluruh bumi dan atas segala binatang melata yang merayap di bumi." Maka Allah menciptakan manusia itu menurut gambar-Nya, menurut gambar Allah diciptakan-Nya dia; laki-laki dan perempuan diciptakan-Nya mereka. Allah memberkati mereka, lalu Allah berfirman kepada mereka: "Beranakcuculah dan bertambah banyak; penuhilah bumi dan taklukkanlah itu, berkuasalah atas ikan-ikan di laut dan burung-burung di udara dan atas segala binatang yang merayap di bumi."',
+        translation: 'TB',
+        color: 'indigo',
+    },
+};
+
+const VerseHeading = ({ label, verseKey, onOpen }) => (
+    <button
+        type="button"
+        onClick={() => onOpen(verseKey)}
+        className="group flex items-center gap-2 text-left w-full mb-4"
+    >
+        <h4 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 group-hover:text-indigo-900 dark:group-hover:text-indigo-100 transition-colors">
+            {label}
+        </h4>
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-400 dark:text-indigo-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors border border-indigo-200 dark:border-indigo-700 rounded-full px-2 py-0.5 shrink-0">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Lihat ayat
+        </span>
+    </button>
+);
+
+const TextArea = ({ id, value, onChange, placeholder }) => (
+    <textarea
+        id={id}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 mt-1 block resize"
+        rows="3"
+    />
+);
 
 export default function WhatTheBibleSays({ auth, reflection }) {
+    const [activeVerse, setActiveVerse] = useState(null);
+
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         jeremiah_29_11_who_knows: reflection?.jeremiah_29_11_who_knows || '',
         jeremiah_29_11_plans: reflection?.jeremiah_29_11_plans || '',
@@ -35,17 +89,6 @@ export default function WhatTheBibleSays({ auth, reflection }) {
         });
     };
 
-    const TextArea = ({ id, value, onChange, placeholder }) => (
-        <textarea
-            id={id}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 mt-1 block"
-            rows="3"
-        />
-    );
-
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -53,8 +96,25 @@ export default function WhatTheBibleSays({ auth, reflection }) {
         >
             <Head title={__('RMD_BIBLE_SAYS_TITLE')} />
 
-            <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <BibleVerseModal
+                verse={activeVerse ? BIBLE_VERSES[activeVerse] : null}
+                onClose={() => setActiveVerse(null)}
+            />
+
+            <div className="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen relative">
+                {/* RMD Background */}
+                <div
+                    className="absolute inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: "url('/images/rmd-backgrounds/latar-_5_.svg')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundAttachment: 'fixed',
+                        opacity: 0.08,
+                    }}
+                />
+                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 relative z-10">
                     <form onSubmit={submit} className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100 space-y-8">
                             
@@ -72,7 +132,7 @@ export default function WhatTheBibleSays({ auth, reflection }) {
 
                             {/* Yeremia 29:11 */}
                             <div className="bg-indigo-50 dark:bg-gray-700 p-6 rounded-lg shadow-sm">
-                                <h4 className="text-xl font-bold mb-4 text-indigo-700 dark:text-indigo-300">{__('RMD_JEREMIAH_29_11')}</h4>
+                                <VerseHeading label={__('RMD_JEREMIAH_29_11')} verseKey="jeremiah" onOpen={setActiveVerse} />
                                 <div className="space-y-4">
                                     <div>
                                         <InputLabel htmlFor="jeremiah_29_11_who_knows" value={__('RMD_JEREMIAH_WHO_KNOWS')} />
@@ -93,11 +153,16 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                                         <InputError message={errors.jeremiah_29_11_plans} className="mt-2" />
                                     </div>
                                 </div>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-indigo-100 dark:border-gray-600">
+                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Efesus 2:10 */}
                             <div className="bg-indigo-50 dark:bg-gray-700 p-6 rounded-lg shadow-sm">
-                                <h4 className="text-xl font-bold mb-4 text-indigo-700 dark:text-indigo-300">{__('RMD_EPHESIANS_2_10')}</h4>
+                                <VerseHeading label={__('RMD_EPHESIANS_2_10')} verseKey="ephesians" onOpen={setActiveVerse} />
                                 <div className="space-y-4">
                                     <div>
                                         <InputLabel htmlFor="ephesians_2_10_made_by" value={__('RMD_EPHESIANS_MADE_BY')} />
@@ -127,11 +192,16 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                                         <InputError message={errors.ephesians_2_10_god_wants} className="mt-2" />
                                     </div>
                                 </div>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-indigo-100 dark:border-gray-600">
+                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Kejadian 1:26-28 */}
                             <div className="bg-indigo-50 dark:bg-gray-700 p-6 rounded-lg shadow-sm">
-                                <h4 className="text-xl font-bold mb-4 text-indigo-700 dark:text-indigo-300">{__('RMD_GENESIS_1_26_28')}</h4>
+                                <VerseHeading label={__('RMD_GENESIS_1_26_28')} verseKey="genesis" onOpen={setActiveVerse} />
                                 <div className="space-y-4">
                                     <div>
                                         <InputLabel htmlFor="genesis_1_26_28_image" value={__('RMD_GENESIS_IMAGE')} />
@@ -151,6 +221,11 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                                         />
                                         <InputError message={errors.genesis_1_26_28_purpose} className="mt-2" />
                                     </div>
+                                </div>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-indigo-100 dark:border-gray-600">
+                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
                                 </div>
                             </div>
 
@@ -179,6 +254,11 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                                         />
                                     </div>
                                 </div>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
+                                </div>
                             </section>
 
                             {/* Reflection */}
@@ -205,6 +285,11 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                                             {__('RMD_SHARE_INSTRUCTION')}
                                         </p>
                                     </div>
+                                </div>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
                                 </div>
                             </section>
 
@@ -302,6 +387,11 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                                 <p className="mb-4 leading-relaxed">
                                     {__('RMD_LEADERSHIP_CLOSING_INTRO')}
                                 </p>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
+                                </div>
                             </section>
 
                             {/* Mari Mengingat Kembali */}
@@ -343,6 +433,11 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                                             </div>
                                         )}
                                     </div>
+                                </div>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
                                 </div>
                             </section>
 

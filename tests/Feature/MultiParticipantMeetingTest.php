@@ -17,6 +17,7 @@ class MultiParticipantMeetingTest extends TestCase
     {
         Notification::fake();
 
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participants = User::factory()->count(3)->create(['role' => 'participant']);
 
@@ -43,6 +44,7 @@ class MultiParticipantMeetingTest extends TestCase
     {
         Notification::fake();
 
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participant1 = User::factory()->create(['role' => 'participant']);
         
@@ -70,6 +72,7 @@ class MultiParticipantMeetingTest extends TestCase
 
     public function test_capacity_is_auto_adjusted_if_participants_exceed_max()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participants = User::factory()->count(4)->create(['role' => 'participant']);
 
@@ -90,6 +93,7 @@ class MultiParticipantMeetingTest extends TestCase
     {
         Notification::fake();
 
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participant = User::factory()->create(['role' => 'participant']);
         

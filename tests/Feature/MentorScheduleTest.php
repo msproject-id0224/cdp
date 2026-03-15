@@ -17,6 +17,7 @@ class MentorScheduleTest extends TestCase
 
     public function test_mentor_can_retrieve_schedules_for_month_view()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participant = User::factory()->create(['role' => 'participant', 'mentor_id' => $mentor->id]);
 
@@ -96,6 +97,7 @@ class MentorScheduleTest extends TestCase
 
     public function test_mentor_can_save_availability()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $this->actingAs($mentor);
 
@@ -116,6 +118,7 @@ class MentorScheduleTest extends TestCase
 
     public function test_non_mentor_cannot_save_availability()
     {
+        /** @var \App\Models\User $user */
         $user = User::factory()->create(['role' => 'participant']);
         $this->actingAs($user);
 
@@ -131,6 +134,7 @@ class MentorScheduleTest extends TestCase
 
     public function test_mentor_can_save_meeting()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participant = User::factory()->create(['role' => 'participant']);
         $this->actingAs($mentor);
@@ -161,6 +165,7 @@ class MentorScheduleTest extends TestCase
 
     public function test_mentor_cannot_save_overlapping_meeting()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participant = User::factory()->create(['role' => 'participant']);
         $this->actingAs($mentor);
@@ -202,6 +207,7 @@ class MentorScheduleTest extends TestCase
      */
     public function test_mentor_can_retrieve_participant_details_in_schedule()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participant = User::factory()->create([
             'role' => 'participant',
@@ -245,6 +251,7 @@ class MentorScheduleTest extends TestCase
 
     public function test_mentor_can_save_meeting_with_invalid_participant()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $this->actingAs($mentor);
 

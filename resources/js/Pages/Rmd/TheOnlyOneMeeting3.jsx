@@ -94,8 +94,20 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
         >
             <Head title={__('RMD_MEETING_3_TITLE')} />
 
-            <div className="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8">
+            <div className="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen relative">
+                {/* RMD Background */}
+                <div
+                    className="absolute inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: "url('/images/rmd-backgrounds/latar-_9_.svg')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundAttachment: 'fixed',
+                        opacity: 0.08,
+                    }}
+                />
+                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8 relative z-10">
                     {/* Header Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                         <div className="bg-cyan-400 p-8 text-center text-white">
@@ -115,13 +127,13 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                         "{__('RMD_MEETING_3_REFLECTION_QUESTION_1')}"
                                     </div>
                                     <textarea
-                                        className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px]"
+                                        className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px] resize"
                                         placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
                                         value={data.learning_style_practice}
                                         onChange={e => setData('learning_style_practice', e.target.value)}
                                     />
                                     <textarea
-                                        className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px]"
+                                        className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px] resize"
                                         placeholder={__('RMD_MEETING_3_PLACEHOLDER_IMPACT')}
                                         value={data.learning_style_impact}
                                         onChange={e => setData('learning_style_impact', e.target.value)}
@@ -132,6 +144,11 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                     <p>
                                         {__('RMD_MEETING_3_INTRO_TEXT_3')}
                                     </p>
+                                </div>
+                                <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                    <button type="submit" form="meeting3-form" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                    </button>
                                 </div>
                             </section>
 
@@ -145,7 +162,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                     {__('RMD_PHYSICAL_ASPECT_DESC')}
                                 </p>
 
-                                <form onSubmit={submit} className="space-y-12">
+                                <form id="meeting3-form" onSubmit={submit} className="space-y-12">
                                     {/* Aspek Fisik */}
                                     <div className="border-2 border-orange-400 dark:border-orange-700 rounded-3xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
                                         <table className="w-full border-collapse">
@@ -174,7 +191,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-24 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data[item.key]}
                                                                 onChange={e => setData(item.key, e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -208,7 +225,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.physical_likes}
                                                                 onChange={e => setData('physical_likes', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -222,7 +239,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.physical_development_goal}
                                                                 onChange={e => setData('physical_development_goal', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -232,6 +249,12 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                 </tbody>
                                             </table>
                                         </div>
+                                    </div>
+
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
                                     </div>
 
                                     <hr className="border-gray-100 dark:border-gray-700" />
@@ -276,7 +299,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             </td>
                                                             <td className="p-2">
                                                                 <textarea
-                                                                    className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                    className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                     value={data[item.key]}
                                                                     onChange={e => setData(item.key, e.target.value)}
                                                                     placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -289,11 +312,17 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                         </div>
                                     </div>
 
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
+                                    </div>
+
                                     <div className="mt-12 space-y-6">
                                         <p className="text-gray-700 dark:text-gray-300 text-lg italic">
                                             {__('RMD_REFLECTION_INSTRUCTION')}
                                         </p>
-                                        
+
                                         <div className="border-2 border-orange-400 dark:border-orange-700 rounded-3xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
                                             <table className="w-full border-collapse">
                                                 <thead>
@@ -311,7 +340,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.reflection_learned}
                                                                 onChange={e => setData('reflection_learned', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -325,7 +354,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.reflection_improvement}
                                                                 onChange={e => setData('reflection_improvement', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -335,6 +364,12 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                 </tbody>
                                             </table>
                                         </div>
+                                    </div>
+
+                                    <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                        <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                            {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                        </button>
                                     </div>
 
                                     <hr className="border-gray-100 dark:border-gray-700" />
@@ -367,7 +402,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_knowledge_jesus}
                                                                 onChange={e => setData('spiritual_knowledge_jesus', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -381,7 +416,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_relationship_growth}
                                                                 onChange={e => setData('spiritual_relationship_growth', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -395,7 +430,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_love_obedience}
                                                                 onChange={e => setData('spiritual_love_obedience', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -409,7 +444,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_community}
                                                                 onChange={e => setData('spiritual_community', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -423,7 +458,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_bible_study}
                                                                 onChange={e => setData('spiritual_bible_study', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -437,7 +472,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                         </td>
                                                         <td className="p-2">
                                                             <textarea
-                                                                className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_mentor}
                                                                 onChange={e => setData('spiritual_mentor', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -478,7 +513,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             </td>
                                                             <td className="p-2">
                                                                 <textarea
-                                                                    className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                    className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                     value={data.spiritual_reflection_learned}
                                                                     onChange={e => setData('spiritual_reflection_learned', e.target.value)}
                                                                     placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -492,7 +527,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             </td>
                                                             <td className="p-2">
                                                                 <textarea
-                                                                    className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                                    className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                     value={data.spiritual_reflection_improvement}
                                                                     onChange={e => setData('spiritual_reflection_improvement', e.target.value)}
                                                                     placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -538,6 +573,12 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             <span className="text-gray-700 dark:text-gray-300 font-medium">{item.label}</span>
                                                         </label>
                                                     ))}
+                                                </div>
+
+                                                <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                                    <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                                        {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                                    </button>
                                                 </div>
                                             </div>
 

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
@@ -9,7 +9,7 @@ import SelectInput from '@/Components/SelectInput';
 import ProfilePhoto from '@/Components/ProfilePhoto';
 import axios from 'axios';
 
-export default function ParticipantShow({ auth, participant, notes, tasks, meetings, messages, metrics, analytics }) {
+export default function ParticipantShow({ auth, participant, notes, tasks, meetings, messages, metrics, analytics, rmdProgress }) {
     const { locale } = usePage().props;
     const isAdmin = auth?.user?.role === 'admin';
     const [status, setStatus] = useState(participant.is_active ? 'active' : 'inactive');
@@ -34,6 +34,22 @@ export default function ParticipantShow({ auth, participant, notes, tasks, meeti
     const [meetingLoading, setMeetingLoading] = useState(false);
     const [meetingError, setMeetingError] = useState('');
     const [meetingItems, setMeetingItems] = useState(meetings || []);
+
+    // Calculate dynamic age
+    const participantAge = useMemo(() => {
+        if (participant.date_of_birth) {
+            const birthDate = new Date(participant.date_of_birth);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+        // Fallback to age field if dob is missing, or 0
+        return typeof participant.age === 'number' ? participant.age : 0;
+    }, [participant.date_of_birth, participant.age]);
 
     const formatDate = (dateString) => {
         if (!dateString) return '-';
@@ -149,7 +165,7 @@ export default function ParticipantShow({ auth, participant, notes, tasks, meeti
             <Head title={__('My Participant')} />
 
             <div className="py-8">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                     <div className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div className="flex items-center gap-4">
@@ -253,6 +269,100 @@ export default function ParticipantShow({ auth, participant, notes, tasks, meeti
                             </div>
                         </div>
                     </div>
+
+                    {/* RMD Progress Section - Only for 12+ years old */}
+                    {rmdProgress && participantAge >= 12 && (
+                        <div className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{__('Progres RMD')}</h4>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        {rmdProgress.filled_count} / {rmdProgress.total_modules} {__('modul')}
+                                    </span>
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                        rmdProgress.overall_status === 'Selesai'
+                                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                            : rmdProgress.overall_status === 'Sedang Mengisi'
+                                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                    }`}>
+                                        {rmdProgress.overall_status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Overall progress bar */}
+                            <div className="mb-5">
+                                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                    <span>{__('Keseluruhan')}</span>
+                                    <span>{rmdProgress.overall_percentage}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div
+                                        className={`h-2 rounded-full transition-all ${
+                                            rmdProgress.overall_percentage === 100 ? 'bg-green-500' : 'bg-indigo-500'
+                                        }`}
+                                        style={{ width: `${rmdProgress.overall_percentage}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Per-module list */}
+                            <div className="space-y-3">
+                                {rmdProgress.modules.map((module, idx) => (
+                                    <div key={idx} className="flex items-center gap-3">
+                                        <div className="w-5 h-5 shrink-0 flex items-center justify-center">
+                                            {module.percentage === 100 ? (
+                                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : module.percentage > 0 ? (
+                                                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="w-5 h-5 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-0.5">
+                                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{module.name}</span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 shrink-0">{module.percentage}%</span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                                                <div
+                                                    className={`h-1.5 rounded-full ${
+                                                        module.percentage === 100 ? 'bg-green-500' : 'bg-indigo-400'
+                                                    }`}
+                                                    style={{ width: `${module.percentage}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <span className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
+                                            module.status === 'Selesai Mengisi'
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                                : module.status === 'Sedang Mengisi'
+                                                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                                                : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                                        }`}>
+                                            {module.status === 'Selesai Mengisi' ? '✓' : module.status === 'Sedang Mengisi' ? '…' : '–'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {rmdProgress.modules.some(m => m.last_updated) && (
+                                <p className="mt-4 text-xs text-gray-400 dark:text-gray-500">
+                                    {__('Terakhir diperbarui')}: {rmdProgress.modules
+                                        .filter(m => m.last_updated)
+                                        .sort((a, b) => new Date(b.last_updated) - new Date(a.last_updated))[0]?.last_updated
+                                    }
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">

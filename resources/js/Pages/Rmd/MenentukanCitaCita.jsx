@@ -60,8 +60,20 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
         >
             <Head title={__('RMD_CH4_DETERMINE_GOAL_TITLE')} />
 
-            <div className="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8">
+            <div className="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen relative">
+                {/* RMD Background */}
+                <div
+                    className="absolute inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: "url('/images/rmd-backgrounds/latar-_10_.svg')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundAttachment: 'fixed',
+                        opacity: 0.08,
+                    }}
+                />
+                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8 relative z-10">
                     {/* Header Section */}
                     <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-8 border border-gray-100 dark:border-gray-700">
                         <div className="text-center space-y-2">
@@ -130,7 +142,7 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                                 </td>
                                                 <td className="p-2">
                                                     <textarea
-                                                        className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={data[item.id]}
                                                         onChange={e => setData(item.id, e.target.value)}
                                                         placeholder={__('RMD_CH4_PLACEHOLDER_WRITE_HERE')}
@@ -146,12 +158,17 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                     {__('RMD_CH4_NOTE_MARK_THREE')}
                                 </p>
                                 <textarea
-                                    className="mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border-gray-300 dark:border-gray-700 focus:ring-blue-500"
+                                    className="mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border-gray-300 dark:border-gray-700 focus:ring-blue-500 resize"
                                     value={data.interested_professions_from_style}
                                     onChange={e => setData('interested_professions_from_style', e.target.value)}
                                     placeholder={__('RMD_CH4_PLACEHOLDER_THREE_PROFESSIONS')}
                                     rows="2"
                                 />
+                            </div>
+                            <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                    {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                </button>
                             </div>
                         </div>
 
@@ -192,7 +209,7 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                                 </td>
                                                 <td className="p-2 border-r-2 border-orange-400 dark:border-orange-700">
                                                     <textarea
-                                                        className="w-full h-24 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={data[item.ability]}
                                                         onChange={e => setData(item.ability, e.target.value)}
                                                         placeholder={__('RMD_CH4_PLACEHOLDER_ABILITY')}
@@ -200,7 +217,7 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                                 </td>
                                                 <td className="p-2">
                                                     <textarea
-                                                        className="w-full h-24 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={data[item.professions]}
                                                         onChange={e => setData(item.professions, e.target.value)}
                                                         placeholder={__('RMD_CH4_PLACEHOLDER_PROFESSION')}
@@ -210,6 +227,11 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                            <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                    {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                </button>
                             </div>
                         </div>
 
@@ -243,11 +265,16 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                             <div className="space-y-4 pt-4">
                                 <h5 className="font-bold text-gray-800 dark:text-gray-200">{__('RMD_CH4_ADDITIONAL_CONSIDERATIONS')}</h5>
                                 <textarea
-                                    className="w-full bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-gray-200 dark:border-gray-700 focus:ring-orange-400 h-32"
+                                    className="w-full bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-gray-200 dark:border-gray-700 focus:ring-orange-400 min-h-[128px] resize"
                                     value={data.additional_considerations}
                                     onChange={e => setData('additional_considerations', e.target.value)}
                                     placeholder={__('RMD_CH4_PLACEHOLDER_DISCUSS')}
                                 />
+                            </div>
+                            <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                    {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                </button>
                             </div>
                         </div>
 
@@ -280,7 +307,7 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                                 </td>
                                                 <td className="p-4">
                                                     <textarea
-                                                        className="w-full h-40 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                        className="w-full min-h-[160px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.factors}
                                                         onChange={e => updateMatrix(index, 'factors', e.target.value)}
                                                         placeholder={__('RMD_CH4_PLACEHOLDER_FACTORS')}
@@ -299,6 +326,11 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                 <p className="text-gray-700 dark:text-gray-300 text-sm italic">
                                     {__('RMD_CH4_PARENT_ADVICE')}
                                 </p>
+                            </div>
+                            <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
+                                <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
+                                    {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                </button>
                             </div>
                         </div>
 
@@ -328,7 +360,7 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
 
                         {/* Navigation Section */}
                         <div className="flex justify-between items-center py-8">
-                            <Link 
+                            <Link
                                 href={route('rmd.the-only-one-meeting-3')}
                                 className="flex items-center gap-2 text-gray-500 hover:text-cyan-500 font-bold transition-colors"
                             >
@@ -337,13 +369,25 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                 </svg>
                                 {__('RMD_CH4_BTN_PREV')}
                             </Link>
-                            
-                            <Link 
-                                href={route('rmd.chapters')}
-                                className="px-8 py-3 bg-white dark:bg-gray-800 border-2 border-cyan-400 text-cyan-500 rounded-full font-bold hover:bg-cyan-50 transition-colors shadow-sm"
-                            >
-                                {__('RMD_CH4_BTN_TOC')}
-                            </Link>
+
+                            <div className="flex items-center gap-4">
+                                <Link
+                                    href={route('rmd.chapters')}
+                                    className="px-8 py-3 bg-white dark:bg-gray-800 border-2 border-cyan-400 text-cyan-500 rounded-full font-bold hover:bg-cyan-50 transition-colors shadow-sm"
+                                >
+                                    {__('RMD_CH4_BTN_TOC')}
+                                </Link>
+
+                                <Link
+                                    href={route('rmd.career-exploration-p2')}
+                                    className="flex items-center gap-2 px-8 py-3 bg-cyan-500 text-white rounded-full font-bold hover:bg-cyan-600 transition-colors shadow-lg shadow-cyan-200 dark:shadow-none"
+                                >
+                                    {__('RMD_CH4_BTN_NEXT')}
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                            </div>
                         </div>
                     </form>
                 </div>

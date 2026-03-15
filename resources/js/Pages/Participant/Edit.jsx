@@ -22,24 +22,23 @@ export default function ParticipantEdit({ auth, participant }) {
     };
 
     const { data, setData, patch, errors, processing } = useForm({
-        first_name: participant.first_name,
-        last_name: participant.last_name || '',
-        nickname: participant.nickname || '',
-        email: participant.email,
+        first_name: participant.first_name ?? '',
+        last_name: participant.last_name ?? '',
+        nickname: participant.nickname ?? '',
+        email: participant.email ?? '',
         id_number: participant.id_number ? participant.id_number.replace('ID-0224', '') : '',
-        date_of_birth: participant.date_of_birth || '',
-        age: participant.age || '',
-        gender: participant.gender || '',
-        education: participant.education || '',
-        age_group: participant.age_group || '',
-        height: participant.height || '',
-        weight: participant.weight || '',
-        communication: participant.communication || '',
+        date_of_birth: participant.date_of_birth ? String(participant.date_of_birth).substring(0, 10) : '',
+        age: participant.age ?? '',
+        gender: participant.gender ?? '',
+        education: participant.education ?? '',
+        age_group: participant.age_group ?? '',
+        height: participant.height != null ? participant.height : '',
+        weight: participant.weight != null ? participant.weight : '',
+        communication: participant.communication ?? '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-
         patch(route('participants.update', participant.id));
     };
 
@@ -69,7 +68,7 @@ export default function ParticipantEdit({ auth, participant }) {
             <Head title={__('Edit Participant')} />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                         <div className="p-6 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700">
                             <h3 className="text-lg font-medium mb-4">{__('Profile Photo')}</h3>
@@ -108,7 +107,6 @@ export default function ParticipantEdit({ auth, participant }) {
 
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <form onSubmit={submit} className="space-y-6">
-                                
 
                                 <div>
                                     <InputLabel htmlFor="id_number" value={__('ID Number')} />

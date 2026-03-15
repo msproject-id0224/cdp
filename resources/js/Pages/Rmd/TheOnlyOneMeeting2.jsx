@@ -13,9 +13,13 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
     const [navError, setNavError] = useState(null);
 
     // Helper to safely parse initial data.
+    // PHP may encode sequential checklist as a JSON array [1,2,3,...] instead of
+    // an object {"0":1,"1":2,...}. Convert array back to object so checked comparison works.
     const getInitialData = (data) => {
         if (Array.isArray(data)) {
-            return {};
+            const obj = {};
+            data.forEach((val, idx) => { obj[idx] = val; });
+            return obj;
         }
         return data || {};
     };
@@ -270,8 +274,20 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
         >
             <Head title={__('RMD_THE_ONLY_ONE_MEETING_2_TITLE')} />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen relative">
+                {/* RMD Background */}
+                <div
+                    className="absolute inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: "url('/images/rmd-backgrounds/latar-_8_.svg')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundAttachment: 'fixed',
+                        opacity: 0.08,
+                    }}
+                />
+                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 relative z-10">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             
@@ -418,7 +434,14 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                                 {renderQuestions(section.items, section.key, colors.radio, '', colors.ring, '')}
                                             </div>
                                             {errors[`${section.key}_checklist`] && <InputError message={errors[`${section.key}_checklist`]} className="mt-2" />}
-                                            <div className={`mt-8 pt-4 border-t ${colors.scoreBorder} flex justify-end items-center`}>
+                                            <div className={`mt-8 pt-4 border-t ${colors.scoreBorder} flex justify-between items-center`}>
+                                                <button
+                                                    type="submit"
+                                                    disabled={processing}
+                                                    className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50"
+                                                >
+                                                    {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                                </button>
                                                 <div className={`${colors.scoreBg} px-6 py-3 rounded-full`}>
                                                     <span className={`text-lg font-bold ${colors.scoreText} mr-2`}>{__('RMD_TOTAL_SCORE')}</span>
                                                     <span className={`text-2xl font-extrabold ${colors.scoreText}`}>{calculateScore(data[`${section.key}_checklist`])}</span>
@@ -501,6 +524,16 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
 
                                  {/* Reflection Table Section (Berdasarkan Gambar) */}
                                  <section className="mt-12 space-y-6">
+                                     <div className="flex items-center justify-between mb-2">
+                                         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">{__('RMD_REFLECTION_TITLE') || 'Refleksi'}</h3>
+                                         <button
+                                             type="submit"
+                                             disabled={processing}
+                                             className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50"
+                                         >
+                                             {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}
+                                         </button>
+                                     </div>
                                      <div className="border-2 border-orange-400 dark:border-orange-700 rounded-3xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
                                          <table className="w-full border-collapse">
                                              <thead>
@@ -518,7 +551,7 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                                      </td>
                                                      <td className="p-2">
                                                          <textarea
-                                                             className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                              value={data.reflection_new_learning}
                                                              onChange={e => setData('reflection_new_learning', e.target.value)}
                                                              placeholder={__('RMD_PLACEHOLDER_WRITE_HERE')}
@@ -532,7 +565,7 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                                      </td>
                                                      <td className="p-2">
                                                          <textarea
-                                                             className="w-full h-32 border-none focus:ring-0 bg-transparent resize-none dark:text-gray-200"
+                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                              value={data.reflection_plan}
                                                              onChange={e => setData('reflection_plan', e.target.value)}
                                                              placeholder={__('RMD_PLACEHOLDER_WRITE_HERE')}

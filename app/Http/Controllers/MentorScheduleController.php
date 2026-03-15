@@ -144,7 +144,9 @@ class MentorScheduleController extends Controller
             'end_time' => 'required|date|after:scheduled_at',
             'location' => 'nullable|string',
             'meeting_link' => 'nullable|string',
+            'agenda_type' => 'nullable|string|in:pengisian_rmd,pertemuan_umum,rapat_youth,lainnya',
             'agenda' => 'nullable|string',
+            'tools_materials' => 'nullable|string',
             'notes' => 'nullable|string',
             'max_participants' => 'nullable|integer|min:1',
         ]);
@@ -179,7 +181,9 @@ class MentorScheduleController extends Controller
                 'end_time' => $validated['end_time'],
                 'location' => $validated['location'] ?? null,
                 'meeting_link' => $validated['meeting_link'] ?? null,
+                'agenda_type' => $validated['agenda_type'] ?? null,
                 'agenda' => $validated['agenda'] ?? null,
+                'tools_materials' => $validated['tools_materials'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'max_participants' => $maxParticipants,
                 'participant_id' => $validated['participant_ids'][0], // Legacy support
@@ -187,27 +191,29 @@ class MentorScheduleController extends Controller
 
             $meeting->participants()->attach($validated['participant_ids']);
 
-            // Send notifications
-            try {
-                // Notify Mentor
-                $user = Auth::user();
-                $user->notify(new \App\Notifications\MeetingScheduled($meeting, 'new'));
+            // Build response BEFORE defer so we return immediately
+            $meetingData = $meeting->load('participants');
 
-                // Notify Participants
-                foreach ($meeting->participants as $participant) {
-                     $participant->notify(new \App\Notifications\MeetingScheduled($meeting, 'new'));
+            // Defer all notification sending until AFTER the HTTP response is flushed
+            $mentor = Auth::user();
+            $meetingId = $meeting->id;
+            defer(function () use ($meetingId, $mentor) {
+                try {
+                    $m = ParticipantMeeting::with('participants')->find($meetingId);
+                    if (!$m) return;
+                    $mentor->notify(new \App\Notifications\MeetingScheduled($m, 'new'));
+                    foreach ($m->participants as $participant) {
+                        $participant->notify(new \App\Notifications\MeetingScheduled($m, 'new'));
+                    }
+                    $admins = \App\Models\User::where('role', 'admin')->get();
+                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ScheduleApprovalRequest($m));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send meeting notifications: ' . $e->getMessage());
                 }
-
-                // Notify Admins for Approval
-                $admins = \App\Models\User::where('role', 'admin')->get();
-                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ScheduleApprovalRequest($meeting));
-
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send meeting notifications: ' . $e->getMessage());
-            }
+            });
 
             return response()->json([
-                'meeting' => $meeting->load('participants'),
+                'meeting' => $meetingData,
                 'message' => 'Schedule created and sent to admin for approval.'
             ]);
         } catch (\Exception $e) {
@@ -239,8 +245,10 @@ class MentorScheduleController extends Controller
             'end_time' => 'sometimes|date|after:scheduled_at',
             'location' => 'nullable|string',
             'meeting_link' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'agenda_type' => 'nullable|string|in:pengisian_rmd,pertemuan_umum,rapat_youth,lainnya',
             'agenda' => 'nullable|string',
+            'tools_materials' => 'nullable|string',
+            'notes' => 'nullable|string',
             'participant_ids' => 'sometimes|array',
             'participant_ids.*' => 'exists:users,id',
             'max_participants' => 'nullable|integer|min:1',
@@ -288,23 +296,26 @@ class MentorScheduleController extends Controller
             // Only update fields that exist in table
             $meeting->fill(collect($validated)->except(['participant_ids', 'max_participants'])->toArray());
             $meeting->save();
-            
+
+            // Load participants for the response, then return immediately
             $meeting->load('participants');
 
-            // Send notifications
-            try {
-                // Notify Mentor
-                $meeting->mentor->notify(new \App\Notifications\MeetingScheduled($meeting, 'update'));
-
-                // Notify Participants
-                foreach ($meeting->participants as $participant) {
-                     $participant->notify(new \App\Notifications\MeetingScheduled($meeting, 'update'));
+            // Defer all notification sending until AFTER the HTTP response is flushed
+            $meetingId = $meeting->id;
+            defer(function () use ($meetingId) {
+                try {
+                    $m = ParticipantMeeting::with(['mentor', 'participants'])->find($meetingId);
+                    if (!$m || !$m->mentor) return;
+                    $m->mentor->notify(new \App\Notifications\MeetingScheduled($m, 'update'));
+                    foreach ($m->participants as $participant) {
+                        $participant->notify(new \App\Notifications\MeetingScheduled($m, 'update'));
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send meeting notifications: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send meeting notifications: ' . $e->getMessage());
-            }
-            
-            return response()->json($meeting);
+            });
+
+            return response()->json(['meeting' => $meeting, 'message' => 'Meeting updated successfully.']);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error updating meeting: ' . $e->getMessage());
             return response()->json(['message' => 'An error occurred while updating the meeting.'], 500);
@@ -312,7 +323,7 @@ class MentorScheduleController extends Controller
     }
 
     /**
-     * Delete a meeting.
+     * Request deletion of a meeting (requires admin approval).
      */
     public function destroyMeeting(ParticipantMeeting $meeting): JsonResponse
     {
@@ -320,24 +331,35 @@ class MentorScheduleController extends Controller
             abort(403);
         }
 
-        try {
-            $meeting->load('participants');
-            
-            // Notify cancellation
-            try {
-                $meeting->mentor->notify(new \App\Notifications\MeetingScheduled($meeting, 'cancel'));
-                foreach ($meeting->participants as $participant) {
-                     $participant->notify(new \App\Notifications\MeetingScheduled($meeting, 'cancel'));
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send meeting cancellation notifications: ' . $e->getMessage());
-            }
+        if ($meeting->status === 'deletion_requested') {
+            return response()->json(['message' => 'Deletion request already pending admin approval.'], 422);
+        }
 
-            $meeting->delete();
-            return response()->json(['message' => 'Meeting deleted successfully.']);
+        try {
+            $meeting->update(['status' => 'deletion_requested']);
+
+            // Notify all admins of the deletion request
+            $meetingId = $meeting->id;
+            defer(function () use ($meetingId) {
+                try {
+                    $m = ParticipantMeeting::with(['mentor', 'participants'])->find($meetingId);
+                    if (!$m) return;
+                    $admins = \App\Models\User::where('role', 'admin')->get();
+                    foreach ($admins as $admin) {
+                        $admin->notify(new \App\Notifications\ScheduleApprovalRequest($m));
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to notify admins of deletion request for meeting {$meetingId}: " . $e->getMessage());
+                }
+            });
+
+            return response()->json([
+                'message' => 'Deletion request submitted. Awaiting admin approval.',
+                'meeting' => $meeting->fresh(),
+            ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error deleting meeting: ' . $e->getMessage());
-            return response()->json(['message' => 'Failed to delete meeting.'], 500);
+            \Illuminate\Support\Facades\Log::error('Error requesting meeting deletion: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to submit deletion request.'], 500);
         }
     }
 

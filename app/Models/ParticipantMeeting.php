@@ -14,6 +14,8 @@ class ParticipantMeeting extends Model
         'location',
         'meeting_link',
         'agenda',
+        'agenda_type',
+        'tools_materials',
         'notes',
         'status',
         'max_participants',
@@ -49,5 +51,10 @@ class ParticipantMeeting extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function attendanceSession()
+    {
+        return $this->hasOne(\App\Models\AttendanceSession::class, 'participant_meeting_id');
     }
 }

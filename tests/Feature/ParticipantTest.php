@@ -13,6 +13,7 @@ class ParticipantTest extends TestCase
 
     public function test_mentor_can_view_participant_profile()
     {
+        /** @var \App\Models\User $mentor */
         $mentor = User::factory()->create(['role' => 'mentor']);
         $participant = User::factory()->create([
             'role' => 'participant',
