@@ -14,62 +14,44 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
+use App\Models\PpaSetting;
 use App\Models\User;
 
 class RmdController extends Controller
 {
     /**
-     * Menampilkan Dashboard Rekapitulasi RMD untuk Mentor/Admin
+     * Menampilkan Dashboard Rekapitulasi RMD untuk Admin
      */
     public function dashboard(Request $request)
     {
-        // Validasi Role: Hanya Admin & Mentor
-        if (!Auth::user()->isMentor() && !Auth::user()->isAdmin()) {
+        // Validasi Role: Hanya Admin
+        if (!Auth::user()->isAdmin()) {
             abort(403);
         }
 
-        // Hitung Data Statistik
-        // Asumsi: Umur dihitung dari date_of_birth
-        $now = Carbon::now();
-        
-        // Query Participants (Role: participant)
-        // Group 12-14
-        $count12_14 = User::where('role', 'participant')
-            ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 12 AND 14")
-            ->count();
+        // Query Participants (Role: participant) by age group
+        $count12_14  = User::where('role', 'participant')->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 12 AND 14")->count();
+        $count15_18  = User::where('role', 'participant')->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 15 AND 18")->count();
+        $count19_plus = User::where('role', 'participant')->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 19")->count();
 
-        // Group 15-18
-        $count15_18 = User::where('role', 'participant')
-            ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 15 AND 18")
-            ->count();
-
-        // Group 19+
-        $count19_plus = User::where('role', 'participant')
-            ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 19")
-            ->count();
-
-        // Count Mentors
+        // Count Mentors (semua age group 12-14 s/d 19+)
         $mentorCount = User::where('role', 'mentor')->count();
 
-        // Placeholder Group RMD Data (Sementara hardcode/random karena belum ada tabel group)
-        $groups12_14 = 8; // Placeholder
-        $groups15_18 = 11; // Placeholder
-        $groups19_plus = 0; // Placeholder
-        $totalGroups = $groups12_14 + $groups15_18 + $groups19_plus;
-        
-        // Placeholder Attendance (Sementara kosong)
-        $attendance = [
-            '12_14' => null,
-            '15_18' => null,
-            '19_plus' => null
-        ];
+        // Placeholder Group RMD
+        $groups12_14  = 8;
+        $groups15_18  = 11;
+        $groups19_plus = 0;
+        $totalGroups  = $groups12_14 + $groups15_18 + $groups19_plus;
+
+        // Placeholder Attendance
+        $attendance = ['12_14' => null, '15_18' => null, '19_plus' => null];
 
         // Daftar Partisipan > 12 Tahun
         $participantsQuery = User::where('role', 'participant')
             ->whereRaw("TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) > 12");
 
         if ($request->search) {
-            $participantsQuery->where(function($q) use ($request) {
+            $participantsQuery->where(function ($q) use ($request) {
                 $q->where('first_name', 'like', "%{$request->search}%")
                   ->orWhere('last_name', 'like', "%{$request->search}%")
                   ->orWhere('id_number', 'like', "%{$request->search}%");
@@ -78,30 +60,80 @@ class RmdController extends Controller
 
         $participants = $participantsQuery->paginate(10)->withQueryString();
 
+        // PPA Settings dari DB
+        $setting = PpaSetting::getSetting();
+
+        $picLabel = null;
+        if ($setting->pic) {
+            $name = trim($setting->pic->first_name . ' ' . $setting->pic->last_name);
+            $pos  = $setting->pic->specialization ?? $setting->pic->experience ?? null;
+            $picLabel = $pos ? "{$name} ({$pos})" : $name;
+        }
+
+        // Daftar Admin & Mentor untuk dropdown PIC
+        $staffList = User::where('role', 'admin')
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'last_name', 'specialization', 'experience'])
+            ->map(function ($u) {
+                $name = trim($u->first_name . ' ' . $u->last_name);
+                $pos  = $u->specialization ?? $u->experience ?? null;
+                return [
+                    'id'    => $u->id,
+                    'label' => $pos ? "{$name} ({$pos})" : $name,
+                ];
+            });
+
         return Inertia::render('Rmd/Dashboard', [
             'stats' => [
-                'count_12_14' => $count12_14,
-                'count_15_18' => $count15_18,
+                'count_12_14'   => $count12_14,
+                'count_15_18'   => $count15_18,
                 'count_19_plus' => $count19_plus,
-                'total_teens' => $count12_14 + $count15_18 + $count19_plus,
-                'mentor_count' => $mentorCount,
-                'groups_12_14' => $groups12_14,
-                'groups_15_18' => $groups15_18,
+                'total_teens'   => $count12_14 + $count15_18 + $count19_plus,
+                'mentor_count'  => $mentorCount,
+                'groups_12_14'  => $groups12_14,
+                'groups_15_18'  => $groups15_18,
                 'groups_19_plus' => $groups19_plus,
-                'total_groups' => $totalGroups,
-                'attendance' => $attendance,
+                'total_groups'  => $totalGroups,
+                'attendance'    => $attendance,
             ],
             'participants' => $participants,
-            'filters' => $request->only(['search']),
+            'filters'      => $request->only(['search']),
             'ppaInfo' => [
-                'fiscal_year' => 'FY 2025',
-                'church_name' => 'Gpdi Mawar Saron Tompaso Baru',
-                'ppa_id' => 'ID 0224',
-                'cluster' => 'Minahasa Selatan',
-                'rmd_period' => 'Mei 2025 - Juni 2025',
-                'pic_name' => 'Friko (KTM)',
-            ]
+                'fiscal_year' => $setting->fiscal_year,
+                'church_name' => $setting->church_name,
+                'ppa_id'      => $setting->ppa_id,
+                'cluster'     => $setting->cluster,
+                'rmd_period'  => $setting->rmd_period,
+                'pic_user_id' => $setting->pic_user_id,
+                'pic_name'    => $picLabel,
+            ],
+            'staffList' => $staffList,
         ]);
+    }
+
+    /**
+     * Simpan / update INFORMASI PPA
+     */
+    public function savePpaInfo(Request $request)
+    {
+        if (!Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'fiscal_year' => 'nullable|string|max:20',
+            'church_name' => 'nullable|string|max:100',
+            'ppa_id'      => 'nullable|string|max:20',
+            'cluster'     => 'nullable|string|max:100',
+            'rmd_period'  => 'nullable|string|max:50',
+            'pic_user_id' => 'nullable|exists:users,id',
+        ]);
+
+        $setting = PpaSetting::firstOrNew([]);
+        $setting->fill($validated);
+        $setting->save();
+
+        return back()->with('success', 'Informasi PPA berhasil disimpan.');
     }
 
     public function index()

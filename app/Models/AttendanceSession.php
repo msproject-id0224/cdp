@@ -11,6 +11,7 @@ class AttendanceSession extends Model
     protected $fillable = [
         'participant_meeting_id',
         'token',
+        'checkout_token',
         'is_active',
         'activated_at',
         'expires_at',

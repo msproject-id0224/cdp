@@ -55,68 +55,123 @@ class AttendanceController extends Controller
             'device_type' => 'nullable|in:android,pc',
         ]);
 
-        $user = Auth::user();
-
-        // Decode payload
+        $user    = Auth::user();
         $decoded = json_decode(base64_decode($request->qr_payload), true);
 
-        if (!$decoded || !isset($decoded['token']) || !isset($decoded['meeting_id'])) {
+        if (!$decoded || !isset($decoded['meeting_id']) || !isset($decoded['type'])) {
             return response()->json(['message' => 'Barcode tidak valid.'], 422);
         }
 
-        // Find active session by token
-        $session = AttendanceSession::where('token', $decoded['token'])
-            ->where('participant_meeting_id', $decoded['meeting_id'])
-            ->first();
+        $type = $decoded['type']; // 'mulai' or 'selesai'
 
-        if (!$session) {
-            return response()->json(['message' => 'Sesi tidak ditemukan. Pastikan barcode benar.'], 404);
-        }
+        if ($type === 'mulai') {
+            // ── CHECK-IN (MULAI) ──────────────────────────────────────────
+            if (!isset($decoded['token'])) {
+                return response()->json(['message' => 'Barcode MULAI tidak valid.'], 422);
+            }
 
-        if (!$session->isValid()) {
-            return response()->json(['message' => 'Sesi absensi sudah tidak aktif atau kedaluwarsa.'], 422);
-        }
+            $session = AttendanceSession::where('token', $decoded['token'])
+                ->where('participant_meeting_id', $decoded['meeting_id'])
+                ->first();
 
-        $meeting = $session->meeting()->with('mentor')->first();
+            if (!$session) {
+                return response()->json(['message' => 'Sesi tidak ditemukan. Pastikan barcode benar.'], 404);
+            }
+            if (!$session->isValid()) {
+                return response()->json(['message' => 'Sesi absensi sudah tidak aktif atau kedaluwarsa.'], 422);
+            }
 
-        // Only the assigned mentor can scan
-        if ($meeting->mentor_id !== $user->id) {
-            return response()->json(['message' => 'Anda bukan mentor untuk kegiatan ini.'], 403);
-        }
+            $meeting = $session->meeting()->with('mentor')->first();
 
-        // Check if already checked in for this meeting
-        $existing = Attendance::where('participant_meeting_id', $meeting->id)
-            ->where('user_id', $user->id)
-            ->first();
+            if ($meeting->mentor_id !== $user->id) {
+                return response()->json(['message' => 'Anda bukan mentor untuk kegiatan ini.'], 403);
+            }
 
-        if ($existing) {
+            $existing = Attendance::where('participant_meeting_id', $meeting->id)
+                ->where('user_id', $user->id)
+                ->whereNotNull('check_in_at')
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'message' => 'Anda sudah scan QR MULAI untuk kegiatan ini.',
+                    'status'  => 'already_scanned',
+                ], 200);
+            }
+
+            $scanOrder = Attendance::where('participant_meeting_id', $meeting->id)
+                ->whereNotNull('check_in_at')->count() + 1;
+
+            Attendance::create([
+                'participant_meeting_id' => $meeting->id,
+                'user_id'                => $user->id,
+                'check_in_at'            => now(),
+                'status'                 => 'Hadir',
+                'scan_order'             => $scanOrder,
+                'qr_token_used'          => $decoded['token'],
+                'device_type'            => $request->device_type ?? 'android',
+            ]);
+
             return response()->json([
-                'message' => 'Anda sudah melakukan absensi untuk kegiatan ini.',
-                'status'  => 'already_scanned',
-            ], 200);
+                'message' => '✓ Absensi MULAI berhasil dicatat!',
+                'status'  => 'success',
+                'type'    => 'mulai',
+                'agenda'  => $meeting->agenda,
+                'time'    => now()->format('H:i'),
+            ]);
+
+        } elseif ($type === 'selesai') {
+            // ── CHECK-OUT (SELESAI) ───────────────────────────────────────
+            if (!isset($decoded['checkout_token'])) {
+                return response()->json(['message' => 'Barcode SELESAI tidak valid.'], 422);
+            }
+
+            $session = AttendanceSession::where('checkout_token', $decoded['checkout_token'])
+                ->where('participant_meeting_id', $decoded['meeting_id'])
+                ->first();
+
+            if (!$session) {
+                return response()->json(['message' => 'Sesi tidak ditemukan. Pastikan barcode benar.'], 404);
+            }
+            if (!$session->isValid()) {
+                return response()->json(['message' => 'Sesi absensi sudah tidak aktif atau kedaluwarsa.'], 422);
+            }
+
+            $meeting = $session->meeting()->with('mentor')->first();
+
+            if ($meeting->mentor_id !== $user->id) {
+                return response()->json(['message' => 'Anda bukan mentor untuk kegiatan ini.'], 403);
+            }
+
+            $attendance = Attendance::where('participant_meeting_id', $meeting->id)
+                ->where('user_id', $user->id)
+                ->whereNotNull('check_in_at')
+                ->first();
+
+            if (!$attendance) {
+                return response()->json(['message' => 'Anda belum scan QR MULAI. Scan QR MULAI terlebih dahulu.'], 422);
+            }
+
+            if ($attendance->check_out_at) {
+                return response()->json([
+                    'message' => 'Anda sudah scan QR SELESAI untuk kegiatan ini.',
+                    'status'  => 'already_scanned',
+                ], 200);
+            }
+
+            $attendance->update(['check_out_at' => now()]);
+
+            return response()->json([
+                'message' => '✓ Absensi SELESAI berhasil dicatat!',
+                'status'  => 'success',
+                'type'    => 'selesai',
+                'agenda'  => $meeting->agenda,
+                'time'    => now()->format('H:i'),
+            ]);
+
+        } else {
+            return response()->json(['message' => 'Tipe barcode tidak dikenal.'], 422);
         }
-
-        // Determine scan_order for this meeting (how many have already scanned before this mentor)
-        $scanOrder = Attendance::where('participant_meeting_id', $meeting->id)
-            ->whereNotNull('check_in_at')
-            ->count() + 1;
-
-        Attendance::create([
-            'participant_meeting_id' => $meeting->id,
-            'user_id'                => $user->id,
-            'check_in_at'            => now(),
-            'status'                 => 'Hadir',
-            'scan_order'             => $scanOrder,
-            'qr_token_used'          => $decoded['token'],
-            'device_type'            => $request->device_type ?? 'android',
-        ]);
-
-        return response()->json([
-            'message' => 'Absensi berhasil dicatat!',
-            'status'  => 'success',
-            'agenda'  => $meeting->agenda,
-            'time'    => now()->format('H:i'),
-        ]);
     }
 
     /**

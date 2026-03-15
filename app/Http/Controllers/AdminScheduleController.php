@@ -130,12 +130,13 @@ class AdminScheduleController extends Controller
         AttendanceSession::updateOrCreate(
             ['participant_meeting_id' => $meeting->id],
             [
-                'token'         => Str::random(48),
-                'is_active'     => false,
-                'activated_at'  => null,
-                'expires_at'    => null,
-                'email_sent'    => false,
-                'email_sent_at' => null,
+                'token'          => Str::random(48),
+                'checkout_token' => Str::random(48),
+                'is_active'      => false,
+                'activated_at'   => null,
+                'expires_at'     => null,
+                'email_sent'     => false,
+                'email_sent_at'  => null,
             ]
         );
 

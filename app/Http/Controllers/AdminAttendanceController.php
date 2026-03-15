@@ -120,17 +120,24 @@ class AdminAttendanceController extends Controller
                 $qrPayload = base64_encode(json_encode([
                     'token'      => $session->token,
                     'meeting_id' => $meeting->id,
+                    'type'       => 'mulai',
+                ]));
+                $checkoutQrPayload = base64_encode(json_encode([
+                    'checkout_token' => $session->checkout_token,
+                    'meeting_id'     => $meeting->id,
+                    'type'           => 'selesai',
                 ]));
                 return [
-                    'session_id'   => $session->id,
-                    'meeting_id'   => $meeting->id,
-                    'agenda'       => $meeting->agenda,
-                    'mentor_name'  => $meeting->mentor?->name ?? 'Unknown',
-                    'scheduled_at' => $meeting->scheduled_at,
-                    'end_time'     => $meeting->end_time,
-                    'qr_payload'   => $qrPayload,
-                    'expires_at'   => $session->expires_at,
-                    'email_sent'   => $session->email_sent,
+                    'session_id'          => $session->id,
+                    'meeting_id'          => $meeting->id,
+                    'agenda'              => $meeting->agenda,
+                    'mentor_name'         => $meeting->mentor?->name ?? 'Unknown',
+                    'scheduled_at'        => $meeting->scheduled_at,
+                    'end_time'            => $meeting->end_time,
+                    'qr_payload'          => $qrPayload,
+                    'checkout_qr_payload' => $checkoutQrPayload,
+                    'expires_at'          => $session->expires_at,
+                    'email_sent'          => $session->email_sent,
                 ];
             })
             ->values();

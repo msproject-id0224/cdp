@@ -1,18 +1,27 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import Pagination from '@/Components/Pagination';
 import TextInput from '@/Components/TextInput';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 
-export default function RmdDashboard({ auth, stats, participants, filters, ppaInfo }) {
+export default function RmdDashboard({ auth, stats, participants, filters, ppaInfo, staffList }) {
     const [search, setSearch] = useState(filters.search || '');
+    const [editMode, setEditMode] = useState(false);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        fiscal_year: ppaInfo.fiscal_year || '',
+        church_name: ppaInfo.church_name || '',
+        ppa_id:      ppaInfo.ppa_id || '',
+        cluster:     ppaInfo.cluster || '',
+        rmd_period:  ppaInfo.rmd_period || '',
+        pic_user_id: ppaInfo.pic_user_id || '',
+    });
 
     const handleSearch = (e) => {
         const value = e.target.value;
         setSearch(value);
-        
         clearTimeout(window.searchTimeout);
         window.searchTimeout = setTimeout(() => {
             router.get(
@@ -22,6 +31,21 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
             );
         }, 500);
     };
+
+    const handleSave = (e) => {
+        e.preventDefault();
+        post(route('rmd.dashboard.ppa-info'), {
+            onSuccess: () => setEditMode(false),
+        });
+    };
+
+    const handleCancel = () => {
+        reset();
+        setEditMode(false);
+    };
+
+    const inputClass = "w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500";
+    const errorClass = "text-red-500 text-xs mt-0.5";
 
     return (
         <AuthenticatedLayout
@@ -35,76 +59,192 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
-                    
+
                     {/* TABLE SUMMARY (PELAKSANAAN RMD) */}
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg border-2 border-dashed border-indigo-200 dark:border-indigo-800">
+                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        {/* Header */}
                         <div className="bg-blue-900 text-white text-center py-2 font-bold text-lg uppercase">
                             PELAKSANAAN RMD
                         </div>
 
                         {/* INFORMASI PPA */}
-                        <div className="bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 text-center py-1 font-bold text-sm uppercase border-b border-blue-200 dark:border-blue-800">
-                            INFORMASI PPA
+                        <div className="flex items-center justify-between bg-blue-100 dark:bg-blue-900/50 border-b border-blue-200 dark:border-blue-800 px-4 py-1">
+                            <span className="text-blue-900 dark:text-blue-100 font-bold text-sm uppercase flex-1 text-center">
+                                INFORMASI PPA
+                            </span>
+                            {!editMode && (
+                                <button
+                                    onClick={() => setEditMode(true)}
+                                    className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded"
+                                >
+                                    Edit
+                                </button>
+                            )}
                         </div>
-                        <div className="p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 text-sm border border-gray-300 dark:border-gray-600">
-                                {/* Row 1 */}
-                                <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
-                                    Tahun Fiskal Pengisian RMD
-                                </div>
-                                <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
-                                    {ppaInfo.fiscal_year}
+
+                        <form onSubmit={handleSave}>
+                            <div className="p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 text-sm border border-gray-300 dark:border-gray-600">
+
+                                    {/* Row 1 – Tahun Fiskal */}
+                                    <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
+                                        Tahun Fiskal Pengisian RMD
+                                    </div>
+                                    <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
+                                        {editMode ? (
+                                            <div>
+                                                <TextInput
+                                                    value={data.fiscal_year}
+                                                    onChange={e => setData('fiscal_year', e.target.value)}
+                                                    placeholder="contoh: FY 2025/2026"
+                                                    className={inputClass}
+                                                />
+                                                {errors.fiscal_year && <p className={errorClass}>{errors.fiscal_year}</p>}
+                                            </div>
+                                        ) : ppaInfo.fiscal_year}
+                                    </div>
+
+                                    {/* Row 2 – Nama Gereja */}
+                                    <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
+                                        Nama Gereja
+                                    </div>
+                                    <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
+                                        {editMode ? (
+                                            <div>
+                                                <TextInput
+                                                    value={data.church_name}
+                                                    onChange={e => setData('church_name', e.target.value)}
+                                                    placeholder="Nama gereja"
+                                                    className={inputClass}
+                                                />
+                                                {errors.church_name && <p className={errorClass}>{errors.church_name}</p>}
+                                            </div>
+                                        ) : ppaInfo.church_name}
+                                    </div>
+
+                                    {/* Row 3 – No ID PPA */}
+                                    <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
+                                        No ID PPA
+                                    </div>
+                                    <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
+                                        {editMode ? (
+                                            <div>
+                                                <TextInput
+                                                    value={data.ppa_id}
+                                                    onChange={e => setData('ppa_id', e.target.value)}
+                                                    placeholder="contoh: ID 0224"
+                                                    className={inputClass}
+                                                />
+                                                {errors.ppa_id && <p className={errorClass}>{errors.ppa_id}</p>}
+                                            </div>
+                                        ) : (
+                                            <span className="text-indigo-600 dark:text-indigo-400 font-medium">
+                                                {ppaInfo.ppa_id}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Row 4 – Cluster */}
+                                    <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
+                                        Cluster
+                                    </div>
+                                    <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
+                                        {editMode ? (
+                                            <div>
+                                                <TextInput
+                                                    value={data.cluster}
+                                                    onChange={e => setData('cluster', e.target.value)}
+                                                    placeholder="Nama cluster"
+                                                    className={inputClass}
+                                                />
+                                                {errors.cluster && <p className={errorClass}>{errors.cluster}</p>}
+                                            </div>
+                                        ) : ppaInfo.cluster}
+                                    </div>
+
+                                    {/* Row 5 – Bulan Pengisian RMD */}
+                                    <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
+                                        Bulan Pengisian RMD
+                                    </div>
+                                    <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
+                                        {editMode ? (
+                                            <div>
+                                                <TextInput
+                                                    value={data.rmd_period}
+                                                    onChange={e => setData('rmd_period', e.target.value)}
+                                                    placeholder="contoh: Januari 2025 - Juni 2025"
+                                                    className={inputClass}
+                                                />
+                                                {errors.rmd_period && <p className={errorClass}>{errors.rmd_period}</p>}
+                                            </div>
+                                        ) : (
+                                            <span className="text-indigo-600 dark:text-indigo-400">
+                                                {ppaInfo.rmd_period}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Row 6 – PIC */}
+                                    <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
+                                        Nama PIC Pendampingan RMD & Posisi
+                                    </div>
+                                    <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
+                                        {editMode ? (
+                                            <div>
+                                                <select
+                                                    value={data.pic_user_id}
+                                                    onChange={e => setData('pic_user_id', e.target.value)}
+                                                    className={inputClass}
+                                                >
+                                                    <option value="">-- Pilih PIC --</option>
+                                                    {staffList.map(s => (
+                                                        <option key={s.id} value={s.id}>{s.label}</option>
+                                                    ))}
+                                                </select>
+                                                {errors.pic_user_id && <p className={errorClass}>{errors.pic_user_id}</p>}
+                                            </div>
+                                        ) : (
+                                            <span className="text-indigo-600 dark:text-indigo-400">
+                                                {ppaInfo.pic_name ?? '-'}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Row 7 – Jumlah Mentor (auto) */}
+                                    <div className="border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
+                                        Jumlah Mentor Pendamping untuk RMD
+                                    </div>
+                                    <div className="p-2 text-center">
+                                        <span className="text-indigo-600 dark:text-indigo-400 font-medium">
+                                            {stats.mentor_count} Orang
+                                        </span>
+                                        {editMode && (
+                                            <span className="text-xs text-gray-400 ml-1">(otomatis)</span>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Row 2 */}
-                                <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
-                                    Nama Gereja
-                                </div>
-                                <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
-                                    {ppaInfo.church_name}
-                                </div>
-
-                                {/* Row 3 */}
-                                <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
-                                    No ID PPA
-                                </div>
-                                <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
-                                    {ppaInfo.ppa_id}
-                                </div>
-
-                                {/* Row 4 */}
-                                <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
-                                    Cluster
-                                </div>
-                                <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
-                                    {ppaInfo.cluster}
-                                </div>
-
-                                {/* Row 5 */}
-                                <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
-                                    Bulan pengisian RMD
-                                </div>
-                                <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
-                                    {ppaInfo.rmd_period}
-                                </div>
-
-                                {/* Row 6 */}
-                                <div className="border-b border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
-                                    Nama PIC Pendampingan RMD & Posisi
-                                </div>
-                                <div className="border-b border-gray-300 dark:border-gray-600 p-2 text-center">
-                                    {ppaInfo.pic_name}
-                                </div>
-
-                                {/* Row 7 */}
-                                <div className="border-r border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
-                                    Jumlah Mentor Pendamping untuk RMD
-                                </div>
-                                <div className="p-2 text-center">
-                                    {stats.mentor_count} Orang
-                                </div>
+                                {/* Tombol Simpan / Batal */}
+                                {editMode && (
+                                    <div className="flex justify-end gap-2 mt-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleCancel}
+                                            className="px-4 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            Batal
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={processing}
+                                            className="px-4 py-1.5 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50"
+                                        >
+                                            {processing ? 'Menyimpan...' : 'Simpan'}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                        </div>
+                        </form>
 
                         {/* JUMLAH REMAJA & KEHADIRAN */}
                         <div className="bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 text-center py-1 font-bold text-sm uppercase border-t border-b border-blue-200 dark:border-blue-800">
@@ -157,15 +297,9 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                                         <td className="border border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-gray-700 font-medium">
                                             Persentase Kehadiran Pertemuan RMD (Bab 1 - Bab 6)
                                         </td>
-                                        <td className="border border-gray-300 dark:border-gray-600 p-2 text-center">
-                                            {stats.attendance['12_14'] ?? '-'}
-                                        </td>
-                                        <td className="border border-gray-300 dark:border-gray-600 p-2 text-center">
-                                            {stats.attendance['15_18'] ?? '-'}
-                                        </td>
-                                        <td className="border border-gray-300 dark:border-gray-600 p-2 text-center">
-                                            {stats.attendance['19_plus'] ?? '-'}
-                                        </td>
+                                        <td className="border border-gray-300 dark:border-gray-600 p-2 text-center">{stats.attendance['12_14'] ?? '-'}</td>
+                                        <td className="border border-gray-300 dark:border-gray-600 p-2 text-center">{stats.attendance['15_18'] ?? '-'}</td>
+                                        <td className="border border-gray-300 dark:border-gray-600 p-2 text-center">{stats.attendance['19_plus'] ?? '-'}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -176,7 +310,7 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 uppercase">
-                                Daftar Partisipan (> 12 Tahun)
+                                Daftar Partisipan (&gt; 12 Tahun)
                             </h3>
                             <div className="w-full sm:w-64">
                                 <TextInput
@@ -193,21 +327,11 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            ID Number
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            Nama Lengkap
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            Umur
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            Kelompok Umur
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            Aksi
-                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID Number</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nama Lengkap</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Umur</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Kelompok Umur</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -217,9 +341,7 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                                             const today = new Date();
                                             let age = today.getFullYear() - birthDate.getFullYear();
                                             const m = today.getMonth() - birthDate.getMonth();
-                                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                                                age--;
-                                            }
+                                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
 
                                             let ageGroup = 'Unknown';
                                             if (age >= 12 && age <= 14) ageGroup = '12-14';
@@ -267,7 +389,7 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <div className="mt-4">
                             <Pagination links={participants.links} />
                         </div>

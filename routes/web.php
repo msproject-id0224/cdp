@@ -79,8 +79,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Admin & Mentor Shared Routes
         Route::get('/api/admin/schedules', [MentorScheduleController::class, 'index'])->name('api.admin.schedules.index');
         
-        // RMD Dashboard (Summary)
-        Route::get('/rmd/dashboard', [RmdController::class, 'dashboard'])->name('rmd.dashboard');
+        // RMD Dashboard (Summary) - Admin only
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/rmd/dashboard', [RmdController::class, 'dashboard'])->name('rmd.dashboard');
+            Route::post('/rmd/dashboard/ppa-info', [RmdController::class, 'savePpaInfo'])->name('rmd.dashboard.ppa-info');
+        });
 
         // Health Screening Routes
         Route::resource('health-screenings', HealthScreeningController::class);

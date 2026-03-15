@@ -16,6 +16,7 @@ export default function AdminList() {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
+    const [viewingAdmin, setViewingAdmin] = useState(null);
     const { auth } = usePage().props;
 
     // Form for editing admin
@@ -148,35 +149,37 @@ export default function AdminList() {
                             <th scope="col" className="px-6 py-3">{__('Job Title')}</th>
                             <th scope="col" className="px-6 py-3">{__('Status')}</th>
                             <th scope="col" className="px-6 py-3">{__('Registered')}</th>
-                            <th scope="col" className="px-6 py-3 text-right">{__('Actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center">{__('Loading...')}</td>
+                                <td colSpan="5" className="px-6 py-4 text-center">{__('Loading...')}</td>
                             </tr>
                         ) : admins.data.length === 0 ? (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center">{__('No admins found.')}</td>
+                                <td colSpan="5" className="px-6 py-4 text-center">{__('No admins found.')}</td>
                             </tr>
                         ) : (
                             admins.data.map((admin) => (
                                 <tr key={admin.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                                        <div className="flex items-center space-x-2">
-                                            <ProfilePhoto 
-                                                src={admin.profile_photo_url} 
-                                                alt={admin.name} 
-                                                className="w-8 h-8 rounded-full object-cover" 
+                                        <button
+                                            onClick={() => setViewingAdmin(admin)}
+                                            className="flex items-center space-x-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition text-left"
+                                        >
+                                            <ProfilePhoto
+                                                src={admin.profile_photo_url}
+                                                alt={admin.name}
+                                                className="w-8 h-8 rounded-full object-cover"
                                                 fallbackClassName="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-xs"
                                                 fallback={(admin.name || 'A').charAt(0).toUpperCase()}
                                             />
-                                            <span>
+                                            <span className="underline underline-offset-2 decoration-dotted">
                                                 {admin.name}
                                                 {admin.id === auth.user.id && <span className="ml-2 text-xs text-indigo-600 dark:text-indigo-400">({__('You')})</span>}
                                             </span>
-                                        </div>
+                                        </button>
                                     </td>
                                     <td className="px-6 py-4">{admin.email}</td>
                                     <td className="px-6 py-4">{admin.job_title || '-'}</td>
@@ -191,30 +194,6 @@ export default function AdminList() {
                                     </td>
                                     <td className="px-6 py-4">
                                         {new Date(admin.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 text-right space-x-2">
-                                        {admin.id !== auth.user.id && (
-                                            <>
-                                                <button 
-                                                    onClick={() => openEditModal(admin)}
-                                                    className="font-medium text-indigo-600 dark:text-indigo-500 hover:underline"
-                                                >
-                                                    {__('Edit')}
-                                                </button>
-                                                <button 
-                                                    onClick={() => toggleStatus(admin)}
-                                                    className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                                                >
-                                                    {admin.is_active ? __('Deactivate') : __('Activate')}
-                                                </button>
-                                                <button 
-                                                    onClick={() => deleteUser(admin)}
-                                                    className="font-medium text-red-600 dark:text-red-500 hover:underline"
-                                                >
-                                                    {__('Delete')}
-                                                </button>
-                                            </>
-                                        )}
                                     </td>
                                 </tr>
                             ))
@@ -240,6 +219,88 @@ export default function AdminList() {
                     ))}
                 </div>
             )}
+
+            {/* ── Modal Detail Admin ── */}
+            <Modal show={!!viewingAdmin} onClose={() => setViewingAdmin(null)}>
+                {viewingAdmin && (
+                    <div className="p-6">
+                        <div className="flex items-center space-x-4 mb-6">
+                            <ProfilePhoto
+                                src={viewingAdmin.profile_photo_url}
+                                alt={viewingAdmin.name}
+                                className="w-16 h-16 rounded-full object-cover ring-2 ring-indigo-300"
+                                fallbackClassName="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold text-2xl"
+                                fallback={(viewingAdmin.name || 'A').charAt(0).toUpperCase()}
+                            />
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                    {viewingAdmin.name}
+                                    {viewingAdmin.id === auth.user.id && (
+                                        <span className="ml-2 text-sm text-indigo-500">({__('You')})</span>
+                                    )}
+                                </h2>
+                                <span className={`mt-1 inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                                    viewingAdmin.is_active
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                }`}>
+                                    {viewingAdmin.is_active ? __('Active') : __('Inactive')}
+                                </span>
+                            </div>
+                        </div>
+
+                        <dl className="space-y-3 text-sm">
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <dt className="font-medium text-gray-500 dark:text-gray-400">{__('Email')}</dt>
+                                <dd className="text-gray-900 dark:text-gray-100">{viewingAdmin.email || '-'}</dd>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <dt className="font-medium text-gray-500 dark:text-gray-400">{__('Job Title')}</dt>
+                                <dd className="text-gray-900 dark:text-gray-100">{viewingAdmin.job_title || '-'}</dd>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <dt className="font-medium text-gray-500 dark:text-gray-400">{__('Phone Number')}</dt>
+                                <dd className="text-gray-900 dark:text-gray-100">{viewingAdmin.phone_number || '-'}</dd>
+                            </div>
+                            <div className="flex justify-between">
+                                <dt className="font-medium text-gray-500 dark:text-gray-400">{__('Registered')}</dt>
+                                <dd className="text-gray-900 dark:text-gray-100">
+                                    {new Date(viewingAdmin.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </dd>
+                            </div>
+                        </dl>
+
+                        {viewingAdmin.id !== auth.user.id && (
+                            <div className="mt-6 flex flex-wrap gap-2 border-t border-gray-100 dark:border-gray-700 pt-4">
+                                <button
+                                    onClick={() => { setViewingAdmin(null); openEditModal(viewingAdmin); }}
+                                    className="px-4 py-1.5 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white"
+                                >
+                                    {__('Edit')}
+                                </button>
+                                <button
+                                    onClick={() => { toggleStatus(viewingAdmin); setViewingAdmin(null); }}
+                                    className="px-4 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                    {viewingAdmin.is_active ? __('Deactivate') : __('Activate')}
+                                </button>
+                                <button
+                                    onClick={() => { setViewingAdmin(null); deleteUser(viewingAdmin); }}
+                                    className="px-4 py-1.5 text-sm rounded bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                    {__('Delete')}
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="mt-4 flex justify-end">
+                            <SecondaryButton onClick={() => setViewingAdmin(null)}>
+                                {__('Close')}
+                            </SecondaryButton>
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             <Modal show={!!editingUser} onClose={closeEditModal}>
                 <form onSubmit={submitEdit} className="p-6">
@@ -286,12 +347,20 @@ export default function AdminList() {
 
                         <div>
                             <InputLabel htmlFor="edit_job_title" value={__('Job Title')} />
-                            <TextInput
+                            <select
                                 id="edit_job_title"
                                 value={data.job_title}
                                 onChange={(e) => setData('job_title', e.target.value)}
-                                className="mt-1 block w-full"
-                            />
+                                className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                            >
+                                <option value="">-- Pilih Jabatan --</option>
+                                <option value="Sekretaris">Sekretaris</option>
+                                <option value="Bendahara">Bendahara</option>
+                                <option value="Staf Perlindungan Anak">Staf Perlindungan Anak</option>
+                                <option value="Staf Kesehatan">Staf Kesehatan</option>
+                                <option value="Koordinator Tutor-Mentor">Koordinator Tutor-Mentor</option>
+                                <option value="Staf Lainnya">Staf Lainnya</option>
+                            </select>
                             <InputError message={errors.job_title} className="mt-2" />
                         </div>
 

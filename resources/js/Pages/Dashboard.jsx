@@ -281,6 +281,20 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
                                                     </Link>
                                                 )}
 
+                                                {user.role === 'admin' && (
+                                                    <Link
+                                                        href={route('profile.edit')}
+                                                        className='p-6 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition shadow-sm dark:bg-indigo-900/20 dark:border-indigo-800 dark:hover:bg-indigo-900/30'
+                                                    >
+                                                        <h4 className='font-semibold text-indigo-700 dark:text-indigo-400'>
+                                                            {__('Daftar Admin')}
+                                                        </h4>
+                                                        <p className='text-sm text-indigo-600 mt-2 dark:text-indigo-500'>
+                                                            {__('Kelola dan lihat semua admin yang terdaftar.')}
+                                                        </p>
+                                                    </Link>
+                                                )}
+
                                                 {user.role === 'mentor' && (
                                                     <Link
                                                         href={route('participants.index')}

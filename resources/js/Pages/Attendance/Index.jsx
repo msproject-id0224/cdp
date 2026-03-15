@@ -30,26 +30,28 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
     const deviceType = isAndroid() ? 'android' : 'pc';
 
     // ── UI state ──
-    const [showScanPanel, setShowScanPanel]   = useState(false);
+    // activeScan: null | 'mulai' | 'selesai'
+    const [activeScan, setActiveScan]         = useState(null);
     const [scanMsg, setScanMsg]               = useState(null); // {type, text}
     const [scanning, setScanning]             = useState(false);
-    const [docModal, setDocModal]             = useState(null); // attendance id
+    const [docModal, setDocModal]             = useState(null);
     const [docFile, setDocFile]               = useState(null);
     const [docUploading, setDocUploading]     = useState(false);
     const [docMsg, setDocMsg]                 = useState(null);
-    const [fileUploadName, setFileUploadName] = useState(null);
+    const [fileUploadName, setFileUploadName] = useState({ mulai: null, selesai: null });
 
-    const scannerRef  = useRef(null);
-    const fileInputRef = useRef(null);
+    const scannerRef       = useRef(null);
+    const fileInputMulai   = useRef(null);
+    const fileInputSelesai = useRef(null);
 
     const flash = (text, type = 'success') => {
         setScanMsg({ text, type });
         setTimeout(() => setScanMsg(null), 5000);
     };
 
-    // ── Camera scanner (Android) ─────────────────────────────────────────────
+    // ── Camera scanner ───────────────────────────────────────────────────────
     useEffect(() => {
-        if (!showScanPanel || deviceType !== 'android') return;
+        if (!activeScan) return;
 
         const html5Qrcode = new Html5Qrcode('qr-reader');
         scannerRef.current = html5Qrcode;
@@ -72,16 +74,15 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
             html5Qrcode.stop().catch(() => {});
             setScanning(false);
         };
-    }, [showScanPanel]);
+    }, [activeScan]);
 
     // ── Send decoded QR payload to server ────────────────────────────────────
     const handleDecodedPayload = async (payload, device) => {
-        // Stop camera to prevent double-scan
         if (scannerRef.current) {
             scannerRef.current.stop().catch(() => {});
             setScanning(false);
         }
-        setShowScanPanel(false);
+        setActiveScan(null);
 
         try {
             const res = await axios.post(route('attendance.scan'), {
@@ -92,7 +93,8 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
             if (res.data.status === 'already_scanned') {
                 flash(res.data.message, 'info');
             } else {
-                flash(`✓ Absensi berhasil! Kegiatan: ${res.data.agenda} — ${res.data.time}`);
+                const label = res.data.type === 'selesai' ? 'SELESAI' : 'MULAI';
+                flash(`✓ Absensi ${label} berhasil! Kegiatan: ${res.data.agenda} — ${res.data.time}`);
                 router.reload({ only: ['attendances'] });
             }
         } catch (err) {
@@ -101,28 +103,25 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
         }
     };
 
-    // ── PC: upload barcode image file ─────────────────────────────────────────
-    const handleBarcodeFileChange = async (e) => {
+    // ── Upload barcode image file ─────────────────────────────────────────────
+    const handleBarcodeFileChange = async (e, scanType) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        setFileUploadName(file.name);
+        setFileUploadName(prev => ({ ...prev, [scanType]: file.name }));
         setScanMsg({ text: `Memproses file ${file.name}…`, type: 'info' });
 
         const html5Qrcode = new Html5Qrcode('qr-file-reader');
-
         try {
             const decoded = await html5Qrcode.scanFile(file, true);
-            // scanFile returns the decoded string
             await handleDecodedPayload(decoded, 'pc');
         } catch (err) {
             console.error('QR decode error:', err);
             flash('Gagal membaca barcode dari file. Pastikan file adalah gambar QR yang valid.', 'error');
         } finally {
             html5Qrcode.clear?.();
-            // Reset input so same file can be re-selected
             e.target.value = '';
-            setFileUploadName(null);
+            setFileUploadName(prev => ({ ...prev, [scanType]: null }));
         }
     };
 
@@ -195,81 +194,88 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
                         </div>
                     )}
 
-                    {/* Scan / Upload card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div>
-                                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                                    Catat Kehadiran
-                                </h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                                    {isMobile()
-                                        ? 'Scan barcode dari layar admin menggunakan kamera.'
-                                        : 'Upload file barcode yang dikirim ke email Anda.'}
-                                </p>
-                            </div>
+                    {/* Scan / Upload cards — MULAI & SELESAI */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                            <div className="flex gap-3 shrink-0 flex-wrap">
-                                {/* Camera scan button — all devices */}
+                        {/* ── MULAI card ── */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border-2 border-green-200 dark:border-green-700 p-5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 uppercase">MULAI</span>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Scan saat tiba / memulai kegiatan</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
                                 <button
-                                    onClick={() => setShowScanPanel(v => !v)}
+                                    onClick={() => setActiveScan(v => v === 'mulai' ? null : 'mulai')}
                                     className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition ${
-                                        showScanPanel
+                                        activeScan === 'mulai'
                                             ? 'bg-red-500 hover:bg-red-600 text-white'
-                                            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                            : 'bg-green-600 hover:bg-green-700 text-white'
                                     }`}
                                 >
-                                    {/* Camera icon */}
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    {showScanPanel ? 'Tutup Kamera' : 'Scan Kamera'}
+                                    {activeScan === 'mulai' ? 'Tutup Kamera' : 'Scan Kamera'}
                                 </button>
-
-                                {/* Upload barcode file — all devices */}
                                 <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-xl transition cursor-pointer">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                     </svg>
-                                    {fileUploadName ? 'Memproses…' : 'Upload Gambar QR'}
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleBarcodeFileChange}
-                                        disabled={!!fileUploadName}
-                                    />
+                                    {fileUploadName.mulai ? 'Memproses…' : 'Upload QR Mulai'}
+                                    <input ref={fileInputMulai} type="file" accept="image/*" className="hidden"
+                                        onChange={e => handleBarcodeFileChange(e, 'mulai')}
+                                        disabled={!!fileUploadName.mulai} />
                                 </label>
                             </div>
+                            {activeScan === 'mulai' && (
+                                <div className="mt-4 border-t pt-4 dark:border-gray-700">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Arahkan kamera ke QR <strong>MULAI</strong> (bingkai hijau) di layar admin</p>
+                                    <div id="qr-reader" className="w-full rounded-xl overflow-hidden border border-green-300 dark:border-green-700" />
+                                    {scanning && <p className="text-center text-xs text-green-500 mt-2 animate-pulse">Sedang memindai…</p>}
+                                </div>
+                            )}
                         </div>
 
-                        {/* Camera scanner panel — all devices */}
-                        {showScanPanel && (
-                            <div className="mt-5 border-t pt-5 dark:border-gray-700">
-                                <div className="flex justify-between items-center mb-3">
-                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Arahkan kamera ke barcode di layar admin
-                                    </p>
-                                    <button
-                                        onClick={() => setShowScanPanel(false)}
-                                        className="text-sm text-gray-500 hover:text-red-600 transition"
-                                    >
-                                        Tutup
-                                    </button>
-                                </div>
-                                <div
-                                    id="qr-reader"
-                                    className="w-full rounded-xl overflow-hidden border border-gray-300 dark:border-gray-600"
-                                />
-                                {scanning && (
-                                    <p className="text-center text-xs text-gray-400 mt-2 animate-pulse">
-                                        Sedang memindai…
-                                    </p>
-                                )}
+                        {/* ── SELESAI card ── */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border-2 border-red-200 dark:border-red-700 p-5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 uppercase">SELESAI</span>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Scan saat kegiatan selesai</p>
                             </div>
-                        )}
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setActiveScan(v => v === 'selesai' ? null : 'selesai')}
+                                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition ${
+                                        activeScan === 'selesai'
+                                            ? 'bg-gray-500 hover:bg-gray-600 text-white'
+                                            : 'bg-red-600 hover:bg-red-700 text-white'
+                                    }`}
+                                >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    {activeScan === 'selesai' ? 'Tutup Kamera' : 'Scan Kamera'}
+                                </button>
+                                <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-xl transition cursor-pointer">
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    {fileUploadName.selesai ? 'Memproses…' : 'Upload QR Selesai'}
+                                    <input ref={fileInputSelesai} type="file" accept="image/*" className="hidden"
+                                        onChange={e => handleBarcodeFileChange(e, 'selesai')}
+                                        disabled={!!fileUploadName.selesai} />
+                                </label>
+                            </div>
+                            {activeScan === 'selesai' && (
+                                <div className="mt-4 border-t pt-4 dark:border-gray-700">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Arahkan kamera ke QR <strong>SELESAI</strong> (bingkai merah) di layar admin</p>
+                                    <div id="qr-reader" className="w-full rounded-xl overflow-hidden border border-red-300 dark:border-red-700" />
+                                    {scanning && <p className="text-center text-xs text-red-500 mt-2 animate-pulse">Sedang memindai…</p>}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* ── Attendance Table ─────────────────────────────────── */}

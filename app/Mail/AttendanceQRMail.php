@@ -20,6 +20,7 @@ class AttendanceQRMail extends Mailable
     public string $agenda;
     public string $scheduledAt;
     public string $qrPayload;
+    public string $checkoutQrPayload;
 
     public function __construct(AttendanceSession $session)
     {
@@ -30,9 +31,15 @@ class AttendanceQRMail extends Mailable
         $this->scheduledAt = $meeting->scheduled_at
             ? $meeting->scheduled_at->format('l, d F Y H:i')
             : '-';
-        $this->qrPayload   = base64_encode(json_encode([
+        $this->qrPayload = base64_encode(json_encode([
             'token'      => $session->token,
             'meeting_id' => $meeting->id,
+            'type'       => 'mulai',
+        ]));
+        $this->checkoutQrPayload = base64_encode(json_encode([
+            'checkout_token' => $session->checkout_token,
+            'meeting_id'     => $meeting->id,
+            'type'           => 'selesai',
         ]));
     }
 
@@ -52,11 +59,13 @@ class AttendanceQRMail extends Mailable
 
     public function attachments(): array
     {
-        // Generate QR PNG and attach it so mentor can upload/use it
-        $qrPng = QrCode::format('png')->size(300)->errorCorrection('H')->generate($this->qrPayload);
+        $mulaiQr   = QrCode::format('png')->size(300)->errorCorrection('H')->generate($this->qrPayload);
+        $selesaiQr = QrCode::format('png')->size(300)->errorCorrection('H')->generate($this->checkoutQrPayload);
 
         return [
-            Attachment::fromData(fn () => $qrPng, 'attendance-qr.png')
+            Attachment::fromData(fn () => $mulaiQr, 'qr-mulai.png')
+                ->withMime('image/png'),
+            Attachment::fromData(fn () => $selesaiQr, 'qr-selesai.png')
                 ->withMime('image/png'),
         ];
     }

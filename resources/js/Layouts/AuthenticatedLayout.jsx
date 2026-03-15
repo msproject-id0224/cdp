@@ -143,7 +143,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         {__('Communication')}
                                     </NavLink>
                                 )}
-                                {(user.role === 'admin' || user.role === 'mentor') && (
+                                {user.role === 'admin' && (
                                     <NavLink
                                         href={route('rmd.dashboard')}
                                         active={route().current('rmd.dashboard')}
@@ -412,7 +412,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </ResponsiveNavLink>
                             </>
                         )}
-                        {(user.role === 'admin' || user.role === 'mentor') && (
+                        {user.role === 'admin' && (
                             <ResponsiveNavLink
                                 href={route('rmd.dashboard')}
                                 active={route().current('rmd.dashboard')}
