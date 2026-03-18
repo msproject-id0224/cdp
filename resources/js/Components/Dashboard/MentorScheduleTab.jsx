@@ -215,7 +215,7 @@ export default function MentorScheduleTab() {
             specific_date: selectInfo.startStr.split('T')[0],
             day_of_week: selectInfo.start.getDay(),
         });
-        setModalMode('create_menu'); // Ask user what to create
+        setModalMode('create_meeting');
         setIsModalOpen(true);
     };
 

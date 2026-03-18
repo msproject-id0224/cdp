@@ -31,55 +31,81 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
 
     // ── UI state ──
     // activeScan: null | 'mulai' | 'selesai'
-    const [activeScan, setActiveScan]         = useState(null);
-    const [scanMsg, setScanMsg]               = useState(null); // {type, text}
-    const [scanning, setScanning]             = useState(false);
-    const [docModal, setDocModal]             = useState(null);
-    const [docFile, setDocFile]               = useState(null);
-    const [docUploading, setDocUploading]     = useState(false);
-    const [docMsg, setDocMsg]                 = useState(null);
-    const [fileUploadName, setFileUploadName] = useState({ mulai: null, selesai: null });
+    const [activeScan, setActiveScan]           = useState(null);
+    const [scanMsg, setScanMsg]                 = useState(null); // {type, text}
+    const [scanning, setScanning]               = useState(false);
+    const [cameraAvailable, setCameraAvailable] = useState(null); // null=checking, true, false
+    const [docModal, setDocModal]               = useState(null);
+    const [docFile, setDocFile]                 = useState(null);
+    const [docUploading, setDocUploading]       = useState(false);
+    const [docMsg, setDocMsg]                   = useState(null);
+    const [fileUploadName, setFileUploadName]   = useState({ mulai: null, selesai: null });
 
-    const scannerRef       = useRef(null);
+    const scannerRef     = useRef(null);
+    const scannerStarted = useRef(false); // true only after .start() resolves
     const fileInputMulai   = useRef(null);
     const fileInputSelesai = useRef(null);
 
     const flash = (text, type = 'success') => {
         setScanMsg({ text, type });
-        setTimeout(() => setScanMsg(null), 5000);
+        setTimeout(() => setScanMsg(null), 6000);
     };
+
+    // ── Detect camera/webcam availability on mount ───────────────────────────
+    useEffect(() => {
+        if (!navigator.mediaDevices?.enumerateDevices) {
+            setCameraAvailable(false);
+            return;
+        }
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => setCameraAvailable(devices.some(d => d.kind === 'videoinput')))
+            .catch(() => setCameraAvailable(false));
+    }, []);
 
     // ── Camera scanner ───────────────────────────────────────────────────────
     useEffect(() => {
         if (!activeScan) return;
 
         const html5Qrcode = new Html5Qrcode('qr-reader');
-        scannerRef.current = html5Qrcode;
-        setScanning(true);
+        scannerRef.current  = html5Qrcode;
+        scannerStarted.current = false;
 
         html5Qrcode
             .start(
                 { facingMode: 'environment' },
                 { fps: 10, qrbox: { width: 260, height: 260 } },
-                (decodedText) => handleDecodedPayload(decodedText, 'android'),
+                (decodedText) => handleDecodedPayload(decodedText, deviceType),
                 () => {}
             )
+            .then(() => {
+                scannerStarted.current = true;
+                setScanning(true);
+            })
             .catch((err) => {
-                console.error('Camera error:', err);
-                flash('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.', 'error');
-                setScanning(false);
+                console.error('Camera start error:', err);
+                const msg = isMobile()
+                    ? 'Tidak dapat mengakses kamera. Pastikan izin kamera diberikan pada browser Anda.'
+                    : 'Tidak dapat mengakses webcam. Pastikan webcam terhubung dan izin kamera diberikan pada browser.';
+                flash(msg, 'error');
+                setActiveScan(null);
+                scannerRef.current = null;
             });
 
         return () => {
-            html5Qrcode.stop().catch(() => {});
+            if (scannerStarted.current) {
+                scannerStarted.current = false;
+                html5Qrcode.stop().catch(() => {});
+            }
             setScanning(false);
         };
-    }, [activeScan]);
+    }, [activeScan]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Send decoded QR payload to server ────────────────────────────────────
     const handleDecodedPayload = async (payload, device) => {
-        if (scannerRef.current) {
-            scannerRef.current.stop().catch(() => {});
+        // Stop scanner safely — only if it was successfully started
+        if (scannerRef.current && scannerStarted.current) {
+            scannerStarted.current = false;
+            await scannerRef.current.stop().catch(() => {});
             setScanning(false);
         }
         setActiveScan(null);
@@ -183,14 +209,37 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
 
                     {/* Flash message */}
                     {scanMsg && (
-                        <div className={`px-4 py-3 rounded-xl text-sm font-medium border ${
+                        <div className={`flex items-start gap-3 px-4 py-3 rounded-xl text-sm font-medium border ${
                             scanMsg.type === 'error'
-                                ? 'bg-red-50 text-red-800 border-red-300'
+                                ? 'bg-red-50 text-red-800 border-red-300 dark:bg-red-900/20 dark:text-red-300 dark:border-red-700'
                                 : scanMsg.type === 'info'
-                                ? 'bg-blue-50 text-blue-800 border-blue-300'
-                                : 'bg-green-50 text-green-800 border-green-300'
+                                ? 'bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700'
+                                : 'bg-green-50 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-300 dark:border-green-700'
                         }`}>
-                            {scanMsg.text}
+                            <span className="mt-0.5 shrink-0">
+                                {scanMsg.type === 'error' ? '⚠' : scanMsg.type === 'info' ? 'ℹ' : '✓'}
+                            </span>
+                            <span>{scanMsg.text}</span>
+                        </div>
+                    )}
+
+                    {/* Camera / webcam warning banner */}
+                    {cameraAvailable === false && (
+                        <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm border bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-700">
+                            <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            </svg>
+                            <div>
+                                <p className="font-semibold">
+                                    {isMobile() ? 'Kamera tidak aktif' : 'Webcam tidak terdeteksi'}
+                                </p>
+                                <p className="mt-0.5 font-normal">
+                                    {isMobile()
+                                        ? 'Pastikan izin kamera telah diberikan pada browser dan kamera perangkat Anda aktif.'
+                                        : 'Pastikan kamera atau webcam terhubung ke komputer dan izin kamera telah diberikan pada browser.'}
+                                    {' '}Anda tetap dapat menggunakan fitur <strong>Upload QR</strong> sebagai alternatif.
+                                </p>
+                            </div>
                         </div>
                     )}
 
@@ -205,10 +254,21 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <button
-                                    onClick={() => setActiveScan(v => v === 'mulai' ? null : 'mulai')}
+                                    onClick={() => {
+                                        if (activeScan !== 'mulai' && cameraAvailable === false) {
+                                            flash(isMobile()
+                                                ? 'Kamera tidak aktif. Berikan izin kamera pada browser Anda, lalu coba lagi.'
+                                                : 'Webcam tidak terdeteksi. Pastikan kamera/webcam terhubung ke komputer Anda.',
+                                                'error');
+                                            return;
+                                        }
+                                        setActiveScan(v => v === 'mulai' ? null : 'mulai');
+                                    }}
                                     className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition ${
                                         activeScan === 'mulai'
                                             ? 'bg-red-500 hover:bg-red-600 text-white'
+                                            : cameraAvailable === false
+                                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                             : 'bg-green-600 hover:bg-green-700 text-white'
                                     }`}
                                 >
@@ -245,10 +305,21 @@ export default function AttendanceIndex({ auth, attendances = [] }) {
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <button
-                                    onClick={() => setActiveScan(v => v === 'selesai' ? null : 'selesai')}
+                                    onClick={() => {
+                                        if (activeScan !== 'selesai' && cameraAvailable === false) {
+                                            flash(isMobile()
+                                                ? 'Kamera tidak aktif. Berikan izin kamera pada browser Anda, lalu coba lagi.'
+                                                : 'Webcam tidak terdeteksi. Pastikan kamera/webcam terhubung ke komputer Anda.',
+                                                'error');
+                                            return;
+                                        }
+                                        setActiveScan(v => v === 'selesai' ? null : 'selesai');
+                                    }}
                                     className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition ${
                                         activeScan === 'selesai'
                                             ? 'bg-gray-500 hover:bg-gray-600 text-white'
+                                            : cameraAvailable === false
+                                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                             : 'bg-red-600 hover:bg-red-700 text-white'
                                     }`}
                                 >
