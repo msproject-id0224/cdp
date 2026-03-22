@@ -1,5 +1,23 @@
 import { Link } from '@inertiajs/react';
 
+const activeStyle = {
+    background: 'linear-gradient(to bottom, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 50%, rgba(0,0,0,0.1) 100%), #dc2626',
+    boxShadow: '0 -2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)',
+    borderRadius: '8px 8px 0 0',
+};
+
+const inactiveStyle = {
+    background: 'linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.04) 50%, rgba(0,0,0,0.12) 100%), #3b82f6',
+    boxShadow: '0 -1px 4px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.25)',
+    borderRadius: '8px 8px 0 0',
+};
+
+const hoverStyle = {
+    background: 'linear-gradient(to bottom, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.12) 100%), #60a5fa',
+    boxShadow: '0 -2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.35)',
+    borderRadius: '8px 8px 0 0',
+};
+
 export default function NavLink({
     active = false,
     className = '',
@@ -9,11 +27,11 @@ export default function NavLink({
     return (
         <Link
             {...props}
+            style={active ? activeStyle : inactiveStyle}
+            onMouseEnter={e => { if (!active) Object.assign(e.currentTarget.style, hoverStyle); }}
+            onMouseLeave={e => { if (!active) Object.assign(e.currentTarget.style, inactiveStyle); }}
             className={
-                'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none ' +
-                (active
-                    ? 'border-indigo-400 text-gray-900 focus:border-indigo-700 dark:border-indigo-600 dark:text-gray-100 '
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 focus:border-gray-300 focus:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-300 dark:focus:border-gray-700 dark:focus:text-gray-300 ') +
+                'inline-flex items-center self-end px-4 py-2 text-sm font-semibold text-white focus:outline-none ' +
                 className
             }
         >

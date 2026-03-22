@@ -49,22 +49,23 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+    const [showingPhotoPreview, setShowingPhotoPreview] = useState(false);
 
     const { theme, toggleTheme } = useTheme();
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
-            <nav className="border-b border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700">
+            <nav className="shadow-md bg-[#E6F5FC] dark:bg-gray-900">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
+                    <div className="flex min-h-16 justify-between items-stretch">
+                        <div className="flex items-end flex-wrap gap-y-0">
+                            <div className="flex shrink-0 items-center self-center pr-2">
                                 <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
+                                    <ApplicationLogo className="block h-9 w-auto fill-current text-[#0c4a6e]" />
                                 </Link>
                             </div>
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <div className="hidden sm:flex sm:ms-4 sm:items-end sm:flex-wrap sm:gap-y-0">
                                 <NavLink
                                     href={route('dashboard')}
                                     active={route().current('dashboard')}
@@ -154,49 +155,49 @@ export default function AuthenticatedLayout({ header, children }) {
                                         href={route('admin.mentor-performance.index')}
                                         active={route().current('admin.mentor-performance.index')}
                                     >
-                                        {__('Kinerja Mentor')}
+                                        {__('Mentor Performance')}
                                     </NavLink>
                                 )}
                             </div>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3 flex items-center gap-3">
+                        <div className="hidden sm:flex sm:items-center sm:self-stretch shrink-0 px-4">
+                            <div className="relative flex items-center gap-3">
                                 {/* Notification Bell for all roles */}
                                 <NotificationBell />
                                 <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
                                 <Dropdown>
                                     <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center gap-2 text-sm font-semibold text-[#0c4a6e] hover:opacity-70 focus:outline-none transition duration-150 ease-in-out"
+                                        >
+                                            <span
+                                                onClick={(e) => { e.stopPropagation(); setShowingPhotoPreview(true); }}
+                                                className="cursor-pointer rounded-full ring-2 ring-transparent hover:ring-[#0c4a6e]/40 transition"
                                             >
-                                                <div className="flex items-center">
-                                                    <ProfilePhoto 
-                                                        src={user.profile_photo_url} 
-                                                        alt={user.name} 
-                                                        className="h-8 w-8 rounded-full object-cover mr-2" 
-                                                        fallbackClassName="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 mr-2 text-xs font-bold"
-                                                        fallback={(user.first_name_display || user.name || 'U').charAt(0)}
-                                                    />
-                                                    {user?.first_name_display || user?.name || __('User')}
-                                                </div>
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
+                                                <ProfilePhoto
+                                                    src={user.profile_photo_url}
+                                                    alt={user.name}
+                                                    className="h-8 w-8 rounded-full object-cover"
+                                                    fallbackClassName="h-8 w-8 rounded-full bg-[#0c4a6e]/20 flex items-center justify-center text-[#0c4a6e] text-xs font-bold"
+                                                    fallback={(user.first_name_display || user.name || 'U').charAt(0)}
+                                                />
+                                            </span>
+                                            {user?.first_name_display || user?.name || __('User')}
+                                            <svg
+                                                className="h-4 w-4"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
@@ -230,9 +231,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                             as="button"
                                             href={route('language.switch', 'id')}
                                             method="post"
-                                            preserveState
-                                            preserveScroll
-                                            onClick={() => localStorage.setItem('locale', 'id')}
                                         >
                                             <div className="flex items-center justify-between">
                                                 <span>{__('Bahasa')}</span>
@@ -250,9 +248,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                             as="button"
                                             href={route('language.switch', 'en')}
                                             method="post"
-                                            preserveState
-                                            preserveScroll
-                                            onClick={() => localStorage.setItem('locale', 'en')}
                                         >
                                             <div className="flex items-center justify-between">
                                                 <span>{__('English')}</span>
@@ -291,7 +286,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         (previousState) => !previousState,
                                     )
                                 }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
+                                className="inline-flex items-center justify-center rounded-md p-2 text-[#0c4a6e] transition duration-150 ease-in-out hover:bg-[#0c4a6e]/10 focus:outline-none"
                             >
                                 <svg
                                     className="h-6 w-6"
@@ -330,7 +325,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 <div
                     className={
                         (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
+                        ' sm:hidden bg-[#E6F5FC] dark:bg-gray-900'
                     }
                 >
                     <div className="space-y-1 pb-3 pt-2">
@@ -415,7 +410,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 href={route('admin.mentor-performance.index')}
                                 active={route().current('admin.mentor-performance.index')}
                             >
-                                {__('Kinerja Mentor')}
+                                {__('Mentor Performance')}
                             </ResponsiveNavLink>
                         )}
                         {user.role === 'mentor' && (
@@ -436,13 +431,28 @@ export default function AuthenticatedLayout({ header, children }) {
                         )}
                     </div>
 
-                    <div className="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-                                {user.first_name_display || user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                {user.email}
+                    <div className="border-t border-white/30 pb-1 pt-4 bg-black/10">
+                        <div className="px-4 flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowingPhotoPreview(true)}
+                                className="shrink-0 rounded-full ring-2 ring-transparent hover:ring-[#0c4a6e]/40 transition focus:outline-none"
+                            >
+                                <ProfilePhoto
+                                    src={user.profile_photo_url}
+                                    alt={user.name}
+                                    className="h-10 w-10 rounded-full object-cover"
+                                    fallbackClassName="h-10 w-10 rounded-full bg-[#0c4a6e]/20 flex items-center justify-center text-[#0c4a6e] text-sm font-bold"
+                                    fallback={(user.first_name_display || user.name || 'U').charAt(0)}
+                                />
+                            </button>
+                            <div>
+                                <div className="text-base font-semibold text-[#0c4a6e]">
+                                    {user.first_name_display || user.name}
+                                </div>
+                                <div className="text-sm font-medium text-[#1e6a9e]">
+                                    {user.email}
+                                </div>
                             </div>
                         </div>
 
@@ -514,10 +524,46 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
             </Modal>
             
-            <ProfilePhotoUpdateModal 
-                show={showingPhotoModal} 
-                onClose={() => setShowingPhotoModal(false)} 
+            <ProfilePhotoUpdateModal
+                show={showingPhotoModal}
+                onClose={() => setShowingPhotoModal(false)}
             />
+
+            {/* Photo Preview Overlay */}
+            {showingPhotoPreview && (
+                <div
+                    className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    onClick={() => setShowingPhotoPreview(false)}
+                >
+                    <div
+                        className="relative flex flex-col items-center gap-3 p-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setShowingPhotoPreview(false)}
+                            className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-white dark:bg-gray-800 shadow-lg flex items-center justify-center text-gray-500 hover:text-gray-800 dark:hover:text-gray-100 transition"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        {user.profile_photo_url ? (
+                            <img
+                                src={user.profile_photo_url}
+                                alt={user.name}
+                                className="w-48 h-48 sm:w-64 sm:h-64 rounded-full object-cover shadow-2xl ring-4 ring-white/30"
+                            />
+                        ) : (
+                            <div className="w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-[#0c4a6e]/80 flex items-center justify-center text-white text-7xl font-bold shadow-2xl ring-4 ring-white/30">
+                                {(user.first_name_display || user.name || 'U').charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                        <p className="text-white font-semibold text-lg drop-shadow">
+                            {user.first_name_display || user.name}
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

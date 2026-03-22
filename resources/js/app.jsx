@@ -1,7 +1,7 @@
 import '../css/app.css';
 import './bootstrap';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import ErrorBoundary from '@/Components/ErrorBoundary';
@@ -14,6 +14,14 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Keep window.translations in sync on every Inertia navigation
+router.on('navigate', (event) => {
+    const translations = event.detail.page.props.translations;
+    if (translations) {
+        window.translations = translations;
+    }
+});
+
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: (name) =>
@@ -22,14 +30,8 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.jsx'),
         ).then((module) => {
             const Page = module.default;
-            const WrappedPage = (props) => {
-                if (props.translations) {
-                    window.translations = props.translations;
-                }
-                return <Page {...props} />;
-            };
-            WrappedPage.layout = Page.layout;
-            return WrappedPage;
+            Page.layout = Page.layout;
+            return Page;
         }),
     setup({ el, App, props }) {
         if (props.initialPage.props.translations) {

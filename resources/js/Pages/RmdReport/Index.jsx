@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { __ } from '@/Utils/lang';
+import { Head, router } from '@inertiajs/react';
+import { useTrans } from '@/Utils/lang';
 import Pagination from '@/Components/Pagination';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
@@ -35,12 +35,21 @@ ChartJS.register(
 );
 
 export default function RmdReportIndex({ auth, reports, filters, chartData, totalParticipants, userRole }) {
+    const __ = useTrans();
+
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [isLoading, setIsLoading] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [chartType, setChartType] = useState('bar');
+
+    // Map backend Indonesian status values → translated display labels
+    const STATUS_DISPLAY = {
+        'Selesai':        __('Completed'),
+        'Sedang Mengisi': __('In Progress'),
+        'Belum Mulai':    __('Not Started'),
+    };
 
     // Debounce search
     useEffect(() => {
@@ -114,11 +123,11 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
             ...chartOptions,
             plugins: {
                 ...chartOptions.plugins,
-                title: { display: true, text: 'Distribusi Usia Partisipan' }
+                title: { display: true, text: __('Age Distribution of Participants') }
             },
             scales: {
-                y: { ...chartOptions.scales.y, title: { display: true, text: 'Jumlah Partisipan' } },
-                x: { title: { display: true, text: 'Rentang Usia' } }
+                y: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                x: { title: { display: true, text: __('Age Range') } }
             }
         };
 
@@ -134,7 +143,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'right' },
-                title: { display: true, text: 'Partisipasi RMD' }
+                title: { display: true, text: __('RMD Participation') }
             }
         };
 
@@ -150,11 +159,11 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
             indexAxis: 'y',
             plugins: {
                 ...chartOptions.plugins,
-                title: { display: true, text: 'Progress Pengisian Modul' }
+                title: { display: true, text: __('Module Completion Progress') }
             },
             scales: {
-                x: { ...chartOptions.scales.y, title: { display: true, text: 'Jumlah Partisipan' } },
-                y: { title: { display: true, text: 'Jumlah Modul Terisi' } }
+                x: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                y: { title: { display: true, text: __('Number of Completed Modules') } }
             }
         };
 
@@ -181,7 +190,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                             </svg>
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{__('Total Partisipan (12+ Tahun)')}</p>
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{__('Total Participants (12+ Years)')}</p>
                             <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{totalParticipants || 0}</p>
                         </div>
                     </div>
@@ -191,34 +200,32 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                     {/* Age Distribution */}
                     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
                         <div className="flex justify-between items-center mb-4">
-                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Distribusi Usia')}</h3>
+                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Age Distribution')}</h3>
                              {chartData?.age_distribution?.total !== undefined && (
                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                                    Total: {chartData.age_distribution.total}
+                                    {__('Total')}: {chartData.age_distribution.total}
                                 </span>
                             )}
                         </div>
                         <div className="h-64">
-                            {renderAgeChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('Tidak ada data')}</div>}
+                            {renderAgeChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                         </div>
                     </div>
 
                     {/* Participation Rate */}
                     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
                         <div className="flex justify-between items-center mb-4">
-                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Tingkat Partisipasi (12+ Tahun)')}</h3>
+                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Participation Rate (12+ Years)')}</h3>
                              {chartData?.participation_rate?.total !== undefined && (
                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    Total: {chartData.participation_rate.total}
+                                    {__('Total')}: {chartData.participation_rate.total}
                                 </span>
                             )}
                         </div>
                         <div className="h-64 flex justify-center relative group">
-                            {renderParticipationChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('Tidak ada data')}</div>}
-                            
-                            {/* Tooltip hint for age filter */}
+                            {renderParticipationChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                             <div className="absolute top-0 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-75">
-                                {__('Data hanya mencakup partisipan berusia 12 tahun ke atas')}
+                                {__('Data only includes participants aged 12 and above')}
                             </div>
                         </div>
                     </div>
@@ -226,19 +233,17 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                     {/* Progress Distribution */}
                     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
                         <div className="flex justify-between items-center mb-4">
-                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Progress Pengisian (12+ Tahun)')}</h3>
+                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Module Completion Progress (12+ Years)')}</h3>
                              {chartData?.progress_distribution?.total !== undefined && (
                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                                    Total: {chartData.progress_distribution.total}
+                                    {__('Total')}: {chartData.progress_distribution.total}
                                 </span>
                             )}
                         </div>
                         <div className="h-80 relative group">
-                            {renderProgressChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('Tidak ada data')}</div>}
-                            
-                            {/* Tooltip hint for age filter */}
+                            {renderProgressChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                             <div className="absolute top-0 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-75">
-                                {__('Data hanya mencakup partisipan berusia 12 tahun ke atas')}
+                                {__('Data only includes participants aged 12 and above')}
                             </div>
                         </div>
                     </div>
@@ -251,16 +256,16 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {__('Laporan RMD')}
+                    {__('RMD Report')}
                 </h2>
             }
         >
-            <Head title={__('Laporan RMD')} />
+            <Head title={__('RMD Report')} />
 
-            <RmdDetailModal 
-                show={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                userId={selectedUser} 
+            <RmdDetailModal
+                show={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                userId={selectedUser}
             />
 
             <div className="py-12">
@@ -272,7 +277,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                                {__('Menampilkan progres RMD partisipan yang ditugaskan kepada Anda.')}
+                                {__('Showing RMD progress of participants assigned to you.')}
                             </p>
                         </div>
                     )}
@@ -283,9 +288,9 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-medium">{__('Daftar Partisipan (> 12 Tahun)')}</h3>
+                                <h3 className="text-lg font-medium">{__('Participant List (> 12 Years)')}</h3>
                                 <span className="text-sm text-gray-500">
-                                    Total: {reports.total} Partisipan
+                                    {__('Total')}: {reports.total} {__('Participants')}
                                 </span>
                             </div>
 
@@ -297,7 +302,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             type="text"
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
-                                            placeholder={__('Cari Nama atau No. Identitas')}
+                                            placeholder={__('Search Name or ID Number')}
                                             className="w-full"
                                         />
                                     </div>
@@ -310,14 +315,14 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             }}
                                             className="w-full"
                                         >
-                                            <option value="">{__('Semua Status')}</option>
-                                            <option value="Belum Mulai">{__('Belum Mulai')}</option>
-                                            <option value="Sedang Mengisi">{__('Sedang Mengisi')}</option>
-                                            <option value="Selesai">{__('Selesai')}</option>
+                                            <option value="">{__('All Status')}</option>
+                                            <option value="Belum Mulai">{__('Not Started')}</option>
+                                            <option value="Sedang Mengisi">{__('In Progress')}</option>
+                                            <option value="Selesai">{__('Completed')}</option>
                                         </SelectInput>
                                     </div>
                                 </div>
-                                
+
                                 {userRole !== 'mentor' && (
                                     <div className="flex gap-2 shrink-0">
                                         <a
@@ -335,9 +340,9 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                         <a
                                             href={route('rmd-report.export.analytics')}
                                             className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
-                                            title={__('Download Data Analisis Lengkap')}
+                                            title={__('Download Full Analytics Data')}
                                         >
-                                            {__('Data Analisis')}
+                                            {__('Analytics Data')}
                                         </a>
                                     </div>
                                 )}
@@ -355,29 +360,29 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                         <tr>
                                             <th scope="col" className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('user_name')}>
                                                 <div className="flex items-center">
-                                                    {__('Nama Partisipan')}
+                                                    {__('Participant Name')}
                                                     {filters.sort === 'user_name' && (
                                                         <span className="ml-1">{filters.direction === 'asc' ? '↑' : '↓'}</span>
                                                     )}
                                                 </div>
                                             </th>
                                             <th scope="col" className="px-6 py-3">
-                                                {__('No. Identitas')}
+                                                {__('ID Number')}
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-center">
-                                                {__('Progres Modul')}
+                                                {__('Module Progress')}
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-center">
                                                 {__('Status')}
                                             </th>
                                             <th scope="col" className="px-6 py-3">
-                                                {__('Terakhir Diperbarui')}
+                                                {__('Last Updated')}
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {reports.data.length > 0 ? (
-                                            reports.data.map((item, index) => (
+                                            reports.data.map((item) => (
                                                 <tr
                                                     key={item.user_id}
                                                     onClick={() => handleUserClick(item.user_id)}
@@ -399,7 +404,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                             <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-right">
                                                                 {item.filled_modules_count} / {item.total_modules}
                                                             </span>
-                                                            <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title={__('Klik untuk detail')}>
+                                                            <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title={__('Click for details')}>
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                             </svg>
@@ -407,7 +412,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
-                                                            {item.status}
+                                                            {STATUS_DISPLAY[item.status] ?? item.status}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">
@@ -418,7 +423,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                         ) : (
                                             <tr>
                                                 <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                                    {__('Tidak ada data ditemukan.')}
+                                                    {__('No data found.')}
                                                 </td>
                                             </tr>
                                         )}

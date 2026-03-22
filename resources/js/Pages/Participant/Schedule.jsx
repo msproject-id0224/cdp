@@ -183,7 +183,7 @@ export default function Schedule({ auth, meetings = [], adminSchedules = [] }) {
                                     return (
                                         <div
                                             key={`empty-${idx}`}
-                                            className="min-h-[90px] bg-gray-50 dark:bg-gray-900/30"
+                                            className="min-h-[42px] sm:min-h-[90px] bg-gray-50 dark:bg-gray-900/30"
                                         />
                                     );
                                 }
@@ -194,12 +194,12 @@ export default function Schedule({ auth, meetings = [], adminSchedules = [] }) {
                                 return (
                                     <div
                                         key={cell.dayNum}
-                                        className={`min-h-[90px] p-1.5 flex flex-col gap-1 ${
+                                        className={`min-h-[42px] sm:min-h-[90px] p-1 sm:p-1.5 flex flex-col gap-0.5 sm:gap-1 ${
                                             isWeekend ? 'bg-gray-50/60 dark:bg-gray-900/20' : ''
                                         }`}
                                     >
                                         {/* Date number */}
-                                        <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full self-end ${
+                                        <span className={`text-[10px] sm:text-xs font-medium w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full self-end ${
                                             isToday
                                                 ? 'bg-indigo-600 text-white'
                                                 : 'text-gray-700 dark:text-gray-300'
@@ -207,35 +207,61 @@ export default function Schedule({ auth, meetings = [], adminSchedules = [] }) {
                                             {cell.dayNum}
                                         </span>
 
-                                        {/* Event chips */}
-                                        {cell.events.map(event => {
-                                            const s = statusStyle(event.status);
-                                            return (
-                                                <button
-                                                    key={event.id}
-                                                    onClick={() => setSelected(event)}
-                                                    className={`w-full text-left text-[10px] leading-tight px-1.5 py-1 rounded ${s.bg} ${s.text} font-medium truncate hover:opacity-80 transition`}
-                                                    title={event.agenda || mentorName(event)}
-                                                >
-                                                    {formatTime(event.scheduled_at)} {mentorName(event)}
-                                                </button>
-                                            );
-                                        })}
+                                        {/* Mobile: colored dots only */}
+                                        <div className="flex flex-wrap gap-0.5 sm:hidden">
+                                            {cell.events.map(event => {
+                                                const s = statusStyle(event.status);
+                                                return (
+                                                    <button
+                                                        key={event.id}
+                                                        onClick={() => setSelected(event)}
+                                                        className={`w-1.5 h-1.5 rounded-full ${s.bg} hover:opacity-80`}
+                                                        title={event.agenda || mentorName(event)}
+                                                    />
+                                                );
+                                            })}
+                                            {cell.adminEvents.map(s => {
+                                                const ps = priorityStyle(s.priority);
+                                                return (
+                                                    <button
+                                                        key={`admin-${s.id}`}
+                                                        onClick={() => setSelectedAdmin(s)}
+                                                        className={`w-1.5 h-1.5 rounded-full ${ps.bg} hover:opacity-80`}
+                                                        title={s.name}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
 
-                                        {/* Admin schedule chips */}
-                                        {cell.adminEvents.map(s => {
-                                            const ps = priorityStyle(s.priority);
-                                            return (
-                                                <button
-                                                    key={`admin-${s.id}`}
-                                                    onClick={() => setSelectedAdmin(s)}
-                                                    className={`w-full text-left text-[10px] leading-tight px-1.5 py-1 rounded ${ps.bg} text-white font-medium truncate hover:opacity-80 transition`}
-                                                    title={s.name}
-                                                >
-                                                    {s.start_time ? s.start_time.substring(0, 5) + ' ' : ''}{s.name}
-                                                </button>
-                                            );
-                                        })}
+                                        {/* Desktop: full event chips */}
+                                        <div className="hidden sm:flex sm:flex-col sm:gap-1">
+                                            {cell.events.map(event => {
+                                                const s = statusStyle(event.status);
+                                                return (
+                                                    <button
+                                                        key={event.id}
+                                                        onClick={() => setSelected(event)}
+                                                        className={`w-full text-left text-[10px] leading-tight px-1.5 py-1 rounded ${s.bg} ${s.text} font-medium truncate hover:opacity-80 transition`}
+                                                        title={event.agenda || mentorName(event)}
+                                                    >
+                                                        {formatTime(event.scheduled_at)} {mentorName(event)}
+                                                    </button>
+                                                );
+                                            })}
+                                            {cell.adminEvents.map(s => {
+                                                const ps = priorityStyle(s.priority);
+                                                return (
+                                                    <button
+                                                        key={`admin-${s.id}`}
+                                                        onClick={() => setSelectedAdmin(s)}
+                                                        className={`w-full text-left text-[10px] leading-tight px-1.5 py-1 rounded ${ps.bg} text-white font-medium truncate hover:opacity-80 transition`}
+                                                        title={s.name}
+                                                    >
+                                                        {s.start_time ? s.start_time.substring(0, 5) + ' ' : ''}{s.name}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 );
                             })}

@@ -4,18 +4,20 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import idLocale from '@fullcalendar/core/locales/id';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
-import { __ } from '@/Utils/lang';
+import { Head, usePage } from '@inertiajs/react';
+import { useTrans } from '@/Utils/lang';
 import axios from 'axios';
 
-const AGENDA_LABELS = {
-    pengisian_rmd: 'Pengisian RMD',
-    pertemuan_umum: 'Pertemuan Umum',
-    rapat_youth:    'Rapat Youth',
-    lainnya:        'Lainnya',
-};
-
 export default function ScheduleApproval({ auth }) {
+    const __ = useTrans();
+    const { locale } = usePage().props;
+
+    const AGENDA_LABELS = {
+        pengisian_rmd:  __('Pengisian RMD'),
+        pertemuan_umum: __('Pertemuan Umum'),
+        rapat_youth:    __('Rapat Youth'),
+        lainnya:        __('Others'),
+    };
     const [schedules, setSchedules]               = useState({ data: [], meta: {} });
     const [calendarSchedules, setCalendarSchedules] = useState([]);
     const [loading, setLoading]                   = useState(true);
@@ -268,7 +270,7 @@ export default function ScheduleApproval({ auth }) {
                         </h3>
                         <FullCalendar
                             plugins={[dayGridPlugin, interactionPlugin]}
-                            locale={idLocale}
+                            locale={locale === 'id' ? idLocale : 'en'}
                             headerToolbar={{
                                 left:   'prev,next today',
                                 center: 'title',
@@ -292,6 +294,43 @@ export default function ScheduleApproval({ auth }) {
                             .fc-day-pending { background-color: #FFFBEB !important; }
                             .fc-day-pending .fc-daygrid-day-number { color: #B45309; font-weight: 700; }
                             .fc-event { cursor: pointer; border-radius: 4px; font-size: 0.75rem; }
+
+                            @media (max-width: 640px) {
+                                .fc .fc-toolbar {
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 4px;
+                                    align-items: center;
+                                }
+                                .fc .fc-toolbar-chunk:nth-child(2) {
+                                    order: -1;
+                                    width: 100%;
+                                    text-align: center;
+                                }
+                                .fc .fc-toolbar-title { font-size: 1.1rem; }
+                                .fc .fc-button {
+                                    padding: 0.2rem 0.45rem;
+                                    font-size: 0.7rem;
+                                }
+                                .fc .fc-button .fc-icon { font-size: 0.9rem; }
+                                .fc .fc-daygrid-day-frame {
+                                    min-height: unset !important;
+                                    aspect-ratio: 1 / 1;
+                                    overflow: hidden;
+                                }
+                                .fc .fc-daygrid-day-number {
+                                    font-size: 0.65rem;
+                                    padding: 2px 3px !important;
+                                }
+                                .fc .fc-daygrid-event {
+                                    height: 5px;
+                                    border-radius: 3px;
+                                    margin: 1px 2px !important;
+                                }
+                                .fc .fc-event-title,
+                                .fc .fc-event-time { display: none; }
+                                .fc .fc-daygrid-more-link { font-size: 0.6rem; }
+                            }
                         `}</style>
                     </div>
 

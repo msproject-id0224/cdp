@@ -58,7 +58,7 @@ export default function ScheduleIndex({ auth, schedules }) {
 
     // ── Form ───────────────────────────────────────────────────────────────
     const { data, setData, post, patch, delete: destroy, processing, errors, reset, clearErrors } = useForm({
-        name: '', date: '', start_time: '', end_time: '',
+        name: '', date: '', start_time: '', end_time: '', all_day: false,
         description: '', priority: 'medium', pic: '', location: '', status: 'scheduled',
         notify_target: 'all_user',
     });
@@ -324,7 +324,7 @@ export default function ScheduleIndex({ auth, schedules }) {
         // Empty cells for previous month
         for (let i = 0; i < firstDay; i++) {
             days.push(
-                <div key={`empty-${i}`} className="h-28 sm:h-36 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700" />
+                <div key={`empty-${i}`} className="h-14 sm:h-28 md:h-36 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700" />
             );
         }
 
@@ -337,11 +337,11 @@ export default function ScheduleIndex({ auth, schedules }) {
             days.push(
                 <div
                     key={day}
-                    className={`h-28 sm:h-36 border p-1 transition duration-150 ease-in-out hover:brightness-95 cursor-pointer overflow-y-auto relative ${getCellBg(day)}`}
+                    className={`h-14 sm:h-28 md:h-36 border p-1 transition duration-150 ease-in-out hover:brightness-95 cursor-pointer overflow-hidden sm:overflow-y-auto relative ${getCellBg(day)}`}
                     onClick={() => handleDateClick(day)}
                 >
                     {/* Day number */}
-                    <div className={`text-right text-sm mb-1 ${getDayNumberColor(day)}`}>
+                    <div className={`text-right text-xs sm:text-sm mb-0.5 sm:mb-1 ${getDayNumberColor(day)}`}>
                         {day}
                         {/* Status indicator dot */}
                         {dayData?.pending > 0 && (
@@ -352,8 +352,32 @@ export default function ScheduleIndex({ auth, schedules }) {
                         )}
                     </div>
 
-                    {/* Admin schedule events */}
-                    <div className="space-y-0.5">
+                    {/* Mobile: colored dots only */}
+                    <div className="flex flex-wrap gap-0.5 sm:hidden">
+                        {dailySchedules.slice(0, 3).map(schedule => (
+                            <span
+                                key={schedule.id}
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                    schedule.priority === 'high'   ? 'bg-red-500' :
+                                    schedule.priority === 'medium' ? 'bg-blue-500' : 'bg-emerald-500'
+                                }`}
+                                title={schedule.name}
+                            />
+                        ))}
+                        {dayData?.meetings?.slice(0, 3).map(m => (
+                            <span
+                                key={`meeting-${m.id}`}
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                    m.status === 'deletion_requested' ? 'bg-red-500' :
+                                    m.status === 'pending' ? 'bg-orange-400' : 'bg-green-500'
+                                }`}
+                                title={m.mentor?.name}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Desktop: full event chips */}
+                    <div className="hidden sm:block space-y-0.5">
                         {dailySchedules.slice(0, 2).map(schedule => (
                             <div
                                 key={schedule.id}
@@ -389,7 +413,7 @@ export default function ScheduleIndex({ auth, schedules }) {
                                 🧑‍🏫 {m.mentor?.name?.split(' ')[0] ?? __('Mentor')}
                             </div>
                         ))}
-                        {dayData && dayData.total > 2 + (dayData.meetings?.length > 2 ? 0 : 0) && dayData.meetings?.length > 2 && (
+                        {dayData?.meetings?.length > 2 && (
                             <div className="text-xs text-orange-400 pl-1">+{dayData.meetings.length - 2} mentor</div>
                         )}
                     </div>
@@ -712,19 +736,43 @@ export default function ScheduleIndex({ auth, schedules }) {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <InputLabel htmlFor="start_time" value={__('Start Time')} />
-                                    <TextInput id="start_time" type="time" className="mt-1 block w-full" value={data.start_time}
-                                        onChange={(e) => setData('start_time', e.target.value)} required />
-                                    <InputError message={errors.start_time} className="mt-2" />
-                                </div>
-                                <div>
-                                    <InputLabel htmlFor="end_time" value={__('End Time')} />
-                                    <TextInput id="end_time" type="time" className="mt-1 block w-full" value={data.end_time}
-                                        onChange={(e) => setData('end_time', e.target.value)} required />
-                                    <InputError message={errors.end_time} className="mt-2" />
-                                </div>
+                            <div className="space-y-2">
+                                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        checked={data.all_day}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setData(d => ({
+                                                ...d,
+                                                all_day: checked,
+                                                start_time: checked ? '00:00' : '',
+                                                end_time: checked ? '23:59' : '',
+                                            }));
+                                        }}
+                                    />
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        {__('All Day')} <span className="text-gray-400 font-normal">(24 {__('hours')})</span>
+                                    </span>
+                                </label>
+
+                                {!data.all_day && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <InputLabel htmlFor="start_time" value={__('Start Time')} />
+                                            <TextInput id="start_time" type="time" className="mt-1 block w-full" value={data.start_time}
+                                                onChange={(e) => setData('start_time', e.target.value)} required />
+                                            <InputError message={errors.start_time} className="mt-2" />
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="end_time" value={__('End Time')} />
+                                            <TextInput id="end_time" type="time" className="mt-1 block w-full" value={data.end_time}
+                                                onChange={(e) => setData('end_time', e.target.value)} required />
+                                            <InputError message={errors.end_time} className="mt-2" />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

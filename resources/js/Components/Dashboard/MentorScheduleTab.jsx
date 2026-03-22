@@ -14,13 +14,14 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import SelectInput from '@/Components/SelectInput';
 import Checkbox from '@/Components/Checkbox';
-import { __ } from '@/Utils/lang';
+import { useTrans } from '@/Utils/lang';
 import axios from 'axios';
 import ProfilePhoto from '@/Components/ProfilePhoto';
 import { QRCodeCanvas } from 'qrcode.react';
 
 export default function MentorScheduleTab() {
-    const { auth } = usePage().props;
+    const __ = useTrans();
+    const { auth, locale } = usePage().props;
     const [events, setEvents] = useState([]);
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -594,7 +595,7 @@ export default function MentorScheduleTab() {
 
                 <FullCalendar
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                    locale={idLocale}
+                    locale={locale === 'id' ? idLocale : 'en'}
                     headerToolbar={{
                         left: 'prev,next today',
                         center: 'title',
@@ -625,6 +626,56 @@ export default function MentorScheduleTab() {
                     .fc-day-meeting-approved .fc-daygrid-day-number { color: #15803D; font-weight: 700; }
                     .fc-day-meeting-pending:hover,
                     .fc-day-meeting-approved:hover { filter: brightness(0.94); }
+
+                    @media (max-width: 640px) {
+                        /* Toolbar: stack title on top, controls on bottom row */
+                        .fc .fc-toolbar {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 4px;
+                            align-items: center;
+                        }
+                        .fc .fc-toolbar-chunk:nth-child(2) {
+                            order: -1;
+                            width: 100%;
+                            text-align: center;
+                        }
+                        .fc .fc-toolbar-title {
+                            font-size: 1.1rem;
+                        }
+                        .fc .fc-button {
+                            padding: 0.2rem 0.45rem;
+                            font-size: 0.7rem;
+                        }
+                        .fc .fc-button .fc-icon {
+                            font-size: 0.9rem;
+                        }
+
+                        /* Square day cells */
+                        .fc .fc-daygrid-day-frame {
+                            min-height: unset !important;
+                            aspect-ratio: 1 / 1;
+                            overflow: hidden;
+                        }
+                        .fc .fc-daygrid-day-number {
+                            font-size: 0.65rem;
+                            padding: 2px 3px !important;
+                        }
+
+                        /* Show events as compact dots */
+                        .fc .fc-daygrid-event {
+                            height: 5px;
+                            border-radius: 3px;
+                            margin: 1px 2px !important;
+                        }
+                        .fc .fc-event-title,
+                        .fc .fc-event-time {
+                            display: none;
+                        }
+                        .fc .fc-daygrid-more-link {
+                            font-size: 0.6rem;
+                        }
+                    }
                 `}</style>
             </div>
 

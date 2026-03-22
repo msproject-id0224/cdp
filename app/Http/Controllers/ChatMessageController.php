@@ -159,10 +159,25 @@ class ChatMessageController extends Controller
 
     public function getUnreadCount(): \Illuminate\Http\JsonResponse
     {
-        $count = ChatMessage::where('receiver_id', Auth::id())
+        $userId = Auth::id();
+
+        $rows = ChatMessage::where('receiver_id', $userId)
             ->where('is_read', false)
-            ->count();
-        return response()->json(['count' => $count]);
+            ->selectRaw('sender_id, COUNT(*) as cnt')
+            ->groupBy('sender_id')
+            ->get();
+
+        $bySender = [];
+        $total = 0;
+        foreach ($rows as $row) {
+            $bySender[(string) $row->sender_id] = (int) $row->cnt;
+            $total += (int) $row->cnt;
+        }
+
+        return response()->json([
+            'count'     => $total,
+            'by_sender' => $bySender,
+        ]);
     }
 
     public function logError(Request $request): \Illuminate\Http\JsonResponse

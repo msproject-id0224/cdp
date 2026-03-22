@@ -40,30 +40,62 @@ export default function NotificationBell() {
     // but relying on DB source of truth is better.
     // We can use LocalStorage to store 'dismissed' popup state if we had a persistent popup.
     
-    const handleNotificationClick = (notification) => {
-        // If Admin, redirect to Gifts page with pending_verification filter
-        if (auth.user.role === 'admin' && notification.type.includes('GiftProofUploaded')) {
-            router.post(route('notifications.read', notification.id), {}, {
-                onSuccess: () => {
-                    router.get(route('gifts.index'), { status: 'pending_verification' });
-                }
-            });
-            return;
-        }
+    const getRedirectRoute = (notification) => {
+        const nType = notification.type || '';
+        const data  = notification.data || {};
+        const role  = auth.user.role;
 
-        // If Participant/Mentor, show modal
-        setSelectedNotification(notification);
-        setIsModalOpen(true);
-        
-        // Mark as read in backend
+        // Gift proof uploaded → admin reviews gifts
+        if (nType.includes('GiftProofUploaded')) {
+            return () => router.get(route('gifts.index'), { status: 'pending_verification' });
+        }
+        // Gift verified / assigned → go to gifts page
+        if (nType.includes('GiftVerified') || nType.includes('GiftAssigned') || data.type === 'gift_assigned') {
+            return () => router.get(route('gifts.index'));
+        }
+        // Schedule approval request → admin approval page
+        if (nType.includes('ScheduleApprovalRequest') || data.type === 'schedule_approval_request') {
+            return () => router.get(route('admin.schedule-approval.index'));
+        }
+        // Schedule decision (mentor got approved/rejected) → schedule page by role
+        if (nType.includes('ScheduleDecision') || (data.meeting_id && data.status !== undefined)) {
+            if (role === 'mentor')      return () => router.get(route('mentor.schedule'));
+            if (role === 'participant') return () => router.get(route('participant.schedule'));
+            return () => router.get(route('schedule.index'));
+        }
+        // Schedule activity notification → schedule page by role
+        if (nType.includes('ScheduleActivity') || data.type === 'schedule_activity') {
+            if (role === 'admin')       return () => router.get(route('schedule.index'));
+            if (role === 'mentor')      return () => router.get(route('mentor.schedule'));
+            return () => router.get(route('participant.schedule'));
+        }
+        // Meeting scheduled → schedule page by role
+        if (nType.includes('MeetingScheduled')) {
+            if (role === 'mentor')      return () => router.get(route('mentor.schedule'));
+            if (role === 'participant') return () => router.get(route('participant.schedule'));
+        }
+        return null;
+    };
+
+    const handleNotificationClick = (notification) => {
+        const redirect = getRedirectRoute(notification);
+
+        // Optimistically update UI immediately
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        setNotifications(prev => prev.filter(n => n.id !== notification.id));
+
+        // Mark as read, then redirect or show modal
         router.post(route('notifications.read', notification.id), {}, {
             preserveScroll: true,
-            preserveState: true, 
+            preserveState: true,
             onSuccess: () => {
-                // Optimistically update UI
-                setUnreadCount(prev => Math.max(0, prev - 1));
-                setNotifications(prev => prev.filter(n => n.id !== notification.id));
-            }
+                if (redirect) {
+                    redirect();
+                } else {
+                    setSelectedNotification(notification);
+                    setIsModalOpen(true);
+                }
+            },
         });
     };
 
@@ -114,50 +146,71 @@ export default function NotificationBell() {
                             <Popover.Panel className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {__('Notifikasi')}
+                                        {__('Notifications')}
                                     </h3>
                                     {unreadCount > 0 && (
                                         <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">
-                                            {unreadCount} Baru
+                                            {unreadCount} {__('New')}
                                         </span>
                                     )}
                                 </div>
                                 <div className="max-h-96 overflow-y-auto">
                                     {notifications.length > 0 ? (
-                                        notifications.map((notification) => (
-                                            <button
-                                                key={notification.id}
-                                                onClick={() => handleNotificationClick(notification)}
-                                                className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-b border-gray-100 dark:border-gray-700 last:border-0 ${!notification.read_at ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
-                                            >
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {notification.type.includes('GiftProofUploaded') ? __('Bukti Hadiah Baru') : 
-                                                         notification.type.includes('GiftVerified') ? __('Status Hadiah') : __('Notifikasi Baru')}
+                                        notifications.map((notification) => {
+                                            const nType = notification.type || '';
+                                            const data  = notification.data || {};
+                                            const hasRedirect = !!getRedirectRoute(notification);
+
+                                            const title =
+                                                nType.includes('GiftProofUploaded')    ? __('New Gift Proof') :
+                                                nType.includes('GiftVerified')         ? __('Gift Status Updated') :
+                                                nType.includes('GiftAssigned')         ? __('Gift Assigned') :
+                                                data.type === 'gift_assigned'          ? __('Gift Assigned') :
+                                                nType.includes('ScheduleApprovalRequest') || data.type === 'schedule_approval_request' ? __('New Schedule Request') :
+                                                nType.includes('ScheduleDecision')     ? __('Schedule Decision') :
+                                                nType.includes('ScheduleActivity')     || data.type === 'schedule_activity' ? __('New Activity Schedule') :
+                                                nType.includes('MeetingScheduled')     ? __('Meeting Scheduled') :
+                                                __('New Notification');
+
+                                            return (
+                                                <button
+                                                    key={notification.id}
+                                                    onClick={() => handleNotificationClick(notification)}
+                                                    className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition border-b border-gray-100 dark:border-gray-700 last:border-0 ${!notification.read_at ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                                                >
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</p>
+                                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                            {hasRedirect && (
+                                                                <svg className="w-3 h-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                                </svg>
+                                                            )}
+                                                            {!notification.read_at && <span className="h-2 w-2 bg-blue-500 rounded-full"></span>}
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                                        {data.message || data.title || __('You have a new notification.')}
                                                     </p>
-                                                    {!notification.read_at && <span className="h-2 w-2 bg-blue-500 rounded-full"></span>}
-                                                </div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                                                    {notification.data.message || __('Anda menerima notifikasi baru.')}
-                                                </p>
-                                                <div className="flex justify-between items-center mt-2">
-                                                    <span className="text-[10px] text-gray-400">
-                                                        {new Date(notification.created_at).toLocaleString()}
-                                                    </span>
-                                                    {notification.data.gift_code && (
-                                                        <span className="text-[10px] bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300">
-                                                            {notification.data.gift_code}
+                                                    <div className="flex justify-between items-center mt-2">
+                                                        <span className="text-[10px] text-gray-400">
+                                                            {new Date(notification.created_at).toLocaleString()}
                                                         </span>
-                                                    )}
-                                                </div>
-                                            </button>
-                                        ))
+                                                        {data.gift_code && (
+                                                            <span className="text-[10px] bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300">
+                                                                {data.gift_code}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })
                                     ) : (
                                         <div className="p-8 text-center text-sm text-gray-500 dark:text-gray-400 flex flex-col items-center">
                                             <svg className="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                             </svg>
-                                            {__('Tidak ada notifikasi baru.')}
+                                            {__('No new notifications.')}
                                         </div>
                                     )}
                                 </div>

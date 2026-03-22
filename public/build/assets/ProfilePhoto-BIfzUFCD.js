@@ -1,0 +1,1 @@
+import{r as x,j as r}from"./app-9iPucLBo.js";function c({src:t,alt:e,className:o,fallback:s,fallbackClassName:a}){const[n,i]=x.useState(!1);return t&&!n?r.jsx("img",{src:t,alt:e,onError:()=>i(!0),className:o}):r.jsx("div",{className:a||o,children:s||r.jsx("span",{className:"text-gray-500 font-bold",children:(e||"U").charAt(0).toUpperCase()})})}export{c as P};

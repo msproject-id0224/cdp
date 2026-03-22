@@ -1,10 +1,14 @@
 import Modal from '@/Components/Modal';
 import { useEffect, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { __ } from '@/Utils/lang';
+import { useTrans } from '@/Utils/lang';
 import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function RmdDetailModal({ show, onClose, userId }) {
+    const __ = useTrans();
+    const { locale } = usePage().props;
+
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
@@ -28,7 +32,7 @@ export default function RmdDetailModal({ show, onClose, userId }) {
             setData(response.data);
         } catch (err) {
             console.error('Error fetching participant details:', err);
-            setError(__('Gagal mengambil data partisipan.'));
+            setError(__('Failed to fetch participant data.'));
         } finally {
             setLoading(false);
         }
@@ -66,7 +70,7 @@ export default function RmdDetailModal({ show, onClose, userId }) {
 
     const formatDate = (dateString) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('id-ID', {
+        return new Date(dateString).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -80,10 +84,10 @@ export default function RmdDetailModal({ show, onClose, userId }) {
             <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        {__('Detail Progres RMD Partisipan')}
+                        {__('Participant RMD Progress Details')}
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
-                        <span className="sr-only">Close</span>
+                        <span className="sr-only">{__('Close')}</span>
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -101,7 +105,7 @@ export default function RmdDetailModal({ show, onClose, userId }) {
                             onClick={fetchData}
                             className="block mx-auto mt-4 text-indigo-600 hover:text-indigo-800 underline"
                         >
-                            {__('Coba Lagi')}
+                            {__('Try Again')}
                         </button>
                     </div>
                 ) : data ? (
@@ -118,19 +122,19 @@ export default function RmdDetailModal({ show, onClose, userId }) {
                                 />
                             </div>
                             <div>
-                                <span className="block text-gray-500 dark:text-gray-400">{__('Nama Lengkap')}</span>
+                                <span className="block text-gray-500 dark:text-gray-400">{__('Full Name')}</span>
                                 <span className="font-medium text-gray-900 dark:text-gray-100">{data.user.name}</span>
                             </div>
                             <div>
-                                <span className="block text-gray-500 dark:text-gray-400">{__('No. Identitas')}</span>
+                                <span className="block text-gray-500 dark:text-gray-400">{__('ID Number')}</span>
                                 <span className="font-medium text-gray-900 dark:text-gray-100">{data.user.id_number || '-'}</span>
                             </div>
                             <div>
-                                <span className="block text-gray-500 dark:text-gray-400">{__('Usia')}</span>
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{data.user.age} {__('Tahun')}</span>
+                                <span className="block text-gray-500 dark:text-gray-400">{__('Age')}</span>
+                                <span className="font-medium text-gray-900 dark:text-gray-100">{data.user.age} {__('year(s)')}</span>
                             </div>
                             <div>
-                                <span className="block text-gray-500 dark:text-gray-400">{__('Status Keseluruhan')}</span>
+                                <span className="block text-gray-500 dark:text-gray-400">{__('Overall Status')}</span>
                                 <span className={`font-medium ${data.summary.percentage === 100 ? 'text-green-600' : 'text-indigo-600'}`}>
                                     {data.summary.status} ({data.summary.percentage}%)
                                 </span>
@@ -139,7 +143,7 @@ export default function RmdDetailModal({ show, onClose, userId }) {
 
                         {/* Modules List */}
                         <p className="text-xs text-gray-500 dark:text-gray-400 italic mb-1">
-                            {__('Klik modul untuk melihat detail bagian yang telah/belum diisi.')}
+                            {__('Click on a module to see details of filled/unfilled sections.')}
                         </p>
                         <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                             {data.modules.map((module, index) => (
@@ -147,7 +151,6 @@ export default function RmdDetailModal({ show, onClose, userId }) {
                                     key={index}
                                     className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
                                 >
-                                    {/* Module header — click to expand/collapse sections */}
                                     <button
                                         type="button"
                                         className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
@@ -179,11 +182,10 @@ export default function RmdDetailModal({ show, onClose, userId }) {
 
                                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                                             <span>{__('Progress')}: {module.percentage}%</span>
-                                            <span>{__('Update')}: {formatDate(module.last_updated)}</span>
+                                            <span>{__('Last Update')}: {formatDate(module.last_updated)}</span>
                                         </div>
                                     </button>
 
-                                    {/* Per-section detail (expanded) */}
                                     {expandedModule === index && module.sections?.length > 0 && (
                                         <div className="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 pb-3 pt-2 space-y-2">
                                             {module.sections.map((section, si) => (
@@ -219,7 +221,7 @@ export default function RmdDetailModal({ show, onClose, userId }) {
                         className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
                         onClick={onClose}
                     >
-                        {__('Tutup')}
+                        {__('Close')}
                     </button>
                 </div>
             </div>

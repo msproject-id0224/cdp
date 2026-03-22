@@ -19,6 +19,8 @@ export default function ChatWidget({ user }) {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('global'); // 'global' | 'chat' | 'users'
     const [unreadCount, setUnreadCount] = useState(0);
+    const [unreadBySender, setUnreadBySender] = useState({});
+    const [unreadGlobalCount, setUnreadGlobalCount] = useState(0);
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]); // Private messages
     const [globalMessages, setGlobalMessages] = useState([]); // Global messages
@@ -76,21 +78,29 @@ export default function ChatWidget({ user }) {
         }
     };
 
-    const fetchGlobalMessages = async () => {
+    const fetchGlobalMessages = async (currentTab) => {
         try {
             const response = await axios.get('/api/chat/global', {
                 params: { after_id: lastGlobalId }
             });
-            
+
             if (response.data.length > 0) {
                 const newMessages = response.data;
                 setGlobalMessages(prev => {
-                    // Filter out duplicates just in case
                     const existingIds = new Set(prev.map(m => m.id));
                     const uniqueNew = newMessages.filter(m => !existingIds.has(m.id));
                     return [...prev, ...uniqueNew];
                 });
                 setLastGlobalId(newMessages[newMessages.length - 1].id);
+
+                // Count messages from others and play sound
+                const fromOthers = newMessages.filter(m => m.sender_id !== user.id).length;
+                if (fromOthers > 0) {
+                    if (currentTab !== 'global') {
+                        setUnreadGlobalCount(prev => prev + fromOthers);
+                    }
+                    triggerNotification();
+                }
             }
         } catch (error) {
             console.error('Failed to fetch global messages', error);
@@ -223,14 +233,15 @@ export default function ChatWidget({ user }) {
         try {
             const response = await axios.get('/api/chat-unread');
             const newCount = response.data.count;
-            
+
             // Check for new messages to trigger notification
             // Don't trigger on first load (when lastNotificationCount is -1)
             if (lastNotificationCount !== -1 && newCount > lastNotificationCount) {
                 triggerNotification();
             }
-            
+
             setUnreadCount(newCount);
+            setUnreadBySender(response.data.by_sender || {});
             setLastNotificationCount(newCount);
         } catch (error) {
             // Silently log background errors to avoid annoying user
@@ -283,8 +294,15 @@ export default function ChatWidget({ user }) {
     const markAsRead = async (targetId) => {
         try {
             await axios.patch(`/api/chat/${targetId}/read`);
+            // Optimistically clear this sender's bubble
+            setUnreadBySender(prev => {
+                const next = { ...prev };
+                delete next[String(targetId)];
+                return next;
+            });
             const response = await axios.get('/api/chat-unread');
             setUnreadCount(response.data.count);
+            setUnreadBySender(response.data.by_sender || {});
             setLastNotificationCount(response.data.count);
         } catch (error) {
             console.error('Failed to mark as read', error);
@@ -347,6 +365,18 @@ export default function ChatWidget({ user }) {
                     });
 
                     setLastGlobalId(prev => Math.max(prev, newMsg.id));
+
+                    // Count unread and play sound for messages from others
+                    if (newMsg.sender_id !== user.id) {
+                        setActiveTab(tab => {
+                            if (tab !== 'global') {
+                                setUnreadGlobalCount(c => c + 1);
+                            }
+                            return tab;
+                        });
+                        triggerNotification();
+                    }
+
                     scrollToBottom();
                 });
 
@@ -363,7 +393,7 @@ export default function ChatWidget({ user }) {
             
             // Initial fetch for global messages if active
             if (activeTab === 'global') {
-                fetchGlobalMessages();
+                fetchGlobalMessages(activeTab);
             }
 
             const interval = setInterval(() => {
@@ -372,7 +402,7 @@ export default function ChatWidget({ user }) {
                     fetchMessages(chatTarget.id);
                 }
                 if (activeTab === 'global') {
-                    fetchGlobalMessages();
+                    fetchGlobalMessages(activeTab);
                 }
             }, 3000); // Slightly slower for heavy data
             
@@ -383,6 +413,8 @@ export default function ChatWidget({ user }) {
     const toggleChat = () => {
         if (!isOpen) {
             fetchUnreadCount();
+            // Clear global unread if opening directly on global tab
+            if (activeTab === 'global') setUnreadGlobalCount(0);
         }
         setIsOpen(!isOpen);
     };
@@ -545,20 +577,26 @@ export default function ChatWidget({ user }) {
                         {!chatTarget && (
                             <div className="flex px-4 space-x-4">
                                 <button
-                                    onClick={() => setActiveTab('global')}
-                                    className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
-                                        activeTab === 'global' 
-                                            ? 'border-white text-white' 
+                                    onClick={() => { setActiveTab('global'); setUnreadGlobalCount(0); }}
+                                    className={`pb-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+                                        activeTab === 'global'
+                                            ? 'border-white text-white'
                                             : 'border-transparent text-blue-200 hover:text-white'
                                     }`}
                                 >
                                     {__('All Message')}
+                                    {unreadGlobalCount > 0 && (
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                        </span>
+                                    )}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('users')}
-                                    className={`pb-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1 ${
-                                        activeTab === 'users' 
-                                            ? 'border-white text-white' 
+                                    className={`pb-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+                                        activeTab === 'users'
+                                            ? 'border-white text-white'
                                             : 'border-transparent text-blue-200 hover:text-white'
                                     }`}
                                 >
@@ -566,6 +604,12 @@ export default function ChatWidget({ user }) {
                                     <span className="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                                         {onlineUsers.length}
                                     </span>
+                                    {unreadCount > 0 && (
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                        </span>
+                                    )}
                                 </button>
                             </div>
                         )}
@@ -803,6 +847,11 @@ export default function ChatWidget({ user }) {
                                                             </span>
                                                         </div>
                                                     </div>
+                                                    {unreadBySender[String(u.id)] > 0 && (
+                                                        <span className="shrink-0 min-w-[20px] h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                                                            {unreadBySender[String(u.id)] > 9 ? '9+' : unreadBySender[String(u.id)]}
+                                                        </span>
+                                                    )}
                                                 </li>
                                             ))}
                                         </ul>
@@ -816,9 +865,12 @@ export default function ChatWidget({ user }) {
 
             {/* Toggle Button */}
             <div className="relative">
-                {unreadCount > 0 && !isOpen && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce z-50 shadow-md">
-                        {unreadCount}
+                {(unreadCount > 0 || unreadGlobalCount > 0) && !isOpen && (
+                    <span className="absolute -top-1 -right-1 z-50">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold shadow-md">
+                            {(unreadCount + unreadGlobalCount) > 9 ? '9+' : unreadCount + unreadGlobalCount}
+                        </span>
                     </span>
                 )}
                 <button

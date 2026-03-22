@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import idLocale from '@fullcalendar/core/locales/id';
-import { __ } from '@/Utils/lang';
+import { useTrans } from '@/Utils/lang';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -13,13 +13,6 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import SelectInput from '@/Components/SelectInput';
-
-const AGENDA_LABELS = {
-    pengisian_rmd:   'Pengisian RMD',
-    pertemuan_umum:  'Pertemuan Umum',
-    rapat_youth:     'Rapat Youth',
-    lainnya:         'Lainnya',
-};
 
 const STATUS_BADGE = {
     pending:                'bg-orange-100 text-orange-700',
@@ -30,16 +23,25 @@ const STATUS_BADGE = {
     completed:              'bg-gray-100 text-gray-700',
 };
 
-const STATUS_LABELS = {
-    pending:                __('Pending Approval'),
-    scheduled:              __('Scheduled'),
-    confirmed:              __('Confirmed'),
-    rejected:               __('Rejected'),
-    modification_requested: __('Modification Requested'),
-    completed:              __('Completed'),
-};
-
 export default function ScheduleTab() {
+    const __ = useTrans();
+    const { locale } = usePage().props;
+
+    const AGENDA_LABELS = {
+        pengisian_rmd:  __('Pengisian RMD'),
+        pertemuan_umum: __('Pertemuan Umum'),
+        rapat_youth:    __('Rapat Youth'),
+        lainnya:        __('Others'),
+    };
+
+    const STATUS_LABELS = {
+        pending:                __('Pending Approval'),
+        scheduled:              __('Scheduled'),
+        confirmed:              __('Confirmed'),
+        rejected:               __('Rejected'),
+        modification_requested: __('Modification Requested'),
+        completed:              __('Completed'),
+    };
     // ── Admin Schedule Table state (existing) ──────────────────────────────
     const [schedules, setSchedules]     = useState([]);
     const [loading, setLoading]         = useState(false);
@@ -52,7 +54,7 @@ export default function ScheduleTab() {
     const [selectedSchedule, setSelectedSchedule] = useState(null);
 
     const { data, setData, post, patch, delete: destroy, processing, errors, reset, clearErrors } = useForm({
-        name: '', date: '', start_time: '', end_time: '',
+        name: '', date: '', start_time: '', end_time: '', all_day: false,
         description: '', priority: 'medium', pic: '', location: '', status: 'scheduled',
         notify_target: 'all_user',
     });
@@ -187,6 +189,7 @@ export default function ScheduleTab() {
             setData({
                 name:          schedule.name,
                 date:          schedule.date,
+                all_day:       schedule.start_time === '00:00:00' && schedule.end_time === '23:59:00',
                 start_time:    schedule.start_time ? schedule.start_time.substring(0, 5) : '',
                 end_time:      schedule.end_time ? schedule.end_time.substring(0, 5) : '',
                 description:   schedule.description || '',
@@ -300,7 +303,7 @@ export default function ScheduleTab() {
 
                 <FullCalendar
                     plugins={[dayGridPlugin, interactionPlugin]}
-                    locale={idLocale}
+                    locale={locale === 'id' ? idLocale : 'en'}
                     headerToolbar={{
                         left:   'prev,next today',
                         center: 'title',
@@ -323,6 +326,44 @@ export default function ScheduleTab() {
                     .fc-day-mentor-approved .fc-daygrid-day-number { color: #15803D; font-weight: 700; }
                     .fc-day-mentor-pending:hover, .fc-day-mentor-approved:hover { filter: brightness(0.94); }
                     .fc-event { cursor: pointer; border-radius: 4px; font-size: 0.72rem; }
+
+                    @media (max-width: 640px) {
+                        .fc .fc-toolbar {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 4px;
+                            align-items: center;
+                        }
+                        .fc .fc-toolbar-chunk:nth-child(2) {
+                            order: -1;
+                            width: 100%;
+                            text-align: center;
+                        }
+                        .fc .fc-toolbar-title { font-size: 1.1rem; }
+                        .fc .fc-button {
+                            padding: 0.2rem 0.45rem;
+                            font-size: 0.7rem;
+                        }
+                        .fc .fc-button .fc-icon { font-size: 0.9rem; }
+
+                        .fc .fc-daygrid-day-frame {
+                            min-height: unset !important;
+                            aspect-ratio: 1 / 1;
+                            overflow: hidden;
+                        }
+                        .fc .fc-daygrid-day-number {
+                            font-size: 0.65rem;
+                            padding: 2px 3px !important;
+                        }
+                        .fc .fc-daygrid-event {
+                            height: 5px;
+                            border-radius: 3px;
+                            margin: 1px 2px !important;
+                        }
+                        .fc .fc-event-title,
+                        .fc .fc-event-time { display: none; }
+                        .fc .fc-daygrid-more-link { font-size: 0.6rem; }
+                    }
                 `}</style>
             </div>
 
@@ -587,31 +628,55 @@ export default function ScheduleTab() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <InputLabel htmlFor="start_time" value={__('Start Time')} />
-                                <TextInput
-                                    id="start_time"
-                                    type="time"
-                                    value={data.start_time}
-                                    onChange={(e) => setData('start_time', e.target.value)}
-                                    className="mt-1 block w-full"
-                                    required
+                        <div className="space-y-2">
+                            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    checked={data.all_day}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        setData(d => ({
+                                            ...d,
+                                            all_day: checked,
+                                            start_time: checked ? '00:00' : '',
+                                            end_time: checked ? '23:59' : '',
+                                        }));
+                                    }}
                                 />
-                                <InputError message={errors.start_time} className="mt-2" />
-                            </div>
-                            <div>
-                                <InputLabel htmlFor="end_time" value={__('End Time')} />
-                                <TextInput
-                                    id="end_time"
-                                    type="time"
-                                    value={data.end_time}
-                                    onChange={(e) => setData('end_time', e.target.value)}
-                                    className="mt-1 block w-full"
-                                    required
-                                />
-                                <InputError message={errors.end_time} className="mt-2" />
-                            </div>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {__('All Day')} <span className="text-gray-400 font-normal">(24 {__('hours')})</span>
+                                </span>
+                            </label>
+
+                            {!data.all_day && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel htmlFor="start_time" value={__('Start Time')} />
+                                        <TextInput
+                                            id="start_time"
+                                            type="time"
+                                            value={data.start_time}
+                                            onChange={(e) => setData('start_time', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            required
+                                        />
+                                        <InputError message={errors.start_time} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="end_time" value={__('End Time')} />
+                                        <TextInput
+                                            id="end_time"
+                                            type="time"
+                                            value={data.end_time}
+                                            onChange={(e) => setData('end_time', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            required
+                                        />
+                                        <InputError message={errors.end_time} className="mt-2" />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div>

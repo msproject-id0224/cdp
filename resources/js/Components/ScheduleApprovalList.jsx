@@ -265,12 +265,12 @@ export default function ScheduleApprovalList() {
                                     <td className="px-6 py-4">
                                         <div className="flex -space-x-2 overflow-hidden">
                                             {schedule.participants && schedule.participants.slice(0, 3).map((p) => (
-                                                <div key={p.id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-300 flex items-center justify-center text-xs font-bold text-white" title={p.name}>
+                                                <div key={p.id} className="inline-flex h-8 w-8 rounded-full ring-2 ring-white bg-gray-300 items-center justify-center text-xs font-bold text-white" title={p.name}>
                                                     {p.name.charAt(0)}
                                                 </div>
                                             ))}
                                             {schedule.participants && schedule.participants.length > 3 && (
-                                                <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-500">
+                                                <div className="inline-flex h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 items-center justify-center text-xs font-medium text-gray-500">
                                                     +{schedule.participants.length - 3}
                                                 </div>
                                             )}

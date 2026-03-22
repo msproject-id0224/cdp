@@ -1,12 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { __ } from '@/Utils/lang';
+import { useTrans } from '@/Utils/lang';
 import Pagination from '@/Components/Pagination';
 import TextInput from '@/Components/TextInput';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 
 export default function RmdDashboard({ auth, stats, participants, filters, ppaInfo, staffList }) {
+    const __ = useTrans();
     const [search, setSearch] = useState(filters.search || '');
     const [editMode, setEditMode] = useState(false);
 
@@ -343,10 +344,13 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                                             const m = today.getMonth() - birthDate.getMonth();
                                             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
 
-                                            let ageGroup = 'Unknown';
+                                            let ageGroup = null;
                                             if (age >= 12 && age <= 14) ageGroup = '12-14';
                                             else if (age >= 15 && age <= 18) ageGroup = '15-18';
                                             else if (age >= 19) ageGroup = '19+';
+                                            const ageGroupLabel = ageGroup
+                                                ? `${__('KU')} ${ageGroup}`
+                                                : __('Unknown');
 
                                             return (
                                                 <tr key={participant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -363,9 +367,10 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                                             ageGroup === '12-14' ? 'bg-green-100 text-green-800' :
                                                             ageGroup === '15-18' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-purple-100 text-purple-800'
+                                                            ageGroup === '19+'   ? 'bg-purple-100 text-purple-800' :
+                                                            'bg-gray-100 text-gray-600'
                                                         }`}>
-                                                            {__('KU')} {ageGroup}
+                                                            {ageGroupLabel}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
