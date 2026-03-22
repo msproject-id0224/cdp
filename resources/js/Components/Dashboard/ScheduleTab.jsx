@@ -54,6 +54,7 @@ export default function ScheduleTab() {
     const { data, setData, post, patch, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         name: '', date: '', start_time: '', end_time: '',
         description: '', priority: 'medium', pic: '', location: '', status: 'scheduled',
+        notify_target: 'all_user',
     });
 
     // ── Mentor Meetings calendar state ─────────────────────────────────────
@@ -184,15 +185,16 @@ export default function ScheduleTab() {
         clearErrors();
         if (mode === 'edit' && schedule) {
             setData({
-                name:        schedule.name,
-                date:        schedule.date,
-                start_time:  schedule.start_time ? schedule.start_time.substring(0, 5) : '',
-                end_time:    schedule.end_time ? schedule.end_time.substring(0, 5) : '',
-                description: schedule.description || '',
-                priority:    schedule.priority,
-                pic:         schedule.pic,
-                location:    schedule.location || '',
-                status:      schedule.status || 'scheduled',
+                name:          schedule.name,
+                date:          schedule.date,
+                start_time:    schedule.start_time ? schedule.start_time.substring(0, 5) : '',
+                end_time:      schedule.end_time ? schedule.end_time.substring(0, 5) : '',
+                description:   schedule.description || '',
+                priority:      schedule.priority,
+                pic:           schedule.pic,
+                location:      schedule.location || '',
+                status:        schedule.status || 'scheduled',
+                notify_target: schedule.notify_target || 'all_user',
             });
         } else {
             reset();
@@ -365,6 +367,7 @@ export default function ScheduleTab() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Activity')}</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Date & Time')}</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Priority')}</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Notify To')}</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('PIC')}</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Status')}</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Actions')}</th>
@@ -373,11 +376,11 @@ export default function ScheduleTab() {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-4 text-center text-gray-500">{__('Loading...')}</td>
+                                        <td colSpan="7" className="px-6 py-4 text-center text-gray-500">{__('Loading...')}</td>
                                     </tr>
                                 ) : schedules.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-4 text-center text-gray-500">{__('No schedules found.')}</td>
+                                        <td colSpan="7" className="px-6 py-4 text-center text-gray-500">{__('No schedules found.')}</td>
                                     </tr>
                                 ) : (
                                     schedules.map((schedule) => (
@@ -397,6 +400,15 @@ export default function ScheduleTab() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(schedule.priority)}`}>
                                                     {__(schedule.priority)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                    {schedule.notify_target === 'all_user'        ? __('All Users')
+                                                    : schedule.notify_target === 'mentor_only'    ? __('Mentor Only')
+                                                    : schedule.notify_target === 'participant_only' ? __('Participant Only')
+                                                    : schedule.notify_target === 'staff_only'     ? __('Staff Only')
+                                                    : __('All Users')}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.pic}</td>
@@ -650,6 +662,22 @@ export default function ScheduleTab() {
                                 className="mt-1 block w-full"
                             />
                             <InputError message={errors.description} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="notify_target" value={__('Notify To')} />
+                            <SelectInput
+                                id="notify_target"
+                                value={data.notify_target}
+                                onChange={(e) => setData('notify_target', e.target.value)}
+                                className="mt-1 block w-full"
+                            >
+                                <option value="all_user">{__('All Users')}</option>
+                                <option value="mentor_only">{__('Mentor Only')}</option>
+                                <option value="participant_only">{__('Participant Only')}</option>
+                                <option value="staff_only">{__('Staff Only')}</option>
+                            </SelectInput>
+                            <InputError message={errors.notify_target} className="mt-2" />
                         </div>
                     </div>
 

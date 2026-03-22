@@ -9,6 +9,7 @@ use App\Models\ParticipantNote;
 use App\Models\ParticipantTask;
 use App\Models\ParticipantMeeting;
 use App\Models\AuditLog;
+use App\Models\Schedule;
 use Illuminate\Support\Str;
 use App\Services\RmdProgressService;
 use Illuminate\Support\Facades\DB;
@@ -699,8 +700,14 @@ class ParticipantController extends Controller
             ->orderByDesc('scheduled_at')
             ->get();
 
+        $adminSchedules = Schedule::whereIn('notify_target', ['all_user', 'participant_only'])
+            ->orderBy('date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get();
+
         return Inertia::render('Participant/Schedule', [
-            'meetings' => $meetings,
+            'meetings'       => $meetings,
+            'adminSchedules' => $adminSchedules,
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MentorAvailability;
 use App\Models\ParticipantMeeting;
+use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,14 @@ class MentorScheduleController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Mentor/Schedule');
+        $adminSchedules = Schedule::whereIn('notify_target', ['all_user', 'mentor_only'])
+            ->orderBy('date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        return Inertia::render('Mentor/Schedule', [
+            'adminSchedules' => $adminSchedules,
+        ]);
     }
 
     /**

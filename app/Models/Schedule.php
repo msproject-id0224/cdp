@@ -16,5 +16,6 @@ class Schedule extends Model
         'priority',
         'status',
         'pic',
+        'notify_target',
     ];
 }

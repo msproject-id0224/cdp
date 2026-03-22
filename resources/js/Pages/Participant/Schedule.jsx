@@ -40,11 +40,22 @@ function sameDay(a, b) {
            a.getDate() === b.getDate();
 }
 
-export default function Schedule({ auth, meetings = [] }) {
+const PRIORITY_STYLES = {
+    high:   { bg: 'bg-red-500',     badge: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
+    medium: { bg: 'bg-blue-500',    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+    low:    { bg: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' },
+};
+
+function priorityStyle(priority) {
+    return PRIORITY_STYLES[priority] || PRIORITY_STYLES.medium;
+}
+
+export default function Schedule({ auth, meetings = [], adminSchedules = [] }) {
     const today = new Date();
     const [currentYear, setCurrentYear]   = useState(today.getFullYear());
     const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-indexed
     const [selected, setSelected]         = useState(null); // selected meeting for detail modal
+    const [selectedAdmin, setSelectedAdmin] = useState(null); // selected admin schedule for detail modal
 
     // ── calendar math ──────────────────────────────────────────────
     const firstDay  = new Date(currentYear, currentMonth, 1);
@@ -76,12 +87,19 @@ export default function Schedule({ auth, meetings = [] }) {
         });
     }
 
+    function adminSchedulesForDate(date) {
+        return adminSchedules.filter(s => {
+            if (!s.date) return false;
+            return sameDay(new Date(s.date + 'T00:00:00'), date);
+        });
+    }
+
     // ── build cells array ───────────────────────────────────────────
     const cells = Array.from({ length: totalCells }, (_, i) => {
         const dayNum = i - startPad + 1;
         if (dayNum < 1 || dayNum > lastDay.getDate()) return null;
         const date = new Date(currentYear, currentMonth, dayNum);
-        return { date, dayNum, events: meetingsForDate(date) };
+        return { date, dayNum, events: meetingsForDate(date), adminEvents: adminSchedulesForDate(date) };
     });
 
     const mentorName = (m) => {
@@ -203,11 +221,69 @@ export default function Schedule({ auth, meetings = [] }) {
                                                 </button>
                                             );
                                         })}
+
+                                        {/* Admin schedule chips */}
+                                        {cell.adminEvents.map(s => {
+                                            const ps = priorityStyle(s.priority);
+                                            return (
+                                                <button
+                                                    key={`admin-${s.id}`}
+                                                    onClick={() => setSelectedAdmin(s)}
+                                                    className={`w-full text-left text-[10px] leading-tight px-1.5 py-1 rounded ${ps.bg} text-white font-medium truncate hover:opacity-80 transition`}
+                                                    title={s.name}
+                                                >
+                                                    {s.start_time ? s.start_time.substring(0, 5) + ' ' : ''}{s.name}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
+
+                    {/* ── Admin schedule list ── */}
+                    {adminSchedules.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-xl p-5">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                {__('Program Activities')}
+                                <span className="ml-2 text-xs font-normal text-gray-400">({adminSchedules.length})</span>
+                            </h4>
+                            <div className="space-y-2">
+                                {[...adminSchedules]
+                                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                                    .map(s => {
+                                        const ps = priorityStyle(s.priority);
+                                        return (
+                                            <button
+                                                key={s.id}
+                                                onClick={() => setSelectedAdmin(s)}
+                                                className="w-full text-left flex items-start gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+                                            >
+                                                <div className={`w-1 self-stretch rounded-full shrink-0 ${ps.bg}`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{s.name}</span>
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${ps.badge}`}>
+                                                            {s.priority}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                                        {new Date(s.date + 'T00:00:00').toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                                        {s.start_time && ` · ${s.start_time.substring(0, 5)}`}
+                                                        {s.end_time && `–${s.end_time.substring(0, 5)}`}
+                                                        {s.location && ` · ${s.location}`}
+                                                    </div>
+                                                    {s.description && (
+                                                        <div className="mt-1 text-xs text-gray-600 dark:text-gray-300 truncate">{s.description}</div>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* ── Meeting list below calendar ── */}
                     <div className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-xl p-5">
@@ -266,6 +342,43 @@ export default function Schedule({ auth, meetings = [] }) {
                     </div>
                 </div>
             </div>
+
+            {/* ── Admin Schedule Detail Modal ── */}
+            {selectedAdmin && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                    onClick={() => setSelectedAdmin(null)}
+                >
+                    <div
+                        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 relative"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setSelectedAdmin(null)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${priorityStyle(selectedAdmin.priority).badge}`}>
+                            {selectedAdmin.priority}
+                        </span>
+                        <h3 className="mt-3 text-lg font-bold text-gray-900 dark:text-gray-100">{selectedAdmin.name}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(selectedAdmin.date + 'T00:00:00').toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        <div className="mt-4 space-y-3 text-sm">
+                            {selectedAdmin.start_time && (
+                                <Row label={__('Time')} value={`${selectedAdmin.start_time.substring(0, 5)}–${selectedAdmin.end_time ? selectedAdmin.end_time.substring(0, 5) : ''}`} />
+                            )}
+                            {selectedAdmin.location && <Row label={__('Location')} value={selectedAdmin.location} />}
+                            {selectedAdmin.pic && <Row label={__('PIC')} value={selectedAdmin.pic} />}
+                            {selectedAdmin.description && <Row label={__('Description')} value={selectedAdmin.description} />}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── Detail Modal ── */}
             {selected && (

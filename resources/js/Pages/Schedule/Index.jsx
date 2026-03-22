@@ -60,6 +60,7 @@ export default function ScheduleIndex({ auth, schedules }) {
     const { data, setData, post, patch, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         name: '', date: '', start_time: '', end_time: '',
         description: '', priority: 'medium', pic: '', location: '', status: 'scheduled',
+        notify_target: 'all_user',
     });
 
     // ── Fetch mentor meetings ──────────────────────────────────────────────
@@ -122,15 +123,16 @@ export default function ScheduleIndex({ auth, schedules }) {
                 reset();
                 clearErrors();
                 setData({
-                    name:        schedule.name,
-                    date:        schedule.date,
-                    start_time:  schedule.start_time ? schedule.start_time.substring(0, 5) : '',
-                    end_time:    schedule.end_time ? schedule.end_time.substring(0, 5) : '',
-                    description: schedule.description,
-                    priority:    schedule.priority,
-                    pic:         schedule.pic,
-                    location:    schedule.location || '',
-                    status:      schedule.status || 'scheduled',
+                    name:          schedule.name,
+                    date:          schedule.date,
+                    start_time:    schedule.start_time ? schedule.start_time.substring(0, 5) : '',
+                    end_time:      schedule.end_time ? schedule.end_time.substring(0, 5) : '',
+                    description:   schedule.description,
+                    priority:      schedule.priority,
+                    pic:           schedule.pic,
+                    location:      schedule.location || '',
+                    status:        schedule.status || 'scheduled',
+                    notify_target: schedule.notify_target || 'all_user',
                 });
                 setSelectedSchedule(schedule);
                 setModalMode('edit');
@@ -191,7 +193,7 @@ export default function ScheduleIndex({ auth, schedules }) {
         setData({
             name: '', date: dateStr, start_time: '', end_time: '',
             description: '', priority: 'medium', pic: auth.user.name,
-            location: '', status: 'scheduled',
+            location: '', status: 'scheduled', notify_target: 'all_user',
         });
         setModalMode('add');
         setActiveTab('details');
@@ -204,15 +206,16 @@ export default function ScheduleIndex({ auth, schedules }) {
         reset();
         clearErrors();
         setData({
-            name:        schedule.name,
-            date:        schedule.date,
-            start_time:  schedule.start_time ? schedule.start_time.substring(0, 5) : '',
-            end_time:    schedule.end_time ? schedule.end_time.substring(0, 5) : '',
-            description: schedule.description,
-            priority:    schedule.priority,
-            pic:         schedule.pic,
-            location:    schedule.location || '',
-            status:      schedule.status || 'scheduled',
+            name:          schedule.name,
+            date:          schedule.date,
+            start_time:    schedule.start_time ? schedule.start_time.substring(0, 5) : '',
+            end_time:      schedule.end_time ? schedule.end_time.substring(0, 5) : '',
+            description:   schedule.description,
+            priority:      schedule.priority,
+            pic:           schedule.pic,
+            location:      schedule.location || '',
+            status:        schedule.status || 'scheduled',
+            notify_target: schedule.notify_target || 'all_user',
         });
         setModalMode('edit');
         setActiveTab('details');
@@ -629,7 +632,7 @@ export default function ScheduleIndex({ auth, schedules }) {
                                             setData({
                                                 name: '', date: dayModal.date, start_time: '', end_time: '',
                                                 description: '', priority: 'medium', pic: auth.user.name,
-                                                location: '', status: 'scheduled',
+                                                location: '', status: 'scheduled', notify_target: 'all_user',
                                             });
                                             setModalMode('add');
                                             setActiveTab('details');
@@ -743,6 +746,19 @@ export default function ScheduleIndex({ auth, schedules }) {
                                     </select>
                                     <InputError message={errors.status} className="mt-2" />
                                 </div>
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="notify_target" value={__('Notify To')} />
+                                <select id="notify_target"
+                                    className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    value={data.notify_target} onChange={(e) => setData('notify_target', e.target.value)}>
+                                    <option value="all_user">{__('All Users')}</option>
+                                    <option value="mentor_only">{__('Mentor Only')}</option>
+                                    <option value="participant_only">{__('Participant Only')}</option>
+                                    <option value="staff_only">{__('Staff Only')}</option>
+                                </select>
+                                <InputError message={errors.notify_target} className="mt-2" />
                             </div>
 
                             <div>

@@ -109,16 +109,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                         {__('Participants')}
                                     </NavLink>
                                 )}
-                                {user.role === 'admin' && (
-                                    <>
-                                        <NavLink
-                                            href={route('schedule.index')}
-                                            active={route().current('schedule.index')}
-                                        >
-                                            {__('Schedule')}
-                                        </NavLink>
-                                    </>
-                                )}
                                 {user.role === 'mentor' && (
                                     <NavLink
                                         href={route('mentor.schedule')}
@@ -397,20 +387,12 @@ export default function AuthenticatedLayout({ header, children }) {
                             </ResponsiveNavLink>
                         )}
                         {user.role === 'admin' && (
-                            <>
-                                <ResponsiveNavLink
-                                    href={route('schedule.index')}
-                                    active={route().current('schedule.index')}
-                                >
-                                    {__('Schedule')}
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route('communication.index')}
-                                    active={route().current('communication.index')}
-                                >
-                                    {__('Communication')}
-                                </ResponsiveNavLink>
-                            </>
+                            <ResponsiveNavLink
+                                href={route('communication.index')}
+                                active={route().current('communication.index')}
+                            >
+                                {__('Communication')}
+                            </ResponsiveNavLink>
                         )}
                         {user.role === 'admin' && (
                             <ResponsiveNavLink

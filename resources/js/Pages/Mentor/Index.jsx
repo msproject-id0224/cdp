@@ -1,11 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import ProfilePhoto from '@/Components/ProfilePhoto';
 
 export default function MentorIndex({ auth, mentors }) {
-    const { locale } = usePage().props;
-
     const toggleStatus = (id) => {
         router.patch(route('mentors.toggle-status', id));
     };
@@ -14,15 +12,6 @@ export default function MentorIndex({ auth, mentors }) {
         window.dispatchEvent(new CustomEvent('start-chat', {
             detail: { user: mentor }
         }));
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
     };
 
     return (
@@ -52,31 +41,16 @@ export default function MentorIndex({ auth, mentors }) {
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                                {__('First Name')}
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                                {__('Last Name')}
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                                {__('Nickname')}
+                                                {__('Name')}
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Email')}
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                                {__('Date of Birth')}
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Gender')}
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                                {__('Age')}
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Age Group')}
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                                {__('Joined Date')}
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Action')}
@@ -88,40 +62,27 @@ export default function MentorIndex({ auth, mentors }) {
                                             mentors.map((mentor) => (
                                                 <tr key={mentor.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        <div className="flex items-center space-x-2">
-                                                            <ProfilePhoto 
-                                                                src={mentor.profile_photo_url} 
-                                                                alt={mentor.first_name} 
-                                                                className="w-8 h-8 rounded-full object-cover" 
+                                                        <div className="flex items-center space-x-3">
+                                                            <ProfilePhoto
+                                                                src={mentor.profile_photo_url}
+                                                                alt={mentor.first_name}
+                                                                className="w-8 h-8 rounded-full object-cover"
                                                                 fallbackClassName="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold text-xs"
                                                                 fallback={(mentor.first_name || 'M').charAt(0).toUpperCase()}
                                                             />
-                                                            <span>{mentor.first_name}</span>
+                                                            <span>
+                                                                {[mentor.first_name, mentor.last_name].filter(Boolean).join(' ')}
+                                                            </span>
                                                         </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {mentor.last_name || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        {mentor.nickname || '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {mentor.email}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        {formatDate(mentor.date_of_birth)}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {mentor.gender ? __(mentor.gender) : '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        {mentor.age || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {mentor.age_group ? __(mentor.age_group) : '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        {formatDate(mentor.created_at)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                         <div className="flex space-x-3">
@@ -156,7 +117,7 @@ export default function MentorIndex({ auth, mentors }) {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="9" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                                <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                                                     {__('No mentors found.')}
                                                 </td>
                                             </tr>
