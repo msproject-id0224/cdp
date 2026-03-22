@@ -6,6 +6,158 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError';
 
+// ─── Intelligence profiles ────────────────────────────────────────────────
+const INTELLIGENCE_DATA = {
+    linguistic: {
+        icon: '📝', cardBg: 'bg-purple-50 dark:bg-purple-900/20',
+        border: 'border-purple-300 dark:border-purple-700',
+        textColor: 'text-purple-700 dark:text-purple-300',
+        badgeBg: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200',
+        desc: 'Pandai menggunakan kata-kata secara efektif, baik lisan maupun tulisan. Sensitif terhadap suara, makna, dan struktur bahasa.',
+        strengths: ['Menulis & membaca', 'Bercerita & berdebat', 'Belajar bahasa baru', 'Berkomunikasi efektif'],
+        careers: ['Penulis / Sastrawan', 'Jurnalis / Reporter', 'Guru / Dosen', 'Pengacara / Advokat', 'Penerjemah', 'Editor / Redaktur', 'Penyiar / Presenter', 'Public Relations'],
+    },
+    logical_mathematical: {
+        icon: '🔢', cardBg: 'bg-blue-50 dark:bg-blue-900/20',
+        border: 'border-blue-300 dark:border-blue-700',
+        textColor: 'text-blue-700 dark:text-blue-300',
+        badgeBg: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
+        desc: 'Mampu berpikir logis, memecahkan masalah matematis, dan menemukan pola abstrak dengan mudah dan sistematis.',
+        strengths: ['Analisis & logika', 'Pemrograman komputer', 'Pemecahan masalah', 'Berpikir sistematis'],
+        careers: ['Programmer / Developer', 'Insinyur / Engineer', 'Ilmuwan / Peneliti', 'Akuntan / Analis Keuangan', 'Analis Data / Data Scientist', 'Dokter / Tenaga Medis', 'Arsitek', 'Matematikawan'],
+    },
+    visual_spatial: {
+        icon: '🎨', cardBg: 'bg-yellow-50 dark:bg-yellow-900/20',
+        border: 'border-yellow-300 dark:border-yellow-700',
+        textColor: 'text-yellow-700 dark:text-yellow-300',
+        badgeBg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200',
+        desc: 'Mampu berpikir dalam gambar dan ruang, memvisualisasikan objek dari berbagai sudut dengan imajinasi visual yang kuat.',
+        strengths: ['Menggambar & desain', 'Membaca peta & navigasi', 'Imajinasi visual kuat', 'Memahami ruang & bentuk'],
+        careers: ['Arsitek', 'Desainer Grafis / UI/UX', 'Fotografer / Videografer', 'Animator / Motion Designer', 'Pilot / Navigator', 'Seniman / Pelukis', 'Sutradara Film', 'Interior Desainer'],
+    },
+    kinesthetic: {
+        icon: '🤸', cardBg: 'bg-red-50 dark:bg-red-900/20',
+        border: 'border-red-300 dark:border-red-700',
+        textColor: 'text-red-700 dark:text-red-300',
+        badgeBg: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200',
+        desc: 'Terampil menggunakan tubuh dan tangan; belajar paling efektif melalui gerakan, sentuhan, dan pengalaman langsung.',
+        strengths: ['Olahraga & atletik', 'Kerajinan tangan', 'Koordinasi tubuh', 'Belajar lewat praktik'],
+        careers: ['Atlet / Pelatih Olahraga', 'Penari / Koreografer', 'Dokter Bedah / Fisioterapis', 'Mekanik / Teknisi', 'Chef / Koki Profesional', 'Aktor / Performer', 'Terapis Fisik', 'Pemadam Kebakaran'],
+    },
+    musical: {
+        icon: '🎵', cardBg: 'bg-green-50 dark:bg-green-900/20',
+        border: 'border-green-300 dark:border-green-700',
+        textColor: 'text-green-700 dark:text-green-300',
+        badgeBg: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
+        desc: 'Peka terhadap nada, ritme, dan pola musikal. Mudah mengenali, menciptakan, dan mengolah musik dalam berbagai bentuk.',
+        strengths: ['Bernyanyi & memainkan instrumen', 'Komposisi musik', 'Menghafal nada & ritme', 'Ekspresi melalui musik'],
+        careers: ['Musisi / Penyanyi', 'Komposer / Penulis Lagu', 'Guru Musik / Instruktur', 'Sound Engineer', 'Produser Musik', 'Terapis Musik', 'Penyiar Radio / Podcaster', 'Konduktor Orkestra'],
+    },
+    interpersonal: {
+        icon: '🤝', cardBg: 'bg-indigo-50 dark:bg-indigo-900/20',
+        border: 'border-indigo-300 dark:border-indigo-700',
+        textColor: 'text-indigo-700 dark:text-indigo-300',
+        badgeBg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200',
+        desc: 'Mudah memahami dan berinteraksi dengan orang lain; peka terhadap perasaan, motivasi, dan kebutuhan orang di sekitarnya.',
+        strengths: ['Komunikasi & empati', 'Kepemimpinan tim', 'Mediasi & negosiasi', 'Membangun relasi'],
+        careers: ['Guru / Konselor Sekolah', 'Psikolog / Terapis', 'Pemimpin / Manajer', 'Sales / Marketing', 'Diplomat / Hub. Internasional', 'Dokter / Perawat', 'HR Manager', 'Social Worker'],
+    },
+    intrapersonal: {
+        icon: '🪞', cardBg: 'bg-pink-50 dark:bg-pink-900/20',
+        border: 'border-pink-300 dark:border-pink-700',
+        textColor: 'text-pink-700 dark:text-pink-300',
+        badgeBg: 'bg-pink-100 text-pink-800 dark:bg-pink-800 dark:text-pink-200',
+        desc: 'Memiliki pemahaman mendalam tentang diri sendiri: kekuatan, kelemahan, dan motivasi. Mandiri dan mampu merencanakan hidup dengan baik.',
+        strengths: ['Refleksi & introspeksi', 'Kemandirian & disiplin', 'Perencanaan hidup', 'Fokus & determinasi'],
+        careers: ['Penulis / Blogger', 'Psikolog / Konselor', 'Wirausaha / Entrepreneur', 'Filosof / Pemikir', 'Life Coach / Motivator', 'Rohaniawan / Pendeta', 'Peneliti', 'Terapis'],
+    },
+    naturalist: {
+        icon: '🌿', cardBg: 'bg-emerald-50 dark:bg-emerald-900/20',
+        border: 'border-emerald-300 dark:border-emerald-700',
+        textColor: 'text-emerald-700 dark:text-emerald-300',
+        badgeBg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200',
+        desc: 'Mampu mengenali dan mengkategorikan makhluk hidup dan fenomena alam; peka terhadap lingkungan dan mencintai alam.',
+        strengths: ['Identifikasi flora & fauna', 'Observasi alam', 'Pelestarian lingkungan', 'Berpikir ekosistem'],
+        careers: ['Biolog / Ekolog', 'Dokter Hewan / Zoolog', 'Agripreneur / Petani Modern', 'Ahli Lingkungan / Konservasi', 'Peneliti Alam', 'Geograf / Kartograf', 'Chef / Food Scientist', 'Landscape Desainer'],
+    },
+    existential: {
+        icon: '🌌', cardBg: 'bg-cyan-50 dark:bg-cyan-900/20',
+        border: 'border-cyan-300 dark:border-cyan-700',
+        textColor: 'text-cyan-700 dark:text-cyan-300',
+        badgeBg: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-800 dark:text-cyan-200',
+        desc: 'Suka merenungkan pertanyaan mendalam tentang kehidupan, tujuan hidup, dan makna keberadaan manusia.',
+        strengths: ['Berpikir filosofis', 'Analisis etika & moral', 'Pertanyaan mendalam', 'Visi jangka panjang'],
+        careers: ['Filosof / Teolog', 'Rohaniawan / Pemimpin Rohani', 'Life Coach / Konselor', 'Penulis / Esayis', 'Peneliti Sosial / Humaniora', 'Pendidik / Akademisi', 'Penasihat / Mediator Konflik', 'Aktivis Sosial'],
+    },
+};
+
+// Career database: each career tagged with intelligences it aligns with.
+// Used to find synergistic careers from a set of top 3 intelligence keys.
+const ALL_CAREERS = [
+    { name: 'Guru / Pendidik', tags: ['linguistic', 'interpersonal', 'intrapersonal'] },
+    { name: 'Penulis Lagu / Liricist', tags: ['linguistic', 'musical', 'intrapersonal'] },
+    { name: 'Jurnalis / Wartawan', tags: ['linguistic', 'interpersonal'] },
+    { name: 'Pengacara / Advokat', tags: ['linguistic', 'logical_mathematical', 'interpersonal'] },
+    { name: 'Penyiar / MC / Presenter TV', tags: ['linguistic', 'musical', 'interpersonal'] },
+    { name: 'Penulis Kreatif / Sastrawan', tags: ['linguistic', 'intrapersonal'] },
+    { name: 'Public Relations / Humas', tags: ['linguistic', 'interpersonal'] },
+    { name: 'Politisi / Negarawan', tags: ['linguistic', 'interpersonal', 'existential'] },
+    { name: 'Life Coach / Konselor Karir', tags: ['linguistic', 'interpersonal', 'intrapersonal', 'existential'] },
+    { name: 'Pendidik / Dosen', tags: ['linguistic', 'existential', 'interpersonal'] },
+    { name: 'Penasihat Rohani / Rohaniawan', tags: ['linguistic', 'existential', 'intrapersonal', 'interpersonal'] },
+    { name: 'Programmer / Developer', tags: ['logical_mathematical', 'visual_spatial'] },
+    { name: 'Insinyur / Engineer', tags: ['logical_mathematical', 'visual_spatial', 'kinesthetic'] },
+    { name: 'Ilmuwan / Peneliti', tags: ['logical_mathematical', 'naturalist', 'intrapersonal'] },
+    { name: 'Dokter / Tenaga Medis', tags: ['logical_mathematical', 'interpersonal', 'kinesthetic'] },
+    { name: 'Akuntan / Analis Keuangan', tags: ['logical_mathematical', 'intrapersonal'] },
+    { name: 'Analis Data / Data Scientist', tags: ['logical_mathematical', 'visual_spatial'] },
+    { name: 'Arsitek', tags: ['logical_mathematical', 'visual_spatial'] },
+    { name: 'Ahli Hukum / Notaris', tags: ['logical_mathematical', 'linguistic', 'intrapersonal'] },
+    { name: 'Game Developer / Desainer Game', tags: ['logical_mathematical', 'visual_spatial', 'musical'] },
+    { name: 'Sound Engineer / Audio Teknisi', tags: ['musical', 'logical_mathematical', 'visual_spatial'] },
+    { name: 'Desainer Grafis / UI/UX', tags: ['visual_spatial', 'logical_mathematical'] },
+    { name: 'Fotografer / Videografer', tags: ['visual_spatial', 'kinesthetic'] },
+    { name: 'Animator / Motion Designer', tags: ['visual_spatial', 'musical', 'kinesthetic'] },
+    { name: 'Sutradara / Produser Film', tags: ['visual_spatial', 'musical', 'interpersonal'] },
+    { name: 'Interior Desainer / Landscape Desainer', tags: ['visual_spatial', 'naturalist'] },
+    { name: 'Pilot / Navigator', tags: ['visual_spatial', 'logical_mathematical', 'kinesthetic'] },
+    { name: 'Atlet / Pelatih Olahraga', tags: ['kinesthetic', 'interpersonal'] },
+    { name: 'Penari / Koreografer', tags: ['kinesthetic', 'musical', 'visual_spatial'] },
+    { name: 'Dokter Bedah / Fisioterapis', tags: ['kinesthetic', 'logical_mathematical', 'interpersonal'] },
+    { name: 'Chef / Koki Profesional', tags: ['kinesthetic', 'naturalist', 'visual_spatial'] },
+    { name: 'Aktor / Performer / Seniman Pertunjukan', tags: ['kinesthetic', 'musical', 'linguistic', 'interpersonal'] },
+    { name: 'Musisi / Penyanyi Profesional', tags: ['musical', 'interpersonal'] },
+    { name: 'Komposer / Produser Musik', tags: ['musical', 'intrapersonal', 'logical_mathematical'] },
+    { name: 'Guru Musik / Instruktur Seni', tags: ['musical', 'linguistic', 'interpersonal'] },
+    { name: 'Terapis Musik', tags: ['musical', 'interpersonal', 'intrapersonal'] },
+    { name: 'Penyiar Radio / Podcaster', tags: ['musical', 'linguistic'] },
+    { name: 'Psikolog / Terapis', tags: ['interpersonal', 'intrapersonal', 'linguistic'] },
+    { name: 'Pemimpin Organisasi / CEO', tags: ['interpersonal', 'intrapersonal', 'linguistic', 'existential'] },
+    { name: 'Sales / Marketing Manager', tags: ['interpersonal', 'linguistic'] },
+    { name: 'Diplomat / Hubungan Internasional', tags: ['interpersonal', 'linguistic', 'existential'] },
+    { name: 'HR Manager / Rekruter', tags: ['interpersonal', 'linguistic', 'intrapersonal'] },
+    { name: 'Social Worker / Aktivis Sosial', tags: ['interpersonal', 'existential', 'naturalist'] },
+    { name: 'Wirausaha / Entrepreneur', tags: ['intrapersonal', 'interpersonal', 'logical_mathematical'] },
+    { name: 'Filosof / Teolog', tags: ['existential', 'linguistic', 'intrapersonal'] },
+    { name: 'Peneliti Sosial / Humaniora', tags: ['existential', 'linguistic', 'logical_mathematical'] },
+    { name: 'Konselor Rohani / Pendamping', tags: ['existential', 'interpersonal', 'intrapersonal'] },
+    { name: 'Mediator Konflik / Negosiator', tags: ['existential', 'interpersonal', 'linguistic'] },
+    { name: 'Biolog / Ekolog', tags: ['naturalist', 'logical_mathematical'] },
+    { name: 'Dokter Hewan / Zoolog', tags: ['naturalist', 'logical_mathematical', 'kinesthetic'] },
+    { name: 'Agripreneur / Petani Modern', tags: ['naturalist', 'logical_mathematical', 'intrapersonal'] },
+    { name: 'Ahli Lingkungan / Konservasi Alam', tags: ['naturalist', 'existential', 'interpersonal'] },
+    { name: 'Geograf / Peneliti Alam', tags: ['naturalist', 'visual_spatial', 'logical_mathematical'] },
+];
+
+const getCareerSuggestions = (topKeys) => {
+    const keySet = new Set(topKeys);
+    return ALL_CAREERS
+        .map(c => ({ ...c, matchCount: c.tags.filter(t => keySet.has(t)).length }))
+        .filter(c => c.matchCount >= 2)
+        .sort((a, b) => b.matchCount - a.matchCount || a.name.localeCompare(b.name));
+};
+// ──────────────────────────────────────────────────────────────────────────────
+
 export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -189,6 +341,7 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
 
     const sortedScores = sections
         .map(s => ({
+            key: s.key,
             title: s.title.split('. ')[1] || s.title, // Fallback if no dot separation in translation
             score: calculateScore(data[`${s.key}_checklist`])
         }))
@@ -522,7 +675,126 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                      </div>
                                  </section>
 
-                                 {/* Reflection Table Section (Berdasarkan Gambar) */}
+                                 {/* ═══ Career Analysis & Suggestion Box ═══ */}
+                                {topThree[0]?.score > 0 && (() => {
+                                    const topKeys = topThree.map(t => t.key).filter(Boolean);
+                                    const suggestions = getCareerSuggestions(topKeys);
+                                    const primary   = suggestions.filter(c => c.matchCount === 3);
+                                    const secondary = suggestions.filter(c => c.matchCount === 2);
+                                    return (
+                                        <section className="mt-8 border-2 border-orange-300 dark:border-orange-700 rounded-3xl overflow-hidden shadow-xl">
+                                            {/* Header */}
+                                            <div className="bg-gradient-to-r from-orange-500 to-yellow-400 py-4 px-6 text-center">
+                                                <h3 className="text-white font-black text-xl">💡 Analisis Kecerdasan &amp; Saran Karir</h3>
+                                                <p className="text-orange-100 text-sm mt-1">Berdasarkan 3 Kecerdasan Dominan Kamu</p>
+                                            </div>
+
+                                            {/* 3 Intelligence Cards */}
+                                            <div className="p-5 bg-orange-50 dark:bg-gray-800 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                {topThree.map((intel, idx) => {
+                                                    const profile = INTELLIGENCE_DATA[intel.key];
+                                                    if (!profile) return null;
+                                                    return (
+                                                        <div key={intel.key} className={`${profile.cardBg} ${profile.border} border-2 rounded-2xl p-4`}>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-2xl">{profile.icon}</span>
+                                                                <span className={`${profile.badgeBg} px-2 py-0.5 rounded-full text-xs font-bold`}>
+                                                                    #{idx + 1} · {intel.score} poin
+                                                                </span>
+                                                            </div>
+                                                            <h4 className={`font-black text-base ${profile.textColor} mb-1`}>{intel.title}</h4>
+                                                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">{profile.desc}</p>
+                                                            <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Kekuatan:</p>
+                                                            <ul className="space-y-0.5">
+                                                                {profile.strengths.map((s, i) => (
+                                                                    <li key={i} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
+                                                                        <span className="text-orange-500 mt-0.5 shrink-0">•</span> {s}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {/* Career Suggestion Box */}
+                                            <div className="px-5 pb-5 bg-orange-50 dark:bg-gray-800">
+                                                <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-orange-200 dark:border-orange-800 overflow-hidden">
+                                                    <div className="bg-orange-100 dark:bg-orange-900/40 px-5 py-3 border-b border-orange-200 dark:border-orange-800">
+                                                        <h4 className="font-black text-orange-800 dark:text-orange-200 text-base">🎯 Saran Profesi</h4>
+                                                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">Profesi yang paling sesuai dengan kombinasi kecerdasanmu</p>
+                                                    </div>
+                                                    <div className="p-5 space-y-5">
+                                                        {/* Primary: match all 3 */}
+                                                        {primary.length > 0 && (
+                                                            <div>
+                                                                <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                                                                    ⭐ <span>Profesi Utama</span>
+                                                                    <span className="font-normal text-gray-500">(cocok dengan 3 kecerdasanmu)</span>
+                                                                </p>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {primary.map((c, i) => (
+                                                                        <span key={i} className="bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-sm font-semibold border border-orange-200 dark:border-orange-700">
+                                                                            {c.name}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Secondary: match 2 of 3 */}
+                                                        {secondary.length > 0 && (
+                                                            <div>
+                                                                <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                                                                    ✨ <span>Profesi Pendukung</span>
+                                                                    <span className="font-normal text-gray-500">(cocok dengan 2 dari 3 kecerdasanmu)</span>
+                                                                </p>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {secondary.map((c, i) => (
+                                                                        <span key={i} className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-200 dark:border-blue-700">
+                                                                            {c.name}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Per-intelligence careers */}
+                                                        <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+                                                            <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-3">📋 Profesi per Kecerdasan</p>
+                                                            <div className="space-y-2">
+                                                                {topThree.map(intel => {
+                                                                    const profile = INTELLIGENCE_DATA[intel.key];
+                                                                    if (!profile) return null;
+                                                                    return (
+                                                                        <div key={intel.key} className="flex flex-wrap items-start gap-2">
+                                                                            <span className={`${profile.badgeBg} px-2 py-0.5 rounded text-xs font-bold shrink-0`}>
+                                                                                {profile.icon} {intel.title}
+                                                                            </span>
+                                                                            <span className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                                                                                {profile.careers.join(' · ')}
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Motivational note */}
+                                                <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
+                                                    <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed text-center">
+                                                        💬 <strong>Ingat:</strong> Hasil ini menunjukkan <em>potensi dan kecenderunganmu</em>, bukan batasan.
+                                                        Kamu bisa sukses di bidang apapun yang kamu tekuni dengan sungguh-sungguh. Teruslah belajar dan kembangkan dirimu! 🌟
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    );
+                                })()}
+
+                                {/* Reflection Table Section (Berdasarkan Gambar) */}
                                  <section className="mt-12 space-y-6">
                                      <div className="flex items-center justify-between mb-2">
                                          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">{__('RMD_REFLECTION_TITLE') || 'Refleksi'}</h3>

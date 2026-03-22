@@ -144,6 +144,11 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
             plugins: {
                 legend: { position: 'right' },
                 title: { display: true, text: __('RMD Participation') }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 0
+                }
             }
         };
 

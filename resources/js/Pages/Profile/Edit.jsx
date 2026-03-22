@@ -266,7 +266,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                         </div>
                     )}
 
-                    {!isAdmin && user.role !== 'participant' && (
+                    {!isAdmin && user.role !== 'participant' && user.role !== 'mentor' && (
                         <div className="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg mt-6">
                             <DeleteUserForm className="max-w-xl" />
                         </div>

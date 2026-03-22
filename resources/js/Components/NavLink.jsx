@@ -31,7 +31,7 @@ export default function NavLink({
             onMouseEnter={e => { if (!active) Object.assign(e.currentTarget.style, hoverStyle); }}
             onMouseLeave={e => { if (!active) Object.assign(e.currentTarget.style, inactiveStyle); }}
             className={
-                'inline-flex items-center self-end px-4 py-2 text-sm font-semibold text-white focus:outline-none ' +
+                'inline-flex items-center justify-center self-end min-w-[7rem] px-4 py-2 text-sm font-semibold text-white focus:outline-none ' +
                 className
             }
         >

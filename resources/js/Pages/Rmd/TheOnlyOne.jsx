@@ -109,6 +109,11 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
         return Object.values(checklist).reduce((acc, curr) => acc + parseInt(curr || 0), 0);
     };
 
+    const visualScore      = calculateTotalScore(data.visual_checklist);
+    const auditoryScore    = calculateTotalScore(data.auditory_checklist);
+    const kinestheticScore = calculateTotalScore(data.kinesthetic_checklist);
+    const maxScore         = Math.max(visualScore, auditoryScore, kinestheticScore);
+
     const submit = (e) => {
         e.preventDefault();
         post(route('rmd.the-only-one.store'), {
@@ -526,17 +531,38 @@ export default function TheOnlyOne({ auth, theOnlyOne }) {
                                                 <tr>
                                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100 sm:pl-6">1</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">{__('RMD_CH1_VISUAL')}</td>
-                                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300 font-bold">{calculateTotalScore(data.visual_checklist)}</td>
+                                                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-300 font-bold">
+                                                        {visualScore}
+                                                        {maxScore > 0 && visualScore === maxScore && (
+                                                            <span className="ml-2 inline-block px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs font-semibold">
+                                                                Gaya Belajar Kamu
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100 sm:pl-6">2</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">{__('RMD_CH1_AUDITORY')}</td>
-                                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300 font-bold">{calculateTotalScore(data.auditory_checklist)}</td>
+                                                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-300 font-bold">
+                                                        {auditoryScore}
+                                                        {maxScore > 0 && auditoryScore === maxScore && (
+                                                            <span className="ml-2 inline-block px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs font-semibold">
+                                                                Gaya Belajar Kamu
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100 sm:pl-6">3</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">{__('RMD_CH1_KINESTHETIC')}</td>
-                                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300 font-bold">{calculateTotalScore(data.kinesthetic_checklist)}</td>
+                                                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-300 font-bold">
+                                                        {kinestheticScore}
+                                                        {maxScore > 0 && kinestheticScore === maxScore && (
+                                                            <span className="ml-2 inline-block px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs font-semibold">
+                                                                Gaya Belajar Kamu
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>

@@ -110,8 +110,8 @@ export default function NotificationBell() {
                 {({ open }) => (
                     <>
                         <Popover.Button className={`
-                            relative p-2 rounded-full text-gray-500 dark:text-gray-400 
-                            hover:bg-gray-100 dark:hover:bg-gray-800 
+                            relative w-10 h-10 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400
+                            hover:bg-gray-100 dark:hover:bg-gray-800
                             focus:outline-none focus:ring-2 focus:ring-indigo-500
                             transition-all duration-300 ease-in-out
                             ${open ? 'bg-gray-100 dark:bg-gray-800 text-indigo-500 dark:text-indigo-400' : ''}

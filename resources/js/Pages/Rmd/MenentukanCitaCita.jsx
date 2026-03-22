@@ -1,9 +1,148 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
+
+// ─── Profesi per Gaya Belajar ─────────────────────────────────────────────
+const LEARNING_STYLE_PROFESSIONS = {
+    visual_professions: [
+        {
+            category: 'Seni & Desain Kreatif',
+            items: [
+                'Desainer Grafis / UI/UX Designer',
+                'Animator / Motion Graphic Designer',
+                'Fotografer / Videografer',
+                'Ilustrator / Seniman Digital',
+                'Fashion Desainer / Stylist',
+                'Sutradara Film / Sinematografer',
+            ],
+        },
+        {
+            category: 'Arsitektur & Teknik Visual',
+            items: [
+                'Arsitek / Arsitektur Lansekap',
+                'Interior Desainer',
+                'Drafter / CAD Engineer',
+                'Urban Planner / Perencana Kota',
+            ],
+        },
+        {
+            category: 'Sains & Data Visual',
+            items: [
+                'Analis Data / Data Visualization Specialist',
+                'Ahli Radiologi / Sonografer Medis',
+                'Kartografer / GIS Specialist',
+                'Astronom / Astrofisikawan',
+            ],
+        },
+        {
+            category: 'Media & Komunikasi Visual',
+            items: [
+                'Art Director / Creative Director',
+                'Game Designer / Game Developer',
+                'Kurator Museum / Sejarawan Seni',
+                'Jurnalis Foto / Jurnalis Visual',
+            ],
+        },
+    ],
+    auditory_professions: [
+        {
+            category: 'Pendidikan & Komunikasi',
+            items: [
+                'Guru / Dosen / Pengajar',
+                'Penyiar Radio / Podcaster',
+                'Presenter TV / MC / Host',
+                'Jurnalis / Reporter Berita',
+            ],
+        },
+        {
+            category: 'Hukum & Konseling',
+            items: [
+                'Pengacara / Advokat / Jaksa',
+                'Konselor Psikologi / Terapis Bicara',
+                'Penerjemah Lisan / Interpreter',
+                'Mediator / Negosiator Konflik',
+            ],
+        },
+        {
+            category: 'Seni & Musik',
+            items: [
+                'Musisi / Penyanyi Profesional',
+                'Aktor / Pengisi Suara (Voice Actor)',
+                'Komposer / Produser Musik',
+                'Guru Musik / Terapis Musik',
+            ],
+        },
+        {
+            category: 'Bisnis & Pelayanan',
+            items: [
+                'Sales Manager / Marketing Komunikasi',
+                'Public Speaker / Motivator',
+                'Customer Experience Manager',
+                'Konsultan SDM / Pelatih Korporat',
+            ],
+        },
+    ],
+    kinesthetic_professions_style: [
+        {
+            category: 'Olahraga & Seni Gerak',
+            items: [
+                'Atlet Profesional / Pelatih Olahraga',
+                'Penari / Koreografer',
+                'Personal Trainer / Instruktur Fitness',
+                'Instruktur Yoga / Pilates / Martial Arts',
+            ],
+        },
+        {
+            category: 'Kesehatan & Medis',
+            items: [
+                'Dokter Umum / Dokter Bedah',
+                'Fisioterapis / Terapis Okupasi',
+                'Perawat / Bidan Profesional',
+                'Dokter Gigi / Teknisi Gigi',
+            ],
+        },
+        {
+            category: 'Teknik & Rekayasa Praktis',
+            items: [
+                'Mekanik / Teknisi Otomotif',
+                'Tukang Kayu / Pengrajin (Craftsman)',
+                'Teknisi Listrik / Elektronik',
+                'Insinyur Konstruksi / Teknisi Lapangan',
+            ],
+        },
+        {
+            category: 'Pangan, Alam & Keselamatan',
+            items: [
+                'Chef / Koki Profesional / Pastry Chef',
+                'Petani Modern / Agripreneur',
+                'Ahli Konservasi Alam / Ranger',
+                'Petugas Pemadam Kebakaran / Tim SAR',
+            ],
+        },
+    ],
+};
+
+const getParsedItems = (str) => {
+    if (!str) return new Set();
+    return new Set(str.split(',').map(s => s.trim()).filter(Boolean));
+};
+
+const toggleItem = (currentStr, item) => {
+    const items = getParsedItems(currentStr);
+    if (items.has(item)) { items.delete(item); } else { items.add(item); }
+    return Array.from(items).join(', ');
+};
+
+const addCustomItem = (currentStr, customItem) => {
+    if (!customItem.trim()) return currentStr;
+    const items = getParsedItems(currentStr);
+    items.add(customItem.trim());
+    return Array.from(items).join(', ');
+};
+// ──────────────────────────────────────────────────────────────────────────────
 
 export default function MenentukanCitaCita({ auth, careerExploration }) {
     const { data, setData, post, processing, recentlySuccessful } = useForm({
@@ -38,6 +177,12 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
             { alternative: '', factors: '' },
             { alternative: '', factors: '' }
         ],
+    });
+
+    const [customText, setCustomText] = useState({
+        visual_professions: '',
+        auditory_professions: '',
+        kinesthetic_professions_style: '',
     });
 
     const submit = (e) => {
@@ -126,45 +271,201 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                 <table className="w-full border-collapse">
                                     <thead>
                                         <tr className="bg-cyan-400 dark:bg-cyan-700 text-white">
-                                            <th className="py-4 px-6 border-r border-white/20 w-1/3 text-center font-bold">{__('RMD_CH4_TABLE_LEARNING_STYLE')}</th>
+                                            <th className="py-4 px-6 border-r border-white/20 w-1/4 text-center font-bold">{__('RMD_CH4_TABLE_LEARNING_STYLE')}</th>
                                             <th className="py-4 px-6 text-center font-bold">{__('RMD_CH4_TABLE_SUITABLE_PROFESSION')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y-2 divide-orange-400 dark:divide-orange-700 text-gray-800 dark:text-gray-200">
                                         {[
-                                            { label: __('RMD_CH4_VISUAL'), id: 'visual_professions' },
-                                            { label: __('RMD_CH4_AUDITORY_LABEL'), id: 'auditory_professions' },
-                                            { label: __('RMD_CH4_KINESTHETIC'), id: 'kinesthetic_professions_style' },
-                                        ].map((item) => (
-                                            <tr key={item.id}>
-                                                <td className="py-8 px-6 border-r-2 border-orange-400 dark:border-orange-700 text-center font-bold bg-gray-50 dark:bg-gray-800/50">
-                                                    {item.label}
-                                                </td>
-                                                <td className="p-2">
-                                                    <textarea
-                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
-                                                        value={data[item.id]}
-                                                        onChange={e => setData(item.id, e.target.value)}
-                                                        placeholder={__('RMD_CH4_PLACEHOLDER_WRITE_HERE')}
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
+                                            { label: __('RMD_CH4_VISUAL'), id: 'visual_professions', icon: '👁️', accentBg: 'bg-orange-50 dark:bg-orange-900/10', accentBorder: 'border-orange-200 dark:border-orange-800', accentText: 'text-orange-700 dark:text-orange-300', checkColor: 'accent-orange-500' },
+                                            { label: __('RMD_CH4_AUDITORY_LABEL'), id: 'auditory_professions', icon: '👂', accentBg: 'bg-red-50 dark:bg-red-900/10', accentBorder: 'border-red-200 dark:border-red-800', accentText: 'text-red-700 dark:text-red-300', checkColor: 'accent-red-500' },
+                                            { label: __('RMD_CH4_KINESTHETIC'), id: 'kinesthetic_professions_style', icon: '👆', accentBg: 'bg-green-50 dark:bg-green-900/10', accentBorder: 'border-green-200 dark:border-green-800', accentText: 'text-green-700 dark:text-green-300', checkColor: 'accent-green-500' },
+                                        ].map((item) => {
+                                            const checked = getParsedItems(data[item.id]);
+                                            const categories = LEARNING_STYLE_PROFESSIONS[item.id] || [];
+                                            const allPredefined = categories.flatMap(c => c.items);
+                                            const customItems = Array.from(checked).filter(i => !allPredefined.includes(i));
+                                            return (
+                                                <tr key={item.id}>
+                                                    {/* Label column */}
+                                                    <td className={`py-6 px-4 border-r-2 border-orange-400 dark:border-orange-700 text-center align-top bg-gray-50 dark:bg-gray-800/50`}>
+                                                        <div className="flex flex-col items-center gap-2 sticky top-4">
+                                                            <span className="text-4xl">{item.icon}</span>
+                                                            <span className="font-bold text-sm uppercase tracking-wider">{item.label}</span>
+                                                            {checked.size > 0 && (
+                                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.accentBg} ${item.accentText} border ${item.accentBorder}`}>
+                                                                    {checked.size} dipilih
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Checkbox column */}
+                                                    <td className="p-4 align-top">
+                                                        <div className="space-y-4">
+                                                            {categories.map(cat => (
+                                                                <div key={cat.category}>
+                                                                    <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                                        <span className={`inline-block w-6 h-0.5 rounded ${item.accentBg.replace('bg-', 'bg-').replace('/10', '')} bg-current opacity-50`} />
+                                                                        {cat.category}
+                                                                    </p>
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                                                                        {cat.items.map(prof => (
+                                                                            <label
+                                                                                key={prof}
+                                                                                className={`flex items-center gap-2.5 cursor-pointer rounded-lg px-3 py-2 transition-all select-none ${
+                                                                                    checked.has(prof)
+                                                                                        ? `${item.accentBg} border ${item.accentBorder}`
+                                                                                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/40 border border-transparent'
+                                                                                }`}
+                                                                            >
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    className={`w-4 h-4 rounded shrink-0 ${item.checkColor}`}
+                                                                                    checked={checked.has(prof)}
+                                                                                    onChange={() => setData(item.id, toggleItem(data[item.id], prof))}
+                                                                                />
+                                                                                <span className={`text-sm leading-snug ${checked.has(prof) ? `${item.accentText} font-medium` : 'text-gray-700 dark:text-gray-300'}`}>
+                                                                                    {prof}
+                                                                                </span>
+                                                                            </label>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+
+                                                            {/* Custom items already added */}
+                                                            {customItems.length > 0 && (
+                                                                <div>
+                                                                    <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Profesi Lainnya (Ditambahkan)</p>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {customItems.map(ci => (
+                                                                            <span key={ci} className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-700">
+                                                                                {ci}
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setData(item.id, toggleItem(data[item.id], ci))}
+                                                                                    className="ml-1 text-blue-400 hover:text-red-500 font-bold leading-none"
+                                                                                    title="Hapus"
+                                                                                >×</button>
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Add custom profession */}
+                                                            <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                                                <input
+                                                                    type="text"
+                                                                    value={customText[item.id]}
+                                                                    onChange={e => setCustomText(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                                                    onKeyDown={e => {
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            if (customText[item.id].trim()) {
+                                                                                setData(item.id, addCustomItem(data[item.id], customText[item.id]));
+                                                                                setCustomText(prev => ({ ...prev, [item.id]: '' }));
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    className="flex-1 text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 dark:text-gray-200"
+                                                                    placeholder="Tambah profesi lainnya…"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if (customText[item.id].trim()) {
+                                                                            setData(item.id, addCustomItem(data[item.id], customText[item.id]));
+                                                                            setCustomText(prev => ({ ...prev, [item.id]: '' }));
+                                                                        }
+                                                                    }}
+                                                                    className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg font-semibold transition-colors shrink-0"
+                                                                >
+                                                                    + Tambah
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-l-4 border-blue-400">
-                                <p className="text-gray-700 dark:text-gray-300 italic">
-                                    {__('RMD_CH4_NOTE_MARK_THREE')}
-                                </p>
-                                <textarea
-                                    className="mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border-gray-300 dark:border-gray-700 focus:ring-blue-500 resize"
-                                    value={data.interested_professions_from_style}
-                                    onChange={e => setData('interested_professions_from_style', e.target.value)}
-                                    placeholder={__('RMD_CH4_PLACEHOLDER_THREE_PROFESSIONS')}
-                                    rows="2"
-                                />
-                            </div>
+                            {/* ── Pilih 3 Favorit dari centangan di atas ── */}
+                            {(() => {
+                                const SOURCES = [
+                                    { id: 'visual_professions',         label: __('RMD_CH4_VISUAL'),        icon: '👁️', chipBase: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-200 dark:border-orange-700' },
+                                    { id: 'auditory_professions',       label: __('RMD_CH4_AUDITORY_LABEL'),icon: '👂', chipBase: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-200 dark:border-red-700' },
+                                    { id: 'kinesthetic_professions_style', label: __('RMD_CH4_KINESTHETIC'), icon: '👆', chipBase: 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700' },
+                                ];
+
+                                const interested = getParsedItems(data.interested_professions_from_style);
+
+                                const toggleInterested = (prof) => {
+                                    const set = getParsedItems(data.interested_professions_from_style);
+                                    if (set.has(prof)) { set.delete(prof); } else { set.add(prof); }
+                                    setData('interested_professions_from_style', Array.from(set).join(', '));
+                                };
+
+                                const allCheckedCount = SOURCES.reduce((n, s) => n + getParsedItems(data[s.id]).size, 0);
+
+                                return (
+                                    <div className="mt-4 p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-l-4 border-blue-400">
+                                        <div className="flex items-start justify-between gap-3 mb-4">
+                                            <p className="text-gray-700 dark:text-gray-300 italic text-sm">
+                                                {__('RMD_CH4_NOTE_MARK_THREE')}
+                                            </p>
+                                            <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full border ${
+                                                interested.size > 0
+                                                    ? 'bg-blue-500 text-white border-blue-500'
+                                                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600'
+                                            }`}>
+                                                {interested.size} dipilih
+                                            </span>
+                                        </div>
+
+                                        {allCheckedCount === 0 ? (
+                                            <div className="py-6 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+                                                Belum ada profesi yang dicentang di tabel di atas. Silakan pilih profesi yang sesuai terlebih dahulu.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {SOURCES.map(src => {
+                                                    const profs = Array.from(getParsedItems(data[src.id]));
+                                                    if (profs.length === 0) return null;
+                                                    return (
+                                                        <div key={src.id}>
+                                                            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                                                                <span>{src.icon}</span> {src.label}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {profs.map(prof => (
+                                                                    <button
+                                                                        key={prof}
+                                                                        type="button"
+                                                                        onClick={() => toggleInterested(prof)}
+                                                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                                                                            interested.has(prof)
+                                                                                ? 'bg-blue-500 text-white border-blue-600 shadow-md scale-[1.03]'
+                                                                                : `${src.chipBase} hover:opacity-80`
+                                                                        }`}
+                                                                    >
+                                                                        {interested.has(prof) && <span className="text-xs font-black">✓</span>}
+                                                                        {prof}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
+                            {/* ─────────────────────────────────────────────── */}
                             <div className="flex justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-600">
                                 <button type="submit" disabled={processing} className="px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-bold rounded-lg transition-all uppercase tracking-wider disabled:opacity-50">
                                     {processing ? __('RMD_SAVING') : __('RMD_SAVE_ANSWER_BUTTON')}

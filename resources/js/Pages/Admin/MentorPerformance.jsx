@@ -4,11 +4,11 @@ import { __ } from '@/Utils/lang'
 import ProfilePhoto from '@/Components/ProfilePhoto'
 
 const CRITERIA = [
-    { key: 'jadwal',      label: 'Penilaian Jadwal',             short: 'Jadwal' },
-    { key: 'kehadiran',   label: 'Penilaian Kehadiran',          short: 'Kehadiran' },
-    { key: 'surat',       label: 'Penilaian Penulisan Surat',    short: 'Surat' },
-    { key: 'gift',        label: 'Penilaian Pendampingan Gift',  short: 'Gift' },
-    { key: 'update_anak', label: 'Penilaian Update Anak',        short: 'Update' },
+    { key: 'jadwal',      label: 'Schedule Assessment',          short: 'Jadwal' },
+    { key: 'kehadiran',   label: 'Attendance Assessment',        short: 'Kehadiran' },
+    { key: 'surat',       label: 'Letter Writing Assessment',    short: 'Surat' },
+    { key: 'gift',        label: 'Gift Mentoring Assessment',    short: 'Gift' },
+    { key: 'update_anak', label: 'Child Update Assessment',      short: 'Update Anak' },
 ]
 
 function ScoreBadge({ value }) {
@@ -45,9 +45,9 @@ function TotalBadge({ value }) {
         : 'bg-red-600 text-white'
 
     const label =
-        value >= 8 ? 'Baik'
-        : value >= 5 ? 'Cukup'
-        : 'Perlu Peningkatan'
+        value >= 8 ? __('Good')
+        : value >= 5 ? __('Fair')
+        : __('Needs Improvement')
 
     return (
         <div className="flex flex-col items-center gap-1">
@@ -82,19 +82,19 @@ export default function MentorPerformance({ performances }) {
                     {/* Legend */}
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 text-sm">
-                            {__('Scoring Criteria')} — rentang 1–10 poin per kriteria
+                            {__('Scoring Criteria')} — {__('Score range 1–10 points per criteria')}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs text-gray-600 dark:text-gray-400">
-                            <div className="flex gap-2"><span className="font-bold text-blue-600">Jadwal</span><span>Kelengkapan pengisian form jadwal (agenda, lokasi, catatan, dll)</span></div>
-                            <div className="flex gap-2"><span className="font-bold text-blue-600">Kehadiran</span><span>Hadir=10, Izin/Sakit=6, Alpha=0 + ketepatan waktu check-in</span></div>
-                            <div className="flex gap-2"><span className="font-bold text-blue-600">Surat</span><span>Persentase peserta yang menerima surat (berdasarkan ID surat)</span></div>
-                            <div className="flex gap-2"><span className="font-bold text-blue-600">Gift</span><span>Kecepatan penerimaan gift: ≤7 hari=10, &gt;30 hari=5</span></div>
-                            <div className="flex gap-2"><span className="font-bold text-blue-600">Update Anak</span><span>Persentase peserta dengan meeting selesai dan catatan terisi</span></div>
+                            <div className="flex gap-2"><span className="font-bold text-blue-600">{__('Schedule')}</span><span>{__('Schedule criteria desc')}</span></div>
+                            <div className="flex gap-2"><span className="font-bold text-blue-600">{__('Attendance')}</span><span>{__('Attendance criteria desc')}</span></div>
+                            <div className="flex gap-2"><span className="font-bold text-blue-600">{__('Letter')}</span><span>{__('Letter criteria desc')}</span></div>
+                            <div className="flex gap-2"><span className="font-bold text-blue-600">{__('Gift')}</span><span>{__('Gift criteria desc')}</span></div>
+                            <div className="flex gap-2"><span className="font-bold text-blue-600">{__('Child Update')}</span><span>{__('Child Update criteria desc')}</span></div>
                         </div>
                         <div className="flex gap-4 mt-4 text-xs font-medium">
-                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> ≥ 8 Baik</span>
-                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block" /> 5–7.99 Cukup</span>
-                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> &lt; 5 Perlu Peningkatan</span>
+                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> ≥ 8 {__('Good')}</span>
+                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block" /> 5–7.99 {__('Fair')}</span>
+                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> &lt; 5 {__('Needs Improvement')}</span>
                         </div>
                     </div>
 
@@ -102,25 +102,25 @@ export default function MentorPerformance({ performances }) {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center">
                             <div className="text-2xl font-black text-gray-900 dark:text-gray-100">{performances.length}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Mentor Aktif</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{__('Total Active Mentors')}</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center">
                             <div className="text-2xl font-black text-green-600">
                                 {performances.filter(p => p.total >= 8).length}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Kinerja Baik (≥8)</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{__('Good Performance (≥8)')}</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center">
                             <div className="text-2xl font-black text-yellow-500">
                                 {performances.filter(p => p.total >= 5 && p.total < 8).length}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Kinerja Cukup (5–8)</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{__('Fair Performance (5–8)')}</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center">
                             <div className="text-2xl font-black text-red-600">
                                 {performances.filter(p => p.total < 5).length}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Perlu Peningkatan</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{__('Needs Improvement')}</div>
                         </div>
                     </div>
 
@@ -130,15 +130,15 @@ export default function MentorPerformance({ performances }) {
                             <thead>
                                 <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
                                     <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 w-8">#</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Nama Mentor</th>
-                                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Peserta</th>
+                                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">{__('Mentor Name')}</th>
+                                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">{__('Participants')}</th>
                                     {CRITERIA.map(c => (
                                         <th key={c.key} className="px-3 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 min-w-[110px]">
-                                            <span title={c.label}>{c.short}</span>
-                                            <div className="text-[10px] font-normal text-gray-400">maks. 10</div>
+                                            <span title={__(c.label)}>{__(c.short)}</span>
+                                            <div className="text-[10px] font-normal text-gray-400">{__('max. 10')}</div>
                                         </th>
                                     ))}
-                                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Total Poin</th>
+                                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">{__('Total Points')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -175,7 +175,7 @@ export default function MentorPerformance({ performances }) {
                                 {sorted.length === 0 && (
                                     <tr>
                                         <td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">
-                                            Belum ada data mentor aktif.
+                                            {__('No active mentor data yet.')}
                                         </td>
                                     </tr>
                                 )}
@@ -200,7 +200,7 @@ export default function MentorPerformance({ performances }) {
                                     <div className="flex-1 min-w-0">
                                         <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">{p.name}</div>
                                         <div className="text-xs text-gray-400 truncate">{p.email}</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">{p.participants_count} peserta</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{p.participants_count} {__('participants')}</div>
                                     </div>
                                     <TotalBadge value={p.total} />
                                 </div>
@@ -209,7 +209,7 @@ export default function MentorPerformance({ performances }) {
                                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                                     {CRITERIA.map(c => (
                                         <div key={c.key} className="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2">
-                                            <div className="text-[10px] text-gray-400 mb-1 font-medium">{c.short}</div>
+                                            <div className="text-[10px] text-gray-400 mb-1 font-medium">{__(c.short)}</div>
                                             <ScoreBadge value={p.scores[c.key]} />
                                             <ScoreBar value={p.scores[c.key]} />
                                         </div>
@@ -219,7 +219,7 @@ export default function MentorPerformance({ performances }) {
                         ))}
                         {sorted.length === 0 && (
                             <div className="text-center py-12 text-gray-400 text-sm">
-                                Belum ada data mentor aktif.
+                                {__('No active mentor data yet.')}
                             </div>
                         )}
                     </div>

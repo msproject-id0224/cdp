@@ -65,6 +65,10 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        if ($user->isMentor()) {
+            abort(403);
+        }
+
         Auth::logout();
 
         $user->delete();

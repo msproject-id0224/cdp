@@ -23,9 +23,9 @@ class RmdChartService
             ->pluck('date_of_birth');
             
         $ranges = [
-            '12-14 Tahun' => 0,
-            '15-18 Tahun' => 0,
-            '≥ 19 Tahun' => 0,
+            '12-14 Years Old' => 0,
+            '15-18 Years Old' => 0,
+            '≥ 19 Years Old' => 0,
         ];
 
         // Total for calculation should be based on filtered result
@@ -33,10 +33,10 @@ class RmdChartService
 
         foreach ($dobs as $dob) {
             $age = \Carbon\Carbon::parse($dob)->age;
-            
-            if ($age >= 12 && $age <= 14) $ranges['12-14 Tahun']++;
-            elseif ($age >= 15 && $age <= 18) $ranges['15-18 Tahun']++;
-            else $ranges['≥ 19 Tahun']++;
+
+            if ($age >= 12 && $age <= 14) $ranges['12-14 Years Old']++;
+            elseif ($age >= 15 && $age <= 18) $ranges['15-18 Years Old']++;
+            else $ranges['≥ 19 Years Old']++;
         }
 
         // Add percentages to labels
@@ -47,7 +47,7 @@ class RmdChartService
             $rangesWithPercentage[$newKey] = $value;
         }
 
-        return $this->formatChartData($rangesWithPercentage, 'Distribusi Usia');
+        return $this->formatChartData($rangesWithPercentage, 'Age Distribution');
     }
 
     /**
@@ -97,10 +97,10 @@ class RmdChartService
         $notFilledCount = max(0, $totalParticipants - $filledCount);
 
         return [
-            'labels' => ['Sudah Mengisi', 'Belum Mengisi'],
+            'labels' => ['Filled', 'Not Filled'],
             'datasets' => [
                 [
-                    'label' => 'Partisipasi RMD',
+                    'label' => 'RMD Participation',
                     'data' => [$filledCount, $notFilledCount],
                     'backgroundColor' => ['#10b981', '#ef4444'], // Green, Red
                 ]
@@ -153,31 +153,31 @@ class RmdChartService
             ->pluck('id');
         
         $ranges = [
-            '0 Modul' => 0,
-            '1-3 Modul' => 0,
-            '4-6 Modul' => 0,
-            '7-9 Modul' => 0, // Assuming 9 is max
+            '0 Modules' => 0,
+            '1-3 Modules' => 0,
+            '4-6 Modules' => 0,
+            '7-9 Modules' => 0, // Assuming 9 is max
         ];
-        
+
         // If max modules > 9, adjust label
         if ($totalModules > 9) {
-             $ranges['> 9 Modul'] = 0;
+             $ranges['> 9 Modules'] = 0;
         }
 
         foreach ($participantIds as $id) {
             $count = $filledCounts->get($id, 0);
-            
-            if ($count == 0) $ranges['0 Modul']++;
-            elseif ($count >= 1 && $count <= 3) $ranges['1-3 Modul']++;
-            elseif ($count >= 4 && $count <= 6) $ranges['4-6 Modul']++;
-            elseif ($count >= 7 && $count <= 9) $ranges['7-9 Modul']++;
+
+            if ($count == 0) $ranges['0 Modules']++;
+            elseif ($count >= 1 && $count <= 3) $ranges['1-3 Modules']++;
+            elseif ($count >= 4 && $count <= 6) $ranges['4-6 Modules']++;
+            elseif ($count >= 7 && $count <= 9) $ranges['7-9 Modules']++;
             else {
-                if (isset($ranges['> 9 Modul'])) $ranges['> 9 Modul']++;
-                else $ranges['7-9 Modul']++; // Fallback
+                if (isset($ranges['> 9 Modules'])) $ranges['> 9 Modules']++;
+                else $ranges['7-9 Modules']++; // Fallback
             }
         }
 
-        return $this->formatChartData($ranges, 'Progress Pengisian');
+        return $this->formatChartData($ranges, 'Module Completion Progress');
     }
 
     /**
@@ -187,7 +187,7 @@ class RmdChartService
      * @param string $label
      * @return array
      */
-    private function formatChartData(array $ranges, $label = 'Jumlah Partisipan')
+    private function formatChartData(array $ranges, $label = 'Number of Participants')
     {
         $dataValues = !empty($ranges) ? array_values($ranges) : [];
         $totalParticipants = array_sum($dataValues);

@@ -162,7 +162,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="hidden sm:flex sm:items-center sm:self-stretch shrink-0 px-4">
-                            <div className="relative flex items-center gap-3">
+                            <div className="relative flex items-center gap-2">
                                 {/* Notification Bell for all roles */}
                                 <NotificationBell />
                                 <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
@@ -170,7 +170,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     <Dropdown.Trigger>
                                         <button
                                             type="button"
-                                            className="inline-flex items-center gap-2 text-sm font-semibold text-[#0c4a6e] hover:opacity-70 focus:outline-none transition duration-150 ease-in-out"
+                                            className="inline-flex items-center gap-2 h-10 px-2 rounded-full text-sm font-semibold text-[#0c4a6e] hover:bg-[#0c4a6e]/10 focus:outline-none transition duration-150 ease-in-out"
                                         >
                                             <span
                                                 onClick={(e) => { e.stopPropagation(); setShowingPhotoPreview(true); }}
@@ -275,18 +275,18 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
                         </div>
 
-                        <div className="-me-2 flex items-center sm:hidden">
+                        <div className="flex items-center gap-1 sm:hidden">
                             {/* Theme Switcher Mobile */}
                             <NotificationBell />
-                            <ThemeToggle theme={theme} toggleTheme={toggleTheme} className="me-3" />
-                            
+                            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+
                             <button
                                 onClick={() =>
                                     setShowingNavigationDropdown(
                                         (previousState) => !previousState,
                                     )
                                 }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-[#0c4a6e] transition duration-150 ease-in-out hover:bg-[#0c4a6e]/10 focus:outline-none"
+                                className="w-10 h-10 flex items-center justify-center rounded-full text-[#0c4a6e] transition duration-150 ease-in-out hover:bg-[#0c4a6e]/10 focus:outline-none"
                             >
                                 <svg
                                     className="h-6 w-6"
