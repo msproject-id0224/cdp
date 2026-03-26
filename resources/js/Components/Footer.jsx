@@ -17,7 +17,7 @@ export default function Footer ({ transparent = false }) {
                             : 'text-gray-500 dark:text-gray-400'
                     }`}
                 >
-                    Hak Cipta &copy; {new Date().getFullYear()}
+                    &copy; {new Date().getFullYear()}
                     {' jamiemax & '}
                     {__('CDP Dev/Team')}. {__('All rights reserved.')}
                 </div>
