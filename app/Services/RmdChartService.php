@@ -181,6 +181,62 @@ class RmdChartService
     }
 
     /**
+     * Get distribution of final career choices from RmdCareerExplorationP2.
+     * Returns the top 10 most common final career choices.
+     *
+     * @return array
+     */
+    public function getFinalCareerChoiceDistribution()
+    {
+        // Total eligible participants (>= 12 years old) — used as the denominator for percentages
+        $totalEligible = User::where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->count();
+
+        $results = DB::table('rmd_career_exploration_p2_s')
+            ->join('users', 'users.id', '=', 'rmd_career_exploration_p2_s.user_id')
+            ->select(DB::raw('TRIM(rmd_career_exploration_p2_s.final_career_choice) as career, COUNT(*) as total'))
+            ->whereNotNull('rmd_career_exploration_p2_s.final_career_choice')
+            ->where('rmd_career_exploration_p2_s.final_career_choice', '!=', '')
+            ->where('users.role', 'participant')
+            ->whereNotNull('users.date_of_birth')
+            ->where('users.date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->groupBy(DB::raw('TRIM(rmd_career_exploration_p2_s.final_career_choice)'))
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        $labels     = [];
+        $data       = [];
+        $totalFilled = 0;
+
+        foreach ($results as $row) {
+            $labels[]     = $row->career;
+            $data[]       = (int) $row->total;
+            $totalFilled += (int) $row->total;
+        }
+
+        $colors = [
+            '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316',
+            '#10b981', '#14b8a6', '#3b82f6', '#f59e0b', '#84cc16',
+        ];
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Final Career Choice',
+                    'data'            => $data,
+                    'backgroundColor' => array_slice($colors, 0, count($labels)),
+                ]
+            ],
+            'total'          => $totalFilled,
+            'total_eligible' => $totalEligible,
+        ];
+    }
+
+    /**
      * Format the data for Chart.js and include total count.
      *
      * @param array $ranges

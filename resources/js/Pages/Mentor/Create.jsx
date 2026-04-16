@@ -15,14 +15,11 @@ export default function MentorCreate({ auth }) {
         last_name: '',
         nickname: '',
         email: '',
-        role: '',
         phone_number: '',
         age: '',
         date_of_birth: '',
         gender: '',
         age_group: '',
-        specialization: '',
-        experience: '',
         bio: '',
     });
 
@@ -127,22 +124,6 @@ export default function MentorCreate({ auth }) {
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="role" value={__('Role')} />
-                                    <select
-                                        id="role"
-                                        className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                        value={data.role}
-                                        onChange={(e) => setData('role', e.target.value)}
-                                        required
-                                    >
-                                        <option value="" disabled>{__('Select Role')}</option>
-                                        <option value="admin">{__('Admin')}</option>
-                                        <option value="mentor">{__('Mentor')}</option>
-                                    </select>
-                                    <InputError className="mt-2" message={errors.role} />
-                                </div>
-                               
-                                <div>
                                     <InputLabel htmlFor="phone_number" value={__('Phone Number')} />
                                     <TextInput
                                         id="phone_number"
@@ -216,28 +197,6 @@ export default function MentorCreate({ auth }) {
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="specialization" value={__('Specialization')} />
-                                    <TextInput
-                                        id="specialization"
-                                        className="mt-1 block w-full"
-                                        value={data.specialization}
-                                        onChange={(e) => setData('specialization', e.target.value)}
-                                    />
-                                    <InputError className="mt-2" message={errors.specialization} />
-                                </div>
-
-                                <div>
-                                    <InputLabel htmlFor="experience" value={__('Experience')} />
-                                    <TextInput
-                                        id="experience"
-                                        className="mt-1 block w-full"
-                                        value={data.experience}
-                                        onChange={(e) => setData('experience', e.target.value)}
-                                    />
-                                    <InputError className="mt-2" message={errors.experience} />
-                                </div>
-
-                                <div>
                                     <InputLabel htmlFor="bio" value={__('Profile Description (Bio)')} />
                                     <textarea
                                         id="bio"
@@ -287,10 +246,6 @@ export default function MentorCreate({ auth }) {
                             <div>
                                 <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">{__('Phone Number')}:</span>
                                 <span className="block text-sm text-gray-900 dark:text-gray-100">{data.phone_number || '-'}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">{__('Specialization')}:</span>
-                                <span className="block text-sm text-gray-900 dark:text-gray-100">{data.specialization || '-'}</span>
                             </div>
                             <div>
                                 <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">{__('Status')}:</span>

@@ -58,14 +58,14 @@ export default function AuthenticatedLayout({ header, children }) {
             <nav className="shadow-md bg-[#E6F5FC] dark:bg-gray-900">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex min-h-16 justify-between items-stretch">
-                        <div className="flex items-end flex-wrap gap-y-0">
-                            <div className="flex shrink-0 items-center self-center pr-2">
+                        <div className="flex items-stretch flex-wrap gap-y-0">
+                            <div className="flex shrink-0 items-center pr-6">
                                 <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-[#0c4a6e]" />
+                                    <ApplicationLogo className="block h-12 w-auto fill-current text-[#0c4a6e]" />
                                 </Link>
                             </div>
 
-                            <div className="hidden sm:flex sm:ms-4 sm:items-end sm:flex-wrap sm:gap-y-0">
+                            <div className="hidden sm:flex sm:items-end sm:flex-wrap sm:gap-y-0">
                                 <NavLink
                                     href={route('dashboard')}
                                     active={route().current('dashboard')}
@@ -94,20 +94,20 @@ export default function AuthenticatedLayout({ header, children }) {
                                         </NavLink>
                                     </>
                                 )}
-                                {user.role === 'admin' && (
-                                    <NavLink
-                                        href={route('mentors.index')}
-                                        active={route().current('mentors.index')}
-                                    >
-                                        {__('Mentors')}
-                                    </NavLink>
-                                )}
                                 {(user.role === 'admin' || user.role === 'mentor') && (
                                     <NavLink
                                         href={route('participants.index')}
                                         active={route().current('participants.index')}
                                     >
                                         {__('Participants')}
+                                    </NavLink>
+                                )}
+                                {user.role === 'admin' && (
+                                    <NavLink
+                                        href={route('mentors.index')}
+                                        active={route().current('mentors.index')}
+                                    >
+                                        {__('Mentors')}
                                     </NavLink>
                                 )}
                                 {user.role === 'mentor' && (
@@ -357,6 +357,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </ResponsiveNavLink>
                             </>
                         )}
+                        {(user.role === 'admin' || user.role === 'mentor') && (
+                            <ResponsiveNavLink
+                                href={route('participants.index')}
+                                active={route().current('participants.index')}
+                            >
+                                {__('Participants')}
+                            </ResponsiveNavLink>
+                        )}
                         {user.role === 'admin' && (
                             <ResponsiveNavLink
                                 href={route('mentors.index')}
@@ -371,14 +379,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                 active={route().current('admin.schedule-approval.index')}
                             >
                                 {__('Schedule Approval')}
-                            </ResponsiveNavLink>
-                        )}
-                        {(user.role === 'admin' || user.role === 'mentor') && (
-                            <ResponsiveNavLink
-                                href={route('participants.index')}
-                                active={route().current('participants.index')}
-                            >
-                                {__('Participants')}
                             </ResponsiveNavLink>
                         )}
                         {user.role === 'admin' && (
@@ -474,10 +474,21 @@ export default function AuthenticatedLayout({ header, children }) {
 
             {header && (
                 <header className="bg-white shadow dark:bg-gray-800 transition-colors duration-200">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
                         {header}
                     </div>
                 </header>
+            )}
+
+            {showFlash && flash?.info && (
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+                    <div className="bg-blue-50 border border-blue-300 text-blue-700 px-4 py-3 rounded relative dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-700" role="alert">
+                        <span className="block sm:inline">{flash.info}</span>
+                        <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setShowFlash(false)}>
+                            <svg className="fill-current h-6 w-6 text-blue-400 dark:text-blue-300" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>{__('Close')}</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+                        </span>
+                    </div>
+                </div>
             )}
 
             {showFlash && flash?.success && (
@@ -502,7 +513,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
             )}
 
-            <main>{children}</main>
+            <main className="flex-1">{children}</main>
 
             <Footer />
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import idLocale from '@fullcalendar/core/locales/id';
 import { useForm, usePage } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
@@ -24,6 +26,7 @@ export default function MentorScheduleTab() {
     const { auth, locale } = usePage().props;
     const [events, setEvents] = useState([]);
     const [participants, setParticipants] = useState([]);
+    const [generalMeetingDates, setGeneralMeetingDates] = useState(new Set());
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -33,6 +36,8 @@ export default function MentorScheduleTab() {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [filterType, setFilterType] = useState('all');
     const [filterParticipant, setFilterParticipant] = useState('all');
+    const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+    const exportDropdownRef = useRef(null);
     
     // List View State
     const [listSearch, setListSearch] = useState('');
@@ -84,6 +89,9 @@ export default function MentorScheduleTab() {
 
     useEffect(() => {
         fetchSchedules();
+        axios.get(route('api.general-meeting-dates'))
+            .then(res => setGeneralMeetingDates(new Set(res.data)))
+            .catch(() => {});
     }, []);
 
     const fetchSchedules = async () => {
@@ -168,24 +176,32 @@ export default function MentorScheduleTab() {
     };
 
     const handleDateSelect = (selectInfo) => {
+        const clickedDate = selectInfo.startStr.split('T')[0];
+
+        // Only allow creating meetings on admin-approved dates
+        if (!generalMeetingDates.has(clickedDate)) {
+            showNotification('error', __('This date has not been approved by admin for scheduling.'));
+            return;
+        }
+
         setSelectedDate(selectInfo);
-        
+
         let startStr, endStr;
         let startTimeStr, endTimeStr;
 
         if (selectInfo.allDay) {
             // Month view click (all day)
-            // Default to 09:00 - 10:00 on the selected day
+            // Default to 14:00 - 16:00 on the selected day
             const s = new Date(selectInfo.start);
-            s.setHours(9, 0, 0, 0);
+            s.setHours(14, 0, 0, 0);
             const e = new Date(selectInfo.start);
-            e.setHours(10, 0, 0, 0);
+            e.setHours(16, 0, 0, 0);
             
             startStr = toDateTimeLocal(s);
             endStr = toDateTimeLocal(e);
             
-            startTimeStr = "09:00";
-            endTimeStr = "10:00";
+            startTimeStr = "14:00";
+            endTimeStr = "16:00";
         } else {
             // Time view click (specific time) - unlikely in month-only view but safe to keep
             startStr = toDateTimeLocal(selectInfo.start);
@@ -194,6 +210,7 @@ export default function MentorScheduleTab() {
             endTimeStr = selectInfo.end.toTimeString().substring(0, 5);
         }
 
+        const isGeneralMeetingDay = true; // already validated above — date is in generalMeetingDates
         meetingForm.setData({
             participant_ids: [],
             max_participants: 1,
@@ -201,7 +218,7 @@ export default function MentorScheduleTab() {
             end_time: endStr,
             location: '',
             meeting_link: '',
-            agenda_type: '',
+            agenda_type: isGeneralMeetingDay ? 'pertemuan_umum' : '',
             agenda: '',
             tools_materials: '',
             notes: '',
@@ -256,11 +273,16 @@ export default function MentorScheduleTab() {
         availabilityForm.clearErrors();
 
         axios.post(route('api.mentor-availability.store'), availabilityForm.data)
-            .then(() => {
+            .then((response) => {
                 setIsModalOpen(false);
                 availabilityForm.reset();
                 showNotification('success', __('Availability saved successfully.'));
-                fetchSchedules();
+                const avail = response.data;
+                if (avail?.id) {
+                    setEvents(prev => [...prev, buildAvailabilityEvent(avail)]);
+                } else {
+                    fetchSchedules();
+                }
             })
             .catch(error => {
                 if (error.response?.status === 422) {
@@ -272,6 +294,31 @@ export default function MentorScheduleTab() {
                     showNotification('error', __('Failed to save availability. Please try again.'));
                 }
             });
+    };
+
+    // Build a FullCalendar event object from an availability record
+    const buildAvailabilityEvent = (avail) => {
+        if (avail.is_recurring) {
+            return {
+                id: `avail-${avail.id}`,
+                groupId: 'available',
+                daysOfWeek: [avail.day_of_week],
+                startTime: avail.start_time,
+                endTime: avail.end_time,
+                display: 'background',
+                color: '#10B981',
+                extendedProps: { type: 'availability', data: avail },
+            };
+        }
+        return {
+            id: `avail-${avail.id}`,
+            groupId: 'available',
+            start: `${avail.specific_date}T${avail.start_time}`,
+            end: `${avail.specific_date}T${avail.end_time}`,
+            display: 'background',
+            color: '#10B981',
+            extendedProps: { type: 'availability', data: avail },
+        };
     };
 
     // Build a FullCalendar event object from a meeting record (avoids full re-fetch after save)
@@ -299,6 +346,16 @@ export default function MentorScheduleTab() {
         meetingForm.clearErrors();
 
         const isEdit = modalMode === 'edit_meeting';
+
+        // Block past dates for new meetings (edit is allowed to keep existing times)
+        if (!isEdit) {
+            const scheduledAt = new Date(meetingForm.data.scheduled_at);
+            if (scheduledAt <= new Date()) {
+                meetingForm.setError('scheduled_at', __('Meeting time must be in the future.'));
+                return;
+            }
+        }
+
         const url = isEdit
             ? route('api.mentor-meetings.update', selectedEvent.data.id)
             : route('api.mentor-meetings.store');
@@ -357,7 +414,8 @@ export default function MentorScheduleTab() {
                     .then(() => {
                         setIsModalOpen(false);
                         showNotification('success', __('Availability deleted.'));
-                        fetchSchedules();
+                        const deletedId = `avail-${selectedEvent.data.id}`;
+                        setEvents(prev => prev.filter(e => e.id !== deletedId));
                     })
                     .catch(() => showNotification('error', __('Failed to delete availability.')));
             }
@@ -435,9 +493,15 @@ export default function MentorScheduleTab() {
             __('Are you sure you want to reschedule this meeting?'),
             () => {
                 axios.patch(route('api.mentor-meetings.update', data.id), { scheduled_at: start, end_time: end })
-                    .then(() => {
+                    .then((response) => {
                         showNotification('success', __('Meeting rescheduled successfully.'));
-                        fetchSchedules();
+                        const updated = response.data.meeting;
+                        if (updated) {
+                            const newEvent = buildMeetingEvent(updated);
+                            setEvents(prev => prev.map(e => e.id === newEvent.id ? newEvent : e));
+                        } else {
+                            fetchSchedules();
+                        }
                     })
                     .catch(error => {
                         console.error('Error rescheduling meeting:', error);
@@ -503,14 +567,89 @@ export default function MentorScheduleTab() {
         return true;
     }).sort((a, b) => new Date(a.start) - new Date(b.start));
 
-    const handleExport = () => {
-        window.location.href = route('api.mentor-schedules.export');
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handler = (e) => {
+            if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target)) {
+                setExportDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const buildExportRows = () => {
+        return filteredListEvents.map(event => {
+            const { type, data } = event.extendedProps;
+            const start = new Date(event.start);
+            const end   = event.end ? new Date(event.end) : null;
+            const agendaLabel = AGENDA_OPTIONS.find(o => o.value === data.agenda_type)?.label ?? (data.agenda_type || '');
+            const participantNames = (data.participants || []).map(p => `${p.first_name} ${p.last_name}`).join(', ');
+            return {
+                [__('Date')]:         start.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+                [__('Start Time')]:   start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                [__('End Time')]:     end ? end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '',
+                [__('Type')]:         type === 'meeting' ? __('Meeting') : __('Availability'),
+                [__('Agenda')]:       agendaLabel,
+                [__('Participants')]: participantNames,
+                [__('Location')]:     data.location || '',
+                [__('Status')]:       type === 'meeting' ? (STATUS_LABELS[data.status] ?? data.status) : __('Available'),
+                [__('Notes')]:        data.notes || '',
+            };
+        });
+    };
+
+    const handleExportCSV = () => {
+        const rows = buildExportRows();
+        if (!rows.length) return;
+        const headers = Object.keys(rows[0]);
+        const csvLines = [
+            headers.join(','),
+            ...rows.map(row => headers.map(h => `"${String(row[h]).replace(/"/g, '""')}"`).join(',')),
+        ];
+        const blob = new Blob([csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'mentor-schedule.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        setExportDropdownOpen(false);
+    };
+
+    const handleExportExcel = () => {
+        const rows = buildExportRows();
+        if (!rows.length) return;
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+        XLSX.writeFile(wb, 'mentor-schedule.xlsx');
+        setExportDropdownOpen(false);
+    };
+
+    const handleExportPDF = () => {
+        const rows = buildExportRows();
+        if (!rows.length) return;
+        const doc  = new jsPDF({ orientation: 'landscape' });
+        const headers = Object.keys(rows[0]);
+        doc.setFontSize(13);
+        doc.text(__('Mentor Schedule'), 14, 15);
+        autoTable(doc, {
+            startY:     22,
+            head:       [headers],
+            body:       rows.map(r => headers.map(h => r[h])),
+            styles:     { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [79, 70, 229] },
+        });
+        doc.save('mentor-schedule.pdf');
+        setExportDropdownOpen(false);
     };
 
     // Derived values for meeting form date/time display
     const scheduledDate = meetingForm.data.scheduled_at ? meetingForm.data.scheduled_at.split('T')[0] : '';
     const scheduledTime = meetingForm.data.scheduled_at ? (meetingForm.data.scheduled_at.split('T')[1] || '') : '';
     const endTimePart   = meetingForm.data.end_time     ? (meetingForm.data.end_time.split('T')[1]     || '') : '';
+    const nowDateTimeLocal = toDateTimeLocal(new Date());
     const allParticipantsSelected = participants.length > 0 &&
         participants.every(p => meetingForm.data.participant_ids.includes(p.id));
 
@@ -535,10 +674,11 @@ export default function MentorScheduleTab() {
     const getDayCellClassNames = (arg) => {
         const dateStr = arg.date.toLocaleDateString('en-CA');
         const day = dateMeetingMap[dateStr];
-        if (!day) return [];
-        if (day.pending > 0) return ['fc-day-meeting-pending'];
-        if (day.total > 0)   return ['fc-day-meeting-approved'];
-        return [];
+        const classes = [];
+        if (generalMeetingDates.has(dateStr)) classes.push('fc-day-general-meeting');
+        if (day?.pending > 0) classes.push('fc-day-meeting-pending');
+        else if (day?.total > 0) classes.push('fc-day-meeting-approved');
+        return classes;
     };
 
     const AGENDA_OPTIONS = [
@@ -588,18 +728,39 @@ export default function MentorScheduleTab() {
                         </div>
                     </div>
                     
-                    <SecondaryButton onClick={handleExport}>
-                        {__('Export to Calendar')}
-                    </SecondaryButton>
+                    <div className="relative" ref={exportDropdownRef}>
+                        <SecondaryButton onClick={() => setExportDropdownOpen(o => !o)}>
+                            {__('Export')}
+                            <svg className="ml-1.5 w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </SecondaryButton>
+                        {exportDropdownOpen && (
+                            <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 overflow-hidden">
+                                <button onClick={handleExportCSV}  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    CSV
+                                </button>
+                                <button onClick={handleExportExcel} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 3v18M14 3v18M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg>
+                                    Excel
+                                </button>
+                                <button onClick={handleExportPDF}   className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                    PDF
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <FullCalendar
-                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                    plugins={[dayGridPlugin, interactionPlugin]}
                     locale={locale === 'id' ? idLocale : 'en'}
                     headerToolbar={{
                         left: 'prev,next today',
                         center: 'title',
-                        right: 'dayGridMonth,timeGridDay'
+                        right: ''
                     }}
                     initialView="dayGridMonth"
                     editable={true}
@@ -620,12 +781,50 @@ export default function MentorScheduleTab() {
                     }}
                 />
                 <style>{`
+                    .fc-day-general-meeting { background-color: #DCFCE7 !important; }
+                    .fc-day-general-meeting .fc-daygrid-day-number { color: #15803D; font-weight: 700; }
                     .fc-day-meeting-pending  { background-color: #FED7AA !important; }
                     .fc-day-meeting-pending  .fc-daygrid-day-number { color: #C2410C; font-weight: 700; }
                     .fc-day-meeting-approved { background-color: #BBF7D0 !important; }
                     .fc-day-meeting-approved .fc-daygrid-day-number { color: #15803D; font-weight: 700; }
                     .fc-day-meeting-pending:hover,
                     .fc-day-meeting-approved:hover { filter: brightness(0.94); }
+
+                    /* ── Dark mode ── */
+                    .dark .fc { color: #e5e7eb; }
+                    .dark .fc-toolbar-title { color: #f3f4f6 !important; }
+                    .dark .fc th,
+                    .dark .fc td,
+                    .dark .fc-scrollgrid,
+                    .dark .fc-scrollgrid-section > td { border-color: #374151 !important; }
+                    .dark .fc .fc-col-header-cell { background-color: #1f2937; }
+                    .dark .fc .fc-col-header-cell-cushion { color: #9ca3af !important; }
+                    .dark .fc .fc-daygrid-day { background-color: #1f2937; }
+                    .dark .fc .fc-daygrid-day-number { color: #d1d5db !important; }
+                    .dark .fc .fc-day-other .fc-daygrid-day-number { color: #6b7280 !important; }
+                    .dark .fc .fc-day-today { background-color: #312e81 !important; }
+                    .dark .fc .fc-day-today .fc-daygrid-day-number { color: #a5b4fc !important; }
+                    .dark .fc .fc-daygrid-more-link { color: #818cf8 !important; }
+                    .dark .fc .fc-button {
+                        background-color: #374151 !important;
+                        border-color: #4b5563 !important;
+                        color: #e5e7eb !important;
+                    }
+                    .dark .fc .fc-button:hover {
+                        background-color: #4b5563 !important;
+                        border-color: #6b7280 !important;
+                    }
+                    .dark .fc .fc-button:not(:disabled):active,
+                    .dark .fc .fc-button-active {
+                        background-color: #4f46e5 !important;
+                        border-color: #4338ca !important;
+                    }
+                    .dark .fc-day-general-meeting { background-color: #14532d !important; }
+                    .dark .fc-day-general-meeting .fc-daygrid-day-number { color: #86efac !important; }
+                    .dark .fc-day-meeting-pending  { background-color: #7c2d12 !important; }
+                    .dark .fc-day-meeting-pending  .fc-daygrid-day-number { color: #fdba74 !important; }
+                    .dark .fc-day-meeting-approved { background-color: #14532d !important; }
+                    .dark .fc-day-meeting-approved .fc-daygrid-day-number { color: #86efac !important; }
 
                     @media (max-width: 640px) {
                         /* Toolbar: stack title on top, controls on bottom row */
@@ -912,7 +1111,7 @@ export default function MentorScheduleTab() {
                 </div>
             </Modal>
 
-            <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
+            <Modal show={isModalOpen && !['create_meeting', 'edit_meeting'].includes(modalMode)} onClose={() => setIsModalOpen(false)}>
                 <div className="p-6">
                     {modalMode === 'create_menu' && (
                         <div className="space-y-4">
@@ -982,247 +1181,7 @@ export default function MentorScheduleTab() {
                         </form>
                     )}
 
-                    {(modalMode === 'create_meeting' || modalMode === 'edit_meeting') && (
-                        <form onSubmit={submitMeeting} className="space-y-5 max-h-[80vh] overflow-y-auto pr-1">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 sticky top-0 bg-white dark:bg-gray-800 pb-2 border-b border-gray-100 dark:border-gray-700">
-                                {modalMode === 'create_meeting' ? __('Schedule Meeting') : __('Edit Meeting')}
-                            </h2>
-
-                            {/* ── Date & Time ── */}
-                            <div>
-                                <InputLabel value={__('Date & Time')} />
-                                <div className="mt-1 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-700">
-                                    <div className="text-sm font-semibold text-indigo-800 dark:text-indigo-200 mb-3">
-                                        {scheduledDate
-                                            ? new Date(scheduledDate + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-                                            : __('No date selected')}
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <InputLabel value={__('Start Time')} />
-                                            <TextInput
-                                                type="time"
-                                                className="w-full mt-1"
-                                                value={scheduledTime}
-                                                onChange={e => meetingForm.setData('scheduled_at', `${scheduledDate}T${e.target.value}`)}
-                                            />
-                                        </div>
-                                        <div>
-                                            <InputLabel value={__('End Time')} />
-                                            <TextInput
-                                                type="time"
-                                                className="w-full mt-1"
-                                                value={endTimePart}
-                                                onChange={e => meetingForm.setData('end_time', `${scheduledDate}T${e.target.value}`)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <InputError message={meetingForm.errors.scheduled_at} />
-                                <InputError message={meetingForm.errors.end_time} />
-                            </div>
-
-                            {/* ── Participants ── */}
-                            <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <InputLabel value={__('Participants')} />
-                                    <button
-                                        type="button"
-                                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
-                                        onClick={() => meetingForm.setData(
-                                            'participant_ids',
-                                            allParticipantsSelected ? [] : participants.map(p => p.id)
-                                        )}
-                                    >
-                                        {allParticipantsSelected ? __('Deselect All') : __('Select All')}
-                                    </button>
-                                </div>
-
-                                <TextInput
-                                    placeholder={__('Search participants...')}
-                                    className="w-full mb-2"
-                                    value={participantSearch}
-                                    onChange={e => setParticipantSearch(e.target.value)}
-                                />
-
-                                <div className="max-h-44 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
-                                    {participants
-                                        .filter(p => {
-                                            if (!participantSearch) return true;
-                                            const s = participantSearch.toLowerCase();
-                                            return (p.first_name + ' ' + p.last_name + ' ' + (p.nickname || '')).toLowerCase().includes(s);
-                                        })
-                                        .map(p => {
-                                            const checked = meetingForm.data.participant_ids.includes(p.id);
-                                            return (
-                                                <label
-                                                    key={p.id}
-                                                    className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
-                                                        checked ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                                    }`}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                                        checked={checked}
-                                                        onChange={e => {
-                                                            if (e.target.checked) {
-                                                                meetingForm.setData('participant_ids', [...meetingForm.data.participant_ids, p.id]);
-                                                            } else {
-                                                                meetingForm.setData('participant_ids', meetingForm.data.participant_ids.filter(id => id !== p.id));
-                                                            }
-                                                        }}
-                                                    />
-                                                    <ProfilePhoto
-                                                        src={p.profile_photo_url}
-                                                        alt={p.first_name}
-                                                        className="w-7 h-7 rounded-full object-cover shrink-0"
-                                                        fallback={(p.first_name?.[0] || 'P').toUpperCase()}
-                                                    />
-                                                    <span className="text-sm text-gray-800 dark:text-gray-100 leading-tight">
-                                                        {p.first_name} {p.last_name}
-                                                        {p.nickname && <span className="text-xs text-gray-400 ml-1">({p.nickname})</span>}
-                                                    </span>
-                                                </label>
-                                            );
-                                        })
-                                    }
-                                    {participants.length === 0 && (
-                                        <div className="p-3 text-sm text-gray-500 italic text-center">{__('No participants assigned')}</div>
-                                    )}
-                                </div>
-                                <p className="mt-1 text-xs text-gray-500">
-                                    {meetingForm.data.participant_ids.length} {__('selected')}
-                                </p>
-                                <InputError message={meetingForm.errors.participant_ids} />
-                            </div>
-
-                            {/* ── Meeting Agenda ── */}
-                            <div>
-                                <InputLabel value={__('Meeting Agenda')} />
-                                <div className="mt-2 space-y-2">
-                                    {AGENDA_OPTIONS.map(opt => (
-                                        <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="agenda_type"
-                                                value={opt.value}
-                                                checked={meetingForm.data.agenda_type === opt.value}
-                                                onChange={() => meetingForm.setData('agenda_type', opt.value)}
-                                                className="text-indigo-600 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">{opt.label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                                {meetingForm.data.agenda_type === 'lainnya' && (
-                                    <div className="mt-2">
-                                        <InputLabel value={__('Description')} />
-                                        <textarea
-                                            className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
-                                            rows={2}
-                                            placeholder={__('Describe the agenda...')}
-                                            value={meetingForm.data.agenda}
-                                            onChange={e => meetingForm.setData('agenda', e.target.value)}
-                                        />
-                                    </div>
-                                )}
-                                <InputError message={meetingForm.errors.agenda_type} />
-                            </div>
-
-                            {/* ── Tools & Materials ── */}
-                            <div>
-                                <InputLabel value={__('Tools & Materials')} />
-                                <textarea
-                                    className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
-                                    rows={2}
-                                    placeholder={__('e.g. Alkitab, buku catatan, pena...')}
-                                    value={meetingForm.data.tools_materials}
-                                    onChange={e => meetingForm.setData('tools_materials', e.target.value)}
-                                />
-                                <InputError message={meetingForm.errors.tools_materials} />
-                            </div>
-
-                            {/* ── Location ── */}
-                            <div>
-                                <InputLabel value={__('Location')} />
-                                <TextInput
-                                    className="w-full mt-1"
-                                    placeholder={__('e.g. Ruang Meeting A, Online...')}
-                                    value={meetingForm.data.location}
-                                    onChange={e => meetingForm.setData('location', e.target.value)}
-                                />
-                            </div>
-
-                            {/* ── Meeting Link ── */}
-                            <div>
-                                <InputLabel value={__('Meeting Link')} />
-                                <TextInput
-                                    className="w-full mt-1"
-                                    placeholder="https://..."
-                                    value={meetingForm.data.meeting_link}
-                                    onChange={e => meetingForm.setData('meeting_link', e.target.value)}
-                                />
-                            </div>
-
-                            {/* ── Status (edit only) ── */}
-                            {modalMode === 'edit_meeting' && (
-                                <div>
-                                    <InputLabel value={__('Status')} />
-                                    {meetingForm.data.status === 'deletion_requested' ? (
-                                        <div className="mt-1 flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-400">
-                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                                            </svg>
-                                            {__('Deletion Pending Admin Approval')}
-                                        </div>
-                                    ) : (
-                                        <SelectInput
-                                            className="w-full mt-1"
-                                            value={meetingForm.data.status}
-                                            onChange={e => meetingForm.setData('status', e.target.value)}
-                                        >
-                                            <option value="scheduled">{__('Scheduled')}</option>
-                                            <option value="pending">{__('Pending Approval')}</option>
-                                            <option value="confirmed">{__('Confirmed')}</option>
-                                            <option value="cancelled">{__('Cancelled')}</option>
-                                            <option value="completed">{__('Completed')}</option>
-                                        </SelectInput>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* ── Notes ── */}
-                            <div>
-                                <InputLabel value={__('Notes')} />
-                                <textarea
-                                    className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
-                                    rows={2}
-                                    value={meetingForm.data.notes}
-                                    onChange={e => meetingForm.setData('notes', e.target.value)}
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
-                                {modalMode === 'edit_meeting' ? (
-                                    selectedEvent?.data?.status === 'deletion_requested' ? (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            {__('Deletion Pending Approval')}
-                                        </span>
-                                    ) : (
-                                        <DangerButton type="button" onClick={deleteMeeting}>{__('Request Deletion')}</DangerButton>
-                                    )
-                                ) : <div />}
-                                <div className="flex gap-2">
-                                    <SecondaryButton type="button" onClick={() => setIsModalOpen(false)}>{__('Cancel')}</SecondaryButton>
-                                    <PrimaryButton disabled={meetingForm.processing}>{__('Save')}</PrimaryButton>
-                                </div>
-                            </div>
-                        </form>
-                    )}
+                    {/* meeting form moved to its own top-anchored overlay below */}
                     
                     {modalMode === 'view_availability' && (
                          <div className="space-y-4">
@@ -1241,6 +1200,271 @@ export default function MentorScheduleTab() {
                     )}
                 </div>
             </Modal>
+
+            {/* ── Meeting Form Overlay (top-anchored, scrollable) ────────── */}
+            {isModalOpen && (modalMode === 'create_meeting' || modalMode === 'edit_meeting') && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 bg-gray-700/75" onClick={() => setIsModalOpen(false)} />
+
+                    {/* Panel — starts near the top, scrolls with page */}
+                    <div className="relative mx-auto mt-6 mb-10 w-full max-w-2xl px-4 sm:px-0">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden">
+                            {/* Sticky header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10">
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    {modalMode === 'create_meeting' ? __('Schedule Meeting') : __('Edit Meeting')}
+                                </h2>
+                                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <form onSubmit={submitMeeting} className="px-6 py-5 space-y-5">
+
+                                {/* ── Date & Time ── */}
+                                <div>
+                                    <InputLabel value={__('Date & Time')} />
+                                    <div className="mt-1 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                                        <div className="text-sm font-semibold text-indigo-800 dark:text-indigo-200 mb-3">
+                                            {scheduledDate
+                                                ? new Date(scheduledDate + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                                                : __('No date selected')}
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <InputLabel value={__('Start Time')} />
+                                                <TextInput
+                                                    type="time"
+                                                    className="w-full mt-1"
+                                                    value={scheduledTime}
+                                                    min={modalMode === 'create_meeting' && scheduledDate === nowDateTimeLocal.split('T')[0] ? nowDateTimeLocal.split('T')[1] : undefined}
+                                                    onChange={e => meetingForm.setData('scheduled_at', `${scheduledDate}T${e.target.value}`)}
+                                                />
+                                            </div>
+                                            <div>
+                                                <InputLabel value={__('End Time')} />
+                                                <TextInput
+                                                    type="time"
+                                                    className="w-full mt-1"
+                                                    value={endTimePart}
+                                                    min={scheduledTime || undefined}
+                                                    onChange={e => meetingForm.setData('end_time', `${scheduledDate}T${e.target.value}`)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <InputError message={meetingForm.errors.scheduled_at} />
+                                    <InputError message={meetingForm.errors.end_time} />
+                                </div>
+
+                                {/* ── Participants ── */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <InputLabel value={__('Participants')} />
+                                        <button
+                                            type="button"
+                                            className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                                            onClick={() => meetingForm.setData(
+                                                'participant_ids',
+                                                allParticipantsSelected ? [] : participants.map(p => p.id)
+                                            )}
+                                        >
+                                            {allParticipantsSelected ? __('Deselect All') : __('Select All')}
+                                        </button>
+                                    </div>
+
+                                    <TextInput
+                                        placeholder={__('Search participants...')}
+                                        className="w-full mb-2"
+                                        value={participantSearch}
+                                        onChange={e => setParticipantSearch(e.target.value)}
+                                    />
+
+                                    <div className="max-h-44 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
+                                        {participants
+                                            .filter(p => {
+                                                if (!participantSearch) return true;
+                                                const s = participantSearch.toLowerCase();
+                                                return (p.first_name + ' ' + p.last_name + ' ' + (p.nickname || '')).toLowerCase().includes(s);
+                                            })
+                                            .map(p => {
+                                                const checked = meetingForm.data.participant_ids.includes(p.id);
+                                                return (
+                                                    <label
+                                                        key={p.id}
+                                                        className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
+                                                            checked ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                        }`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                            checked={checked}
+                                                            onChange={e => {
+                                                                if (e.target.checked) {
+                                                                    meetingForm.setData('participant_ids', [...meetingForm.data.participant_ids, p.id]);
+                                                                } else {
+                                                                    meetingForm.setData('participant_ids', meetingForm.data.participant_ids.filter(id => id !== p.id));
+                                                                }
+                                                            }}
+                                                        />
+                                                        <ProfilePhoto
+                                                            src={p.profile_photo_url}
+                                                            alt={p.first_name}
+                                                            className="w-7 h-7 rounded-full object-cover shrink-0"
+                                                            fallback={(p.first_name?.[0] || 'P').toUpperCase()}
+                                                        />
+                                                        <span className="text-sm text-gray-800 dark:text-gray-100 leading-tight">
+                                                            {p.first_name} {p.last_name}
+                                                            {p.nickname && <span className="text-xs text-gray-400 ml-1">({p.nickname})</span>}
+                                                        </span>
+                                                    </label>
+                                                );
+                                            })
+                                        }
+                                        {participants.length === 0 && (
+                                            <div className="p-3 text-sm text-gray-500 italic text-center">{__('No participants assigned')}</div>
+                                        )}
+                                    </div>
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        {meetingForm.data.participant_ids.length} {__('selected')}
+                                    </p>
+                                    <InputError message={meetingForm.errors.participant_ids} />
+                                </div>
+
+                                {/* ── Meeting Agenda ── */}
+                                <div>
+                                    <InputLabel value={__('Meeting Agenda')} />
+                                    <div className="mt-2 space-y-2">
+                                        {AGENDA_OPTIONS.map(opt => (
+                                            <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="agenda_type"
+                                                    value={opt.value}
+                                                    checked={meetingForm.data.agenda_type === opt.value}
+                                                    onChange={() => meetingForm.setData('agenda_type', opt.value)}
+                                                    className="text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">{opt.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {meetingForm.data.agenda_type === 'lainnya' && (
+                                        <div className="mt-2">
+                                            <InputLabel value={__('Description')} />
+                                            <textarea
+                                                className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                                rows={2}
+                                                placeholder={__('Describe the agenda...')}
+                                                value={meetingForm.data.agenda}
+                                                onChange={e => meetingForm.setData('agenda', e.target.value)}
+                                            />
+                                        </div>
+                                    )}
+                                    <InputError message={meetingForm.errors.agenda_type} />
+                                </div>
+
+                                {/* ── Tools & Materials ── */}
+                                <div>
+                                    <InputLabel value={__('Tools & Materials')} />
+                                    <textarea
+                                        className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                        rows={2}
+                                        placeholder={__('e.g. Alkitab, buku catatan, pena...')}
+                                        value={meetingForm.data.tools_materials}
+                                        onChange={e => meetingForm.setData('tools_materials', e.target.value)}
+                                    />
+                                    <InputError message={meetingForm.errors.tools_materials} />
+                                </div>
+
+                                {/* ── Location ── */}
+                                <div>
+                                    <InputLabel value={__('Location')} />
+                                    <TextInput
+                                        className="w-full mt-1"
+                                        placeholder={__('e.g. Ruang Meeting A, Online...')}
+                                        value={meetingForm.data.location}
+                                        onChange={e => meetingForm.setData('location', e.target.value)}
+                                    />
+                                </div>
+
+                                {/* ── Meeting Link ── */}
+                                <div>
+                                    <InputLabel value={__('Meeting Link')} />
+                                    <TextInput
+                                        className="w-full mt-1"
+                                        placeholder="https://..."
+                                        value={meetingForm.data.meeting_link}
+                                        onChange={e => meetingForm.setData('meeting_link', e.target.value)}
+                                    />
+                                </div>
+
+                                {/* ── Status (edit only) ── */}
+                                {modalMode === 'edit_meeting' && (
+                                    <div>
+                                        <InputLabel value={__('Status')} />
+                                        {meetingForm.data.status === 'deletion_requested' ? (
+                                            <div className="mt-1 flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-400">
+                                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                                </svg>
+                                                {__('Deletion Pending Admin Approval')}
+                                            </div>
+                                        ) : (
+                                            <SelectInput
+                                                className="w-full mt-1"
+                                                value={meetingForm.data.status}
+                                                onChange={e => meetingForm.setData('status', e.target.value)}
+                                            >
+                                                <option value="scheduled">{__('Scheduled')}</option>
+                                                <option value="pending">{__('Pending Approval')}</option>
+                                                <option value="confirmed">{__('Confirmed')}</option>
+                                                <option value="cancelled">{__('Cancelled')}</option>
+                                                <option value="completed">{__('Completed')}</option>
+                                            </SelectInput>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* ── Notes ── */}
+                                <div>
+                                    <InputLabel value={__('Notes')} />
+                                    <textarea
+                                        className="w-full mt-1 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                        rows={2}
+                                        value={meetingForm.data.notes}
+                                        onChange={e => meetingForm.setData('notes', e.target.value)}
+                                    />
+                                </div>
+
+                                {/* ── Actions ── */}
+                                <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    {modalMode === 'edit_meeting' ? (
+                                        selectedEvent?.data?.status === 'deletion_requested' ? (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700">
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {__('Deletion Pending Approval')}
+                                            </span>
+                                        ) : (
+                                            <DangerButton type="button" onClick={deleteMeeting}>{__('Request Deletion')}</DangerButton>
+                                        )
+                                    ) : <div />}
+                                    <div className="flex gap-2">
+                                        <SecondaryButton type="button" onClick={() => setIsModalOpen(false)}>{__('Cancel')}</SecondaryButton>
+                                        <PrimaryButton disabled={meetingForm.processing}>{__('Save')}</PrimaryButton>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── QR Code Modal ── */}
             <Modal show={isQrModalOpen} onClose={() => setIsQrModalOpen(false)}>

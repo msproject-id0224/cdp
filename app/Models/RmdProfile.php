@@ -16,6 +16,7 @@ class RmdProfile extends Model
         'first_filled_at',
         'first_filled_age',
         'first_filled_education',
+        'first_filled_education_institution',
     ];
 
     protected $casts = [

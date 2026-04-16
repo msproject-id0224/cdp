@@ -1,6 +1,6 @@
 import { __ } from '@/Utils/lang'
 
-export default function Footer ({ transparent = false }) {
+export default function Footer ({ transparent = true }) {
     return (
         <footer
             className={
@@ -11,14 +11,10 @@ export default function Footer ({ transparent = false }) {
         >
             <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-6 py-5 sm:py-5'>
                 <div
-                    className={`flex flex-col items-center justify-center text-base sm:text-sm text-center ${
-                        transparent
-                            ? 'text-white/70'
-                            : 'text-gray-500 dark:text-gray-400'
-                    }`}
+                    className={`flex flex-col items-center justify-center text-xs text-center text-gray-200 dark:text-gray-300`}
                 >
                     &copy; {new Date().getFullYear()}
-                    {' msproject & '}
+                    {' MSProject & '}
                     {__('CDP Development Team')}. {__('All rights reserved.')}
                 </div>
             </div>

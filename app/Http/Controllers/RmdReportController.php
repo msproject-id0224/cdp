@@ -36,9 +36,10 @@ class RmdReportController extends Controller
         if (!$isMentor) {
             try {
                 $chartData = [
-                    'age_distribution' => $chartService->getAgeDistributionAllParticipants(),
-                    'participation_rate' => $chartService->getRmdParticipationRate(),
-                    'progress_distribution' => $chartService->getRmdFillingProgressDistribution(),
+                    'age_distribution'          => $chartService->getAgeDistributionAllParticipants(),
+                    'participation_rate'         => $chartService->getRmdParticipationRate(),
+                    'progress_distribution'      => $chartService->getRmdFillingProgressDistribution(),
+                    'career_choice_distribution' => $chartService->getFinalCareerChoiceDistribution(),
                 ];
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Error fetching RMD chart data: ' . $e->getMessage());

@@ -125,6 +125,183 @@ const LEARNING_STYLE_PROFESSIONS = {
     ],
 };
 
+// ─── Kecerdasan Majemuk – opsi kemampuan & profesi (Howard Gardner) ───────────
+const MI_OPTIONS = {
+    linguistic_ability: [
+        'Berbicara dan berdebat secara efektif',
+        'Menulis kreatif (cerita, puisi, esai)',
+        'Membaca kritis dan analitis',
+        'Menghafal kosa kata dengan mudah',
+        'Mendongeng dan bercerita',
+        'Retorika dan persuasi verbal',
+        'Menguasai lebih dari satu bahasa',
+        'Bermain kata (humor, pantun, puisi)',
+    ],
+    linguistic_professions: [
+        'Penulis / Novelis',
+        'Jurnalis / Reporter Berita',
+        'Pengacara / Advokat',
+        'Guru / Dosen',
+        'Penyair / Sastrawan',
+        'Penyiar Radio / TV',
+        'Pembicara Publik / Motivator',
+        'Penerjemah / Interpreter',
+        'Editor / Proofreader',
+        'Politisi / Diplomat',
+        'Komedian / Stand-Up Comedian',
+    ],
+    logical_math_ability: [
+        'Berpikir logis dan kritis',
+        'Memahami dan mengoperasikan angka',
+        'Memecahkan masalah secara sistematis',
+        'Mengenali pola dan urutan',
+        'Penalaran abstrak dan deduktif',
+        'Merancang eksperimen ilmiah',
+        'Analisis dan interpretasi data',
+        'Pemrograman dan algoritma',
+    ],
+    logical_math_professions: [
+        'Ilmuwan / Peneliti',
+        'Insinyur / Engineer',
+        'Akuntan / Auditor Keuangan',
+        'Dokter Umum / Spesialis',
+        'Ekonom / Analis Keuangan',
+        'Programmer / Software Developer',
+        'Analis Data / Data Scientist',
+        'Matematikawan / Statistikawan',
+        'Ahli Farmasi / Apoteker',
+        'Ahli Forensik',
+    ],
+    visual_spatial_ability: [
+        'Berpikir tiga dimensi (3D)',
+        'Memvisualisasikan objek dan ruang',
+        'Membaca peta, diagram, dan grafik',
+        'Navigasi dan orientasi arah',
+        'Menggambar dan melukis',
+        'Memahami proporsi dan perspektif',
+        'Imajinasi visual yang kuat',
+        'Merakit dan merancang objek',
+    ],
+    visual_spatial_professions: [
+        'Arsitek',
+        'Seniman / Pelukis',
+        'Desainer Grafis / UI-UX Designer',
+        'Desainer Interior',
+        'Pilot / Navigator',
+        'Fotografer / Videografer',
+        'Dokter Bedah / Ahli Radiologi',
+        'Perencana Kota / Urban Planner',
+        'Kartografer / GIS Specialist',
+        'Insinyur Sipil / Konstruksi',
+        'Animator / Motion Designer',
+    ],
+    kinesthetic_ability: [
+        'Koordinasi fisik dan motorik halus',
+        'Keseimbangan dan kelincahan tubuh',
+        'Kekuatan dan stamina fisik',
+        'Kontrol gerakan yang presisi',
+        'Kreasi dengan tangan (handcraft)',
+        'Ekspresi melalui gerakan tubuh',
+        'Kemampuan olahraga dan seni bela diri',
+        'Kepekaan taktil (sentuhan & tekstur)',
+    ],
+    kinesthetic_professions: [
+        'Atlet Profesional / Pelatih Olahraga',
+        'Penari / Koreografer',
+        'Aktor / Aktris',
+        'Dokter Bedah / Fisioterapis',
+        'Mekanik / Teknisi Lapangan',
+        'Pengrajin / Craftsman',
+        'Chef / Koki Profesional',
+        'Instruktur Yoga / Pilates',
+        'Ahli Kebugaran / Personal Trainer',
+    ],
+    musical_ability: [
+        'Kepekaan terhadap nada dan melodi',
+        'Memainkan instrumen musik',
+        'Bernyanyi dengan presisi nada',
+        'Menciptakan melodi dan lirik',
+        'Membaca dan menulis notasi musik',
+        'Kepekaan terhadap ritme dan irama',
+        'Mengingat lagu dan melodi dengan mudah',
+        'Menganalisis dan mengapresiasi musik',
+    ],
+    musical_professions: [
+        'Musisi / Penyanyi Profesional',
+        'Komposer / Penulis Lagu',
+        'Konduktor Orkestra',
+        'Guru Musik / Terapis Musik',
+        'Produser Rekaman / Sound Engineer',
+        'DJ / Music Director',
+        'Pengisi Soundtrack Film / Game',
+        'Kritikus Musik / Jurnalis Musik',
+    ],
+    interpersonal_ability: [
+        'Empati dan memahami perasaan orang lain',
+        'Kepekaan terhadap suasana hati',
+        'Memimpin dan memotivasi kelompok',
+        'Bernegosiasi dan mediasi konflik',
+        'Komunikasi verbal dan nonverbal',
+        'Membangun hubungan dan jejaring',
+        'Bekerja sama dalam tim',
+        'Membaca bahasa tubuh orang lain',
+    ],
+    interpersonal_professions: [
+        'Guru / Konselor Sekolah',
+        'Psikolog / Psikiater',
+        'Manajer / Pemimpin Tim',
+        'Politisi / Diplomat',
+        'Pekerja Sosial / Relawan',
+        'Pemimpin Agama / Rohaniawan',
+        'Sales Manager / Marketing',
+        'HR Manager / Pelatih Korporat',
+        'Event Organizer',
+        'Dokter / Perawat',
+    ],
+    intrapersonal_ability: [
+        'Kesadaran diri (self-awareness)',
+        'Memahami kekuatan dan kelemahan diri',
+        'Regulasi dan pengelolaan emosi',
+        'Refleksi diri yang mendalam',
+        'Pemahaman nilai dan tujuan hidup',
+        'Kemandirian dalam berpikir dan bertindak',
+        'Perencanaan karir jangka panjang',
+        'Ketahanan mental (resilience)',
+    ],
+    intrapersonal_professions: [
+        'Psikolog / Terapis',
+        'Filsuf / Teolog',
+        'Penulis / Blogger',
+        'Pengusaha / Entrepreneur',
+        'Pemimpin Spiritual / Rohaniawan',
+        'Konsultan Karir / Life Coach',
+        'Peneliti Independen',
+        'Ahli Etika / Bioetika',
+    ],
+    naturalist_ability: [
+        'Mengenali dan mengklasifikasikan flora & fauna',
+        'Kepekaan terhadap lingkungan alam',
+        'Memahami ekosistem dan rantai makanan',
+        'Mengamati pola dan perubahan alam',
+        'Merawat tanaman dan hewan',
+        'Pemahaman geografi dan cuaca alam',
+        'Kemampuan survival di alam terbuka',
+        'Kepekaan terhadap isu lingkungan hidup',
+    ],
+    naturalist_professions: [
+        'Ahli Biologi / Ekologi',
+        'Dokter Hewan / Zoologi',
+        'Petani Modern / Agripreneur',
+        'Ahli Konservasi Lingkungan',
+        'Ranger / Penjaga Hutan',
+        'Chef / Ahli Kuliner (Bahan Alam)',
+        'Ahli Geologi / Geografi',
+        'Peneliti Lingkungan / Klimatologi',
+        'Ilmuwan Kelautan / Marine Biologist',
+    ],
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const getParsedItems = (str) => {
     if (!str) return new Set();
     return new Set(str.split(',').map(s => s.trim()).filter(Boolean));
@@ -141,6 +318,201 @@ const addCustomItem = (currentStr, customItem) => {
     const items = getParsedItems(currentStr);
     items.add(customItem.trim());
     return Array.from(items).join(', ');
+};
+// ─── Kecerdasan Majemuk — Howard Gardner ────────────────────────────────────
+const MULTIPLE_INTELLIGENCE_DATA = {
+    linguistic: {
+        abilities: [
+            'Membaca dan menulis dengan baik dan cepat',
+            'Mudah mengingat kata-kata, kutipan, dan informasi verbal',
+            'Pandai bercerita dan menjelaskan ide secara lisan',
+            'Peka terhadap makna, ritme, dan bunyi bahasa',
+            'Mampu mempelajari bahasa asing dengan mudah',
+            'Kemampuan retorika, persuasi, dan debat yang kuat',
+            'Suka bermain kata-kata (teka-teki, pantun, puisi)',
+            'Mampu menulis dengan gaya dan struktur yang variatif',
+        ],
+        professions: [
+            'Penulis / Novelis / Sastrawan',
+            'Jurnalis / Reporter / Editor',
+            'Pengacara / Advokat / Jaksa',
+            'Guru / Dosen Bahasa / Pengajar',
+            'Penyiar / Presenter / Host Acara',
+            'Penerjemah / Interpreter / Translator',
+            'Politikus / Orator / Juru Bicara',
+            'Copywriter / Content Writer / Blogger',
+            'Diplomat / Negosiator',
+            'Penyair / Penulis Skenario / Script Writer',
+        ],
+    },
+    logical_math: {
+        abilities: [
+            'Berpikir logis, sistematis, dan analitis',
+            'Mampu memecahkan masalah matematika dan sains',
+            'Mengenali pola, hubungan, dan sebab-akibat dengan cepat',
+            'Berpikir abstrak dan ilmiah',
+            'Mampu mengklasifikasikan, mengurutkan, dan mengkategorikan',
+            'Menyukai eksperimen, pembuktian logis, dan strategi',
+            'Kemampuan kalkulasi dan komputasi yang kuat',
+            'Senang dengan teka-teki logika dan permainan strategi',
+        ],
+        professions: [
+            'Ilmuwan / Peneliti / Akademisi',
+            'Insinyur / Engineer (Sipil, Mesin, Elektro)',
+            'Programmer / Software Developer / Data Scientist',
+            'Akuntan / Auditor / Analis Keuangan',
+            'Ahli Statistik / Matematikawan / Aktuaris',
+            'Dokter / Ahli Medis / Apoteker',
+            'Ekonom / Analis Bisnis / Konsultan Strategi',
+            'Detektif / Investigator / Kriminolog',
+            'Arsitek / Perencana Kota / Quantity Surveyor',
+            'Trader / Analis Investasi / Manajer Risiko',
+        ],
+    },
+    visual_spatial: {
+        abilities: [
+            'Berpikir dalam bentuk gambar, peta, dan diagram',
+            'Orientasi ruang dan navigasi yang kuat',
+            'Mampu membayangkan objek dalam tiga dimensi',
+            'Peka terhadap warna, garis, bentuk, dan komposisi',
+            'Mudah membaca peta, grafik, dan ilustrasi teknis',
+            'Mampu memvisualisasikan perubahan dan transformasi',
+            'Kepekaan estetika dan seni visual yang tinggi',
+            'Pandai menggambar, merancang, dan mendekorasi',
+        ],
+        professions: [
+            'Arsitek / Desainer Interior / Urban Planner',
+            'Desainer Grafis / UI/UX Designer / Motion Designer',
+            'Pilot / Navigator / Kapten Kapal',
+            'Pelukis / Seniman / Ilustrator',
+            'Ahli Radiologi / Dokter Bedah',
+            'Insinyur / Drafter / CAD Engineer',
+            'Fotografer / Videografer / Sinematografer',
+            'Animator / Game Designer / 3D Artist',
+            'Kartografer / GIS Specialist / Geomatics Engineer',
+            'Ahli Geologi / Astronomer / Oseanograf',
+        ],
+    },
+    kinesthetic: {
+        abilities: [
+            'Mengontrol gerakan tubuh dengan presisi dan kelincahan',
+            'Belajar paling efektif melalui praktik langsung (hands-on)',
+            'Koordinasi fisik dan keseimbangan yang sangat baik',
+            'Peka terhadap sentuhan, tekstur, dan sensasi fisik',
+            'Mampu memanipulasi objek dengan keterampilan tangan',
+            'Mengekspresikan diri melalui gerakan dan tari',
+            'Ketangkasan, refleks cepat, dan reaksi fisik yang baik',
+            'Ketahanan fisik dan stamina yang kuat',
+        ],
+        professions: [
+            'Atlet Profesional / Olahragawan / Pelatih Olahraga',
+            'Penari / Koreografer / Instruktur Seni Gerak',
+            'Dokter Bedah / Dokter Gigi / Bidan Profesional',
+            'Pengrajin / Seniman Pahat / Tukang Kayu',
+            'Aktor / Performer / Seniman Pertunjukan',
+            'Fisioterapis / Terapis Okupasi / Chiropractor',
+            'Mekanik / Teknisi Otomotif / Insinyur Lapangan',
+            'Chef / Koki Profesional / Pastry Chef',
+            'Personal Trainer / Instruktur Fitness / Yoga',
+            'Petugas Pemadam Kebakaran / Tim SAR / Tentara',
+        ],
+    },
+    musical: {
+        abilities: [
+            'Peka terhadap ritme, nada, melodi, dan harmoni musik',
+            'Mudah mengenali dan mereproduksi pola-pola musik',
+            'Mampu bernyanyi atau memainkan alat musik dengan baik',
+            'Memahami struktur, teori, dan komposisi musik',
+            'Kemampuan membedakan suara, irama, dan pitch dengan akurat',
+            'Mengingat informasi lebih mudah melalui lagu atau musik',
+            'Mampu menciptakan dan menyusun komposisi musik',
+            'Kepekaan emosional yang tinggi terhadap ekspresi musikal',
+        ],
+        professions: [
+            'Musisi / Penyanyi Profesional',
+            'Komposer / Arranger / Produser Musik',
+            'Guru Musik / Instruktur Vokal / Instruktur Alat Musik',
+            'Sound Engineer / Audio Engineer / Music Producer',
+            'Terapis Musik / Music Therapist',
+            'Konduktor Orkestra / Dirigen',
+            'Penyiar Radio / DJ / Podcaster',
+            'Pengisi Suara / Voice Actor / Dubber',
+            'Kritikus Musik / Musikolog / Jurnalis Musik',
+            'Game Audio Designer / Komposer Soundtrack Film',
+        ],
+    },
+    interpersonal: {
+        abilities: [
+            'Memahami perasaan, motivasi, dan kebutuhan orang lain',
+            'Berkomunikasi secara efektif dan persuasif',
+            'Berempati tinggi dan mudah membaca emosi',
+            'Mampu memimpin, mengorganisasi, dan mempengaruhi orang',
+            'Pandai menyelesaikan konflik dan negosiasi',
+            'Mampu bekerja sama dalam tim secara harmonis',
+            'Mudah bergaul dan membangun jaringan sosial yang luas',
+            'Peka terhadap dinamika kelompok dan situasi sosial',
+        ],
+        professions: [
+            'Guru / Konselor / Psikolog',
+            'Manajer / Pemimpin Tim / Direktur',
+            'Politikus / Diplomat / Juru Bicara',
+            'Pekerja Sosial / Konselor Karir',
+            'Pengacara / Mediator / Negosiator',
+            'Sales Manager / Marketing / Customer Relations',
+            'HR Manager / Rekruter / Trainer Korporat',
+            'Terapis / Psikiater / Life Coach',
+            'Pemimpin Agama / Rohaniawan / Konselor Spiritual',
+            'Event Organizer / Public Relations / Brand Strategist',
+        ],
+    },
+    intrapersonal: {
+        abilities: [
+            'Memahami diri sendiri secara mendalam (kekuatan & kelemahan)',
+            'Kemampuan refleksi, introspeksi, dan kesadaran diri yang kuat',
+            'Mampu mengatur emosi, motivasi, dan tujuan pribadi',
+            'Mandiri dan memiliki disiplin diri yang kuat',
+            'Mampu menetapkan visi jangka panjang dan merencanakan',
+            'Peka terhadap nilai-nilai, keyakinan, dan prinsip hidup',
+            'Mampu bekerja secara mandiri dengan fokus dan konsentrasi tinggi',
+            'Kemampuan berpikir mendalam, filosofis, dan reflektif',
+        ],
+        professions: [
+            'Psikolog / Konselor Klinis / Psikoterapis',
+            'Filsuf / Penulis / Pemikir',
+            'Pengusaha / Entrepreneur / Intrapreneur',
+            'Peneliti / Ilmuwan Mandiri',
+            'Penulis / Blogger / Content Creator',
+            'Rohaniawan / Pemimpin Spiritual / Pendeta',
+            'Life Coach / Mentor / Motivator',
+            'Seniman / Kreator Independen',
+            'Dokter / Ahli Kesehatan Mental / Psikiater',
+            'Manajer Proyek / Konsultan Strategi',
+        ],
+    },
+    naturalist: {
+        abilities: [
+            'Mengenali dan mengklasifikasikan flora, fauna, dan mineral',
+            'Kepekaan tinggi terhadap lingkungan alam sekitar',
+            'Mengamati pola alam dan perubahan ekosistem',
+            'Mampu bertahan dan beradaptasi di lingkungan alam',
+            'Kepedulian tinggi terhadap konservasi dan pelestarian alam',
+            'Membedakan spesies dan memahami karakteristik makhluk hidup',
+            'Kemampuan berkebun, bercocok tanam, dan budidaya',
+            'Senang mengeksplorasi alam (hiking, diving, birdwatching)',
+        ],
+        professions: [
+            'Biolog / Ahli Ekologi / Ahli Taksonomi',
+            'Dokter Hewan / Veteriner / Konservator Satwa',
+            'Petani Modern / Agronome / Ahli Hortikultura',
+            'Ahli Lingkungan / Konservasionis / Aktivis Lingkungan',
+            'Ahli Botani / Zoologi / Entomologi',
+            'Geolog / Oseanograf / Ahli Meteorologi',
+            'Ranger / Penjaga Hutan / Taman Nasional',
+            'Peneliti Kelautan / Ahli Biologi Laut',
+            'Landscape Architect / Ahli Agroforestri',
+            'Chef Berbasis Bahan Alam / Ahli Pangan Alami',
+        ],
+    },
 };
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -183,6 +555,24 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
         visual_professions: '',
         auditory_professions: '',
         kinesthetic_professions_style: '',
+    });
+
+    const STYLE_IDS = ['visual_professions', 'auditory_professions', 'kinesthetic_professions_style'];
+    const activeStyle = STYLE_IDS.find(id => getParsedItems(data[id]).size > 0) ?? null;
+
+    const clearStyle = (styleId) => {
+        setData({ ...data, [styleId]: '', interested_professions_from_style: '' });
+    };
+
+    const [miCustomText, setMiCustomText] = useState({
+        linguistic_ability: '', linguistic_professions: '',
+        logical_math_ability: '', logical_math_professions: '',
+        visual_spatial_ability: '', visual_spatial_professions: '',
+        kinesthetic_ability: '', kinesthetic_professions: '',
+        musical_ability: '', musical_professions: '',
+        interpersonal_ability: '', interpersonal_professions: '',
+        intrapersonal_ability: '', intrapersonal_professions: '',
+        naturalist_ability: '', naturalist_professions: '',
     });
 
     const submit = (e) => {
@@ -267,6 +657,11 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                 </div>
                             </div>
 
+                            {/* Single-style selection notice */}
+                            <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-800 dark:text-amber-300">
+                                <span className="shrink-0">⚠️</span>
+                                <span>Pilih profesi dari <strong>1 gaya belajar saja</strong>. Setelah memilih, gaya belajar lainnya akan terkunci. Klik <em>Ganti Pilihan</em> untuk beralih ke gaya belajar lain.</span>
+                            </div>
                             <div className="border-2 border-orange-400 dark:border-orange-700 rounded-3xl overflow-hidden shadow-lg">
                                 <table className="w-full border-collapse">
                                     <thead>
@@ -285,23 +680,37 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                             const categories = LEARNING_STYLE_PROFESSIONS[item.id] || [];
                                             const allPredefined = categories.flatMap(c => c.items);
                                             const customItems = Array.from(checked).filter(i => !allPredefined.includes(i));
+                                            const isLocked = activeStyle !== null && activeStyle !== item.id;
                                             return (
                                                 <tr key={item.id}>
                                                     {/* Label column */}
                                                     <td className={`py-6 px-4 border-r-2 border-orange-400 dark:border-orange-700 text-center align-top bg-gray-50 dark:bg-gray-800/50`}>
                                                         <div className="flex flex-col items-center gap-2 sticky top-4">
-                                                            <span className="text-4xl">{item.icon}</span>
-                                                            <span className="font-bold text-sm uppercase tracking-wider">{item.label}</span>
-                                                            {checked.size > 0 && (
-                                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.accentBg} ${item.accentText} border ${item.accentBorder}`}>
-                                                                    {checked.size} dipilih
+                                                            <span className={`text-4xl${isLocked ? ' opacity-40' : ''}`}>{item.icon}</span>
+                                                            <span className={`font-bold text-sm uppercase tracking-wider${isLocked ? ' text-gray-400 dark:text-gray-500' : ''}`}>{item.label}</span>
+                                                            {isLocked ? (
+                                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 border border-gray-200 dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600">
+                                                                    🔒 Terkunci
                                                                 </span>
-                                                            )}
+                                                            ) : checked.size > 0 ? (
+                                                                <>
+                                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.accentBg} ${item.accentText} border ${item.accentBorder}`}>
+                                                                        {checked.size} dipilih
+                                                                    </span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => clearStyle(item.id)}
+                                                                        className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold underline mt-1 transition-colors"
+                                                                    >
+                                                                        Ganti Pilihan
+                                                                    </button>
+                                                                </>
+                                                            ) : null}
                                                         </div>
                                                     </td>
 
                                                     {/* Checkbox column */}
-                                                    <td className="p-4 align-top">
+                                                    <td className={`p-4 align-top${isLocked ? ' opacity-40 pointer-events-none select-none' : ''}`}>
                                                         <div className="space-y-4">
                                                             {categories.map(cat => (
                                                                 <div key={cat.category}>
@@ -492,40 +901,145 @@ export default function MenentukanCitaCita({ auth, careerExploration }) {
                                     </thead>
                                     <tbody className="divide-y-2 divide-orange-400 dark:divide-orange-700 text-gray-800 dark:text-gray-200 text-sm">
                                         {[
-                                            { no: 1, label: __('RMD_CH4_MI_LINGUISTIC'), ability: 'linguistic_ability', professions: 'linguistic_professions' },
-                                            { no: 2, label: __('RMD_CH4_MI_LOGICAL_MATH'), ability: 'logical_math_ability', professions: 'logical_math_professions' },
-                                            { no: 3, label: __('RMD_CH4_MI_VISUAL_SPATIAL'), ability: 'visual_spatial_ability', professions: 'visual_spatial_professions' },
-                                            { no: 4, label: __('RMD_CH4_MI_KINESTHETIC'), ability: 'kinesthetic_ability', professions: 'kinesthetic_professions' },
-                                            { no: 5, label: __('RMD_CH4_MI_MUSICAL'), ability: 'musical_ability', professions: 'musical_professions' },
-                                            { no: 6, label: __('RMD_CH4_MI_INTERPERSONAL'), ability: 'interpersonal_ability', professions: 'interpersonal_professions' },
-                                            { no: 7, label: __('RMD_CH4_MI_INTRAPERSONAL'), ability: 'intrapersonal_ability', professions: 'intrapersonal_professions' },
-                                            { no: 8, label: __('RMD_CH4_MI_NATURALIST'), ability: 'naturalist_ability', professions: 'naturalist_professions' },
-                                        ].map((item) => (
-                                            <tr key={item.no}>
-                                                <td className="py-4 px-4 border-r-2 border-orange-400 dark:border-orange-700 text-center font-bold bg-gray-50 dark:bg-gray-800/50">
-                                                    {item.no}
-                                                </td>
-                                                <td className="py-4 px-6 border-r-2 border-orange-400 dark:border-orange-700 font-bold bg-gray-50 dark:bg-gray-800/50">
-                                                    {item.label}
-                                                </td>
-                                                <td className="p-2 border-r-2 border-orange-400 dark:border-orange-700">
-                                                    <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
-                                                        value={data[item.ability]}
-                                                        onChange={e => setData(item.ability, e.target.value)}
-                                                        placeholder={__('RMD_CH4_PLACEHOLDER_ABILITY')}
-                                                    />
-                                                </td>
-                                                <td className="p-2">
-                                                    <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
-                                                        value={data[item.professions]}
-                                                        onChange={e => setData(item.professions, e.target.value)}
-                                                        placeholder={__('RMD_CH4_PLACEHOLDER_PROFESSION')}
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
+                                            { no: 1, key: 'linguistic',     label: __('RMD_CH4_MI_LINGUISTIC'),    ability: 'linguistic_ability',    professions: 'linguistic_professions' },
+                                            { no: 2, key: 'logical_math',   label: __('RMD_CH4_MI_LOGICAL_MATH'),  ability: 'logical_math_ability',  professions: 'logical_math_professions' },
+                                            { no: 3, key: 'visual_spatial', label: __('RMD_CH4_MI_VISUAL_SPATIAL'),ability: 'visual_spatial_ability', professions: 'visual_spatial_professions' },
+                                            { no: 4, key: 'kinesthetic',    label: __('RMD_CH4_MI_KINESTHETIC'),   ability: 'kinesthetic_ability',   professions: 'kinesthetic_professions' },
+                                            { no: 5, key: 'musical',        label: __('RMD_CH4_MI_MUSICAL'),       ability: 'musical_ability',       professions: 'musical_professions' },
+                                            { no: 6, key: 'interpersonal',  label: __('RMD_CH4_MI_INTERPERSONAL'), ability: 'interpersonal_ability', professions: 'interpersonal_professions' },
+                                            { no: 7, key: 'intrapersonal',  label: __('RMD_CH4_MI_INTRAPERSONAL'), ability: 'intrapersonal_ability', professions: 'intrapersonal_professions' },
+                                            { no: 8, key: 'naturalist',     label: __('RMD_CH4_MI_NATURALIST'),    ability: 'naturalist_ability',    professions: 'naturalist_professions' },
+                                        ].map((item) => {
+                                            const miInfo = MULTIPLE_INTELLIGENCE_DATA[item.key];
+                                            const abilityChecked = getParsedItems(data[item.ability]);
+                                            const profChecked    = getParsedItems(data[item.professions]);
+                                            const customAbilities = Array.from(abilityChecked).filter(a => !miInfo.abilities.includes(a));
+                                            const customProfs     = Array.from(profChecked).filter(p => !miInfo.professions.includes(p));
+                                            return (
+                                                <tr key={item.no}>
+                                                    <td className="py-4 px-4 border-r-2 border-orange-400 dark:border-orange-700 text-center font-bold bg-gray-50 dark:bg-gray-800/50 align-top">
+                                                        {item.no}
+                                                    </td>
+                                                    <td className="py-4 px-4 border-r-2 border-orange-400 dark:border-orange-700 font-bold bg-gray-50 dark:bg-gray-800/50 align-top text-sm leading-snug">
+                                                        {item.label}
+                                                    </td>
+
+                                                    {/* Kemampuan */}
+                                                    <td className="p-3 border-r-2 border-orange-400 dark:border-orange-700 align-top">
+                                                        <div className="space-y-1">
+                                                            {miInfo.abilities.map(ab => (
+                                                                <label key={ab} className={`flex items-start gap-2 cursor-pointer rounded px-2 py-1.5 transition-all select-none text-xs ${
+                                                                    abilityChecked.has(ab)
+                                                                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700'
+                                                                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/40 border border-transparent'
+                                                                }`}>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className="w-3.5 h-3.5 rounded shrink-0 accent-blue-500 mt-0.5"
+                                                                        checked={abilityChecked.has(ab)}
+                                                                        onChange={() => setData(item.ability, toggleItem(data[item.ability], ab))}
+                                                                    />
+                                                                    <span className={`leading-snug ${abilityChecked.has(ab) ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
+                                                                        {ab}
+                                                                    </span>
+                                                                </label>
+                                                            ))}
+                                                            {customAbilities.map(ca => (
+                                                                <span key={ca} className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded border border-blue-200 dark:border-blue-700">
+                                                                    {ca}
+                                                                    <button type="button" onClick={() => setData(item.ability, toggleItem(data[item.ability], ca))} className="ml-1 text-blue-400 hover:text-red-500 font-bold leading-none">×</button>
+                                                                </span>
+                                                            ))}
+                                                            <div className="flex gap-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                                                <input
+                                                                    type="text"
+                                                                    value={miCustomText[item.ability] || ''}
+                                                                    onChange={e => setMiCustomText(prev => ({ ...prev, [item.ability]: e.target.value }))}
+                                                                    onKeyDown={e => {
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            if ((miCustomText[item.ability] || '').trim()) {
+                                                                                setData(item.ability, addCustomItem(data[item.ability], miCustomText[item.ability]));
+                                                                                setMiCustomText(prev => ({ ...prev, [item.ability]: '' }));
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    className="flex-1 text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 focus:ring-1 focus:ring-blue-400 dark:text-gray-200"
+                                                                    placeholder="Tambah kemampuan lain…"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if ((miCustomText[item.ability] || '').trim()) {
+                                                                            setData(item.ability, addCustomItem(data[item.ability], miCustomText[item.ability]));
+                                                                            setMiCustomText(prev => ({ ...prev, [item.ability]: '' }));
+                                                                        }
+                                                                    }}
+                                                                    className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-semibold shrink-0"
+                                                                >+</button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Profesi yang Sesuai */}
+                                                    <td className="p-3 align-top">
+                                                        <div className="space-y-1">
+                                                            {miInfo.professions.map(prof => (
+                                                                <label key={prof} className={`flex items-start gap-2 cursor-pointer rounded px-2 py-1.5 transition-all select-none text-xs ${
+                                                                    profChecked.has(prof)
+                                                                        ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700'
+                                                                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/40 border border-transparent'
+                                                                }`}>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className="w-3.5 h-3.5 rounded shrink-0 accent-orange-500 mt-0.5"
+                                                                        checked={profChecked.has(prof)}
+                                                                        onChange={() => setData(item.professions, toggleItem(data[item.professions], prof))}
+                                                                    />
+                                                                    <span className={`leading-snug ${profChecked.has(prof) ? 'text-orange-700 dark:text-orange-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
+                                                                        {prof}
+                                                                    </span>
+                                                                </label>
+                                                            ))}
+                                                            {customProfs.map(cp => (
+                                                                <span key={cp} className="flex items-center gap-1 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 text-xs px-2 py-1 rounded border border-orange-200 dark:border-orange-700">
+                                                                    {cp}
+                                                                    <button type="button" onClick={() => setData(item.professions, toggleItem(data[item.professions], cp))} className="ml-1 text-orange-400 hover:text-red-500 font-bold leading-none">×</button>
+                                                                </span>
+                                                            ))}
+                                                            <div className="flex gap-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                                                <input
+                                                                    type="text"
+                                                                    value={miCustomText[item.professions] || ''}
+                                                                    onChange={e => setMiCustomText(prev => ({ ...prev, [item.professions]: e.target.value }))}
+                                                                    onKeyDown={e => {
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            if ((miCustomText[item.professions] || '').trim()) {
+                                                                                setData(item.professions, addCustomItem(data[item.professions], miCustomText[item.professions]));
+                                                                                setMiCustomText(prev => ({ ...prev, [item.professions]: '' }));
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    className="flex-1 text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 focus:ring-1 focus:ring-orange-400 dark:text-gray-200"
+                                                                    placeholder="Tambah profesi lain…"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if ((miCustomText[item.professions] || '').trim()) {
+                                                                            setData(item.professions, addCustomItem(data[item.professions], miCustomText[item.professions]));
+                                                                            setMiCustomText(prev => ({ ...prev, [item.professions]: '' }));
+                                                                        }
+                                                                    }}
+                                                                    className="px-2 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded font-semibold shrink-0"
+                                                                >+</button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

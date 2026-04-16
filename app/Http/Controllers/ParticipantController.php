@@ -103,6 +103,88 @@ class ParticipantController extends Controller
         ]);
     }
 
+    /**
+     * Return full RMD detail + progress as JSON (used by the list-page drawer).
+     */
+    public function rmdSummary(User $participant): JsonResponse
+    {
+        if (!$participant->isParticipant()) {
+            abort(404);
+        }
+
+        $viewer = Auth::user();
+        if ($viewer->isMentor() && $participant->mentor_id !== $viewer->id) {
+            abort(403);
+        }
+
+        $rmdModules = RmdProgressService::getModules();
+        $rmdProgress = collect($rmdModules)->map(function ($modelClass, $moduleName) use ($participant) {
+            return array_merge(
+                ['name' => $moduleName],
+                RmdProgressService::calculateProgress($participant, $moduleName, $modelClass)
+            );
+        })->values();
+
+        $rmdFilledCount  = $rmdProgress->where('percentage', '>', 0)->count();
+        $rmdTotalModules = $rmdProgress->count();
+        $rmdOverallStatus = 'Belum Mulai';
+        $rmdOverallPercentage = 0;
+        if ($rmdFilledCount > 0) {
+            $rmdOverallStatus     = $rmdFilledCount === $rmdTotalModules ? 'Selesai' : 'Sedang Mengisi';
+            $rmdOverallPercentage = round(($rmdFilledCount / $rmdTotalModules) * 100);
+        }
+
+        $participant->load([
+            'rmdProfile', 'rmdBibleReflection', 'rmdTrueSuccess', 'rmdTheOnlyOne',
+            'rmdMultipleIntelligence', 'rmdSocioEmotional', 'rmdCareerExploration',
+            'rmdCareerExplorationP2', 'rmdPreparationDreamIsland',
+        ]);
+
+        return response()->json([
+            'rmdProgress' => [
+                'modules'            => $rmdProgress,
+                'filled_count'       => $rmdFilledCount,
+                'total_modules'      => $rmdTotalModules,
+                'overall_status'     => $rmdOverallStatus,
+                'overall_percentage' => $rmdOverallPercentage,
+            ],
+            'rmdDetail' => [
+                'profile'               => $participant->rmdProfile,
+                'bible_reflection'      => $participant->rmdBibleReflection,
+                'true_success'          => $participant->rmdTrueSuccess,
+                'the_only_one'          => $participant->rmdTheOnlyOne,
+                'multiple_intelligence' => $participant->rmdMultipleIntelligence,
+                'socio_emotional'       => $participant->rmdSocioEmotional,
+                'career_exploration'    => $participant->rmdCareerExploration,
+                'career_exploration_p2' => $participant->rmdCareerExplorationP2,
+                'dream_island'          => $participant->rmdPreparationDreamIsland,
+            ],
+        ]);
+    }
+
+    public function updateLog(Request $request): Response
+    {
+        $query = User::where('role', User::ROLE_PARTICIPANT)
+            ->orderBy('updated_at', 'desc');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('nickname', 'like', "%{$search}%")
+                  ->orWhere('id_number', 'like', "%{$search}%");
+            });
+        }
+
+        $participants = $query->paginate(25)->withQueryString();
+
+        return Inertia::render('Participant/UpdateLog', [
+            'participants' => $participants,
+            'filters'      => $request->only(['search']),
+        ]);
+    }
+
     public function show(User $participant): Response
     {
         if (!$participant->isParticipant()) {
@@ -185,6 +267,19 @@ class ParticipantController extends Controller
             $rmdOverallPercentage = round(($rmdFilledCount / $rmdTotalModules) * 100);
         }
 
+        // Full RMD detail data for admin view
+        $participant->load([
+            'rmdProfile',
+            'rmdBibleReflection',
+            'rmdTrueSuccess',
+            'rmdTheOnlyOne',
+            'rmdMultipleIntelligence',
+            'rmdSocioEmotional',
+            'rmdCareerExploration',
+            'rmdCareerExplorationP2',
+            'rmdPreparationDreamIsland',
+        ]);
+
         return Inertia::render('Participant/Show', [
             'participant' => $participant,
             'notes' => $notes,
@@ -209,6 +304,17 @@ class ParticipantController extends Controller
                 'total_modules' => $rmdTotalModules,
                 'overall_status' => $rmdOverallStatus,
                 'overall_percentage' => $rmdOverallPercentage,
+            ],
+            'rmdDetail' => [
+                'profile'               => $participant->rmdProfile,
+                'bible_reflection'      => $participant->rmdBibleReflection,
+                'true_success'          => $participant->rmdTrueSuccess,
+                'the_only_one'          => $participant->rmdTheOnlyOne,
+                'multiple_intelligence' => $participant->rmdMultipleIntelligence,
+                'socio_emotional'       => $participant->rmdSocioEmotional,
+                'career_exploration'    => $participant->rmdCareerExploration,
+                'career_exploration_p2' => $participant->rmdCareerExplorationP2,
+                'dream_island'          => $participant->rmdPreparationDreamIsland,
             ],
         ]);
     }

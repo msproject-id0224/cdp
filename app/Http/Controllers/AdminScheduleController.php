@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\AttendanceSession;
+use App\Models\GeneralMeetingDate;
 use App\Models\ParticipantMeeting;
 use App\Notifications\ScheduleDecisionNotification;
 use Illuminate\Support\Str;
@@ -496,5 +497,46 @@ class AdminScheduleController extends Controller
             Log::error("Failed to bulk reject schedules: " . $e->getMessage());
             return response()->json(['message' => 'Failed to reject schedules.', 'error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Fetch full details of a single mentor meeting for admin view.
+     */
+    public function getMeetingDetails(ParticipantMeeting $meeting): JsonResponse
+    {
+        $meeting->load([
+            'mentor:id,first_name,last_name,email',
+            'participants:id,first_name,last_name,email',
+            'approvedBy:id,first_name,last_name',
+        ]);
+
+        return response()->json($meeting);
+    }
+
+    public function getGeneralMeetingDates(): JsonResponse
+    {
+        $dates = GeneralMeetingDate::orderBy('date')
+            ->pluck('date')
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'));
+
+        return response()->json($dates);
+    }
+
+    public function toggleGeneralMeetingDate(Request $request): JsonResponse
+    {
+        $request->validate(['date' => 'required|date_format:Y-m-d']);
+
+        $existing = GeneralMeetingDate::where('date', $request->date)->first();
+        if ($existing) {
+            $existing->delete();
+            return response()->json(['enabled' => false]);
+        }
+
+        GeneralMeetingDate::create([
+            'date'       => $request->date,
+            'created_by' => Auth::id(),
+        ]);
+
+        return response()->json(['enabled' => true]);
     }
 }

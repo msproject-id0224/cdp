@@ -25,6 +25,7 @@ use App\Http\Controllers\AttendanceController;
 
 use App\Http\Controllers\HealthScreeningController;
 use App\Http\Controllers\GiftController;
+use App\Http\Controllers\MentorDocumentController;
 
 Route::post('/language/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'id'])) {
@@ -156,6 +157,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Admin Management Routes
     Route::get('/api/admins', [App\Http\Controllers\AdminController::class, 'index'])->name('api.admins.index');
+    Route::post('/api/admins', [App\Http\Controllers\AdminController::class, 'store'])->name('api.admins.store');
     Route::patch('/api/admins/{user}', [App\Http\Controllers\AdminController::class, 'update'])->name('api.admins.update');
     Route::delete('/api/admins/{user}', [App\Http\Controllers\AdminController::class, 'destroy'])->name('api.admins.destroy');
     Route::patch('/api/admins/{user}/toggle-status', [App\Http\Controllers\AdminController::class, 'toggleStatus'])->name('api.admins.toggle-status');
@@ -164,6 +166,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/admin/schedule-approval', [AdminScheduleController::class, 'index'])->name('admin.schedule-approval.index');
     Route::get('/api/admin/schedules/pending', [AdminScheduleController::class, 'getPendingSchedules'])->name('api.admin.schedules.pending');
     Route::get('/api/admin/schedules/all', [AdminScheduleController::class, 'getAllMeetings'])->name('api.admin.schedules.all');
+    Route::get('/api/admin/schedules/{meeting}/details', [AdminScheduleController::class, 'getMeetingDetails'])->name('api.admin.schedules.details');
+    Route::post('/api/admin/general-meeting-dates/toggle', [AdminScheduleController::class, 'toggleGeneralMeetingDate'])->name('api.admin.general-meeting-dates.toggle');
     Route::post('/api/admin/schedules/{meeting}/approve', [AdminScheduleController::class, 'approve'])->name('api.admin.schedules.approve');
     Route::post('/api/admin/schedules/{meeting}/reject', [AdminScheduleController::class, 'reject'])->name('api.admin.schedules.reject');
     Route::post('/api/admin/schedules/{meeting}/request-modification', [AdminScheduleController::class, 'requestModification'])->name('api.admin.schedules.request-modification');
@@ -195,7 +199,9 @@ Route::middleware(['auth', 'verified', 'role:admin,mentor'])->group(function () 
     Route::post('/gifts/{gift}/proof', [GiftController::class, 'uploadProof'])->name('gifts.upload-proof');
 
     Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
+    Route::get('/participants/update-log', [ParticipantController::class, 'updateLog'])->name('participants.update-log');
     Route::get('/participants/{participant}', [ParticipantController::class, 'show'])->name('participants.show');
+    Route::get('/participants/{participant}/rmd-summary', [ParticipantController::class, 'rmdSummary'])->name('participants.rmd-summary');
     Route::patch('/participants/{participant}/status', [ParticipantController::class, 'updateStatus'])->name('participants.status.update');
     Route::post('/participants/{participant}/notes', [ParticipantController::class, 'storeNote'])->name('participants.notes.store');
     Route::post('/participants/{participant}/tasks', [ParticipantController::class, 'storeTask'])->name('participants.tasks.store');
@@ -215,9 +221,16 @@ Route::middleware(['auth', 'verified', 'role:participant'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Mentor Document Routes (mentor upload + admin inspect)
+    Route::get('/api/mentor-documents', [MentorDocumentController::class, 'index'])->name('api.mentor-documents.index');
+    Route::post('/api/mentor-documents/upload', [MentorDocumentController::class, 'upload'])->name('api.mentor-documents.upload');
+    Route::get('/api/mentor-documents/{document}/download', [MentorDocumentController::class, 'download'])->name('api.mentor-documents.download');
+    Route::get('/api/admin/mentor-documents', [MentorDocumentController::class, 'adminIndex'])->name('api.admin.mentor-documents.index');
+
     // Mentor Schedule Routes
     Route::get('/mentor-schedule', [MentorScheduleController::class, 'index'])->name('mentor.schedule');
     Route::get('/api/mentor-schedules', [MentorScheduleController::class, 'getSchedules'])->name('api.mentor-schedules');
+    Route::get('/api/general-meeting-dates', [AdminScheduleController::class, 'getGeneralMeetingDates'])->name('api.general-meeting-dates');
     Route::post('/api/mentor-availability', [MentorScheduleController::class, 'storeAvailability'])->name('api.mentor-availability.store');
     Route::delete('/api/mentor-availability/{availability}', [MentorScheduleController::class, 'deleteAvailability'])->name('api.mentor-availability.destroy');
     Route::post('/api/mentor-meetings', [MentorScheduleController::class, 'storeMeeting'])->name('api.mentor-meetings.store');

@@ -17,6 +17,7 @@ export default function AdminList() {
     const [loading, setLoading] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [viewingAdmin, setViewingAdmin] = useState(null);
+    const [addingAdmin, setAddingAdmin] = useState(false);
     const { auth } = usePage().props;
 
     // Form for editing admin
@@ -27,6 +28,39 @@ export default function AdminList() {
         job_title: '',
         phone_number: '',
     });
+
+    // Form for adding admin
+    const { data: addData, setData: setAddData, post: postAdmin, processing: addProcessing, errors: addErrors, reset: resetAdd, clearErrors: clearAddErrors } = useForm({
+        first_name: '',
+        last_name: '',
+        email: '',
+        job_title: '',
+        phone_number: '',
+        password: '',
+        password_confirmation: '',
+    });
+
+    const openAddModal = () => {
+        resetAdd();
+        clearAddErrors();
+        setAddingAdmin(true);
+    };
+
+    const closeAddModal = () => {
+        setAddingAdmin(false);
+        resetAdd();
+        clearAddErrors();
+    };
+
+    const submitAdd = (e) => {
+        e.preventDefault();
+        postAdmin(route('api.admins.store'), {
+            onSuccess: () => {
+                closeAddModal();
+                fetchAdmins();
+            },
+        });
+    };
 
     const fetchAdmins = async (url = route('api.admins.index')) => {
         setLoading(true);
@@ -129,7 +163,7 @@ export default function AdminList() {
                 </p>
             </header>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-4">
                 <div className="w-full max-w-sm">
                     <TextInput
                         placeholder={__('Search admin...')}
@@ -138,6 +172,9 @@ export default function AdminList() {
                         className="w-full"
                     />
                 </div>
+                <PrimaryButton onClick={openAddModal}>
+                    + {__('Add Admin')}
+                </PrimaryButton>
             </div>
 
             <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -300,6 +337,118 @@ export default function AdminList() {
                         </div>
                     </div>
                 )}
+            </Modal>
+
+            {/* ── Modal Add Admin ── */}
+            <Modal show={addingAdmin} onClose={closeAddModal}>
+                <form onSubmit={submitAdd} className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        {__('Add Admin')}
+                    </h2>
+
+                    <div className="mt-6 space-y-4">
+                        <div>
+                            <InputLabel htmlFor="add_first_name" value={__('First Name')} />
+                            <TextInput
+                                id="add_first_name"
+                                value={addData.first_name}
+                                onChange={(e) => setAddData('first_name', e.target.value)}
+                                className="mt-1 block w-full"
+                                required
+                            />
+                            <InputError message={addErrors.first_name} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="add_last_name" value={__('Last Name')} />
+                            <TextInput
+                                id="add_last_name"
+                                value={addData.last_name}
+                                onChange={(e) => setAddData('last_name', e.target.value)}
+                                className="mt-1 block w-full"
+                            />
+                            <InputError message={addErrors.last_name} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="add_email" value={__('Email')} />
+                            <TextInput
+                                id="add_email"
+                                type="email"
+                                value={addData.email}
+                                onChange={(e) => setAddData('email', e.target.value)}
+                                className="mt-1 block w-full"
+                                required
+                            />
+                            <InputError message={addErrors.email} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="add_job_title" value={__('Job Title')} />
+                            <select
+                                id="add_job_title"
+                                value={addData.job_title}
+                                onChange={(e) => setAddData('job_title', e.target.value)}
+                                className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                            >
+                                <option value="">-- {__('Select Job Title')} --</option>
+                                <option value="Sekretaris">Sekretaris</option>
+                                <option value="Bendahara">Bendahara</option>
+                                <option value="Staf Perlindungan Anak">Staf Perlindungan Anak</option>
+                                <option value="Staf Kesehatan">Staf Kesehatan</option>
+                                <option value="Koordinator Tutor-Mentor">Koordinator Tutor-Mentor</option>
+                                <option value="Staf Lainnya">Staf Lainnya</option>
+                            </select>
+                            <InputError message={addErrors.job_title} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="add_phone_number" value={__('Phone Number')} />
+                            <TextInput
+                                id="add_phone_number"
+                                value={addData.phone_number}
+                                onChange={(e) => setAddData('phone_number', e.target.value)}
+                                className="mt-1 block w-full"
+                            />
+                            <InputError message={addErrors.phone_number} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="add_password" value={__('Password')} />
+                            <TextInput
+                                id="add_password"
+                                type="password"
+                                value={addData.password}
+                                onChange={(e) => setAddData('password', e.target.value)}
+                                className="mt-1 block w-full"
+                                required
+                            />
+                            <InputError message={addErrors.password} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="add_password_confirmation" value={__('Confirm Password')} />
+                            <TextInput
+                                id="add_password_confirmation"
+                                type="password"
+                                value={addData.password_confirmation}
+                                onChange={(e) => setAddData('password_confirmation', e.target.value)}
+                                className="mt-1 block w-full"
+                                required
+                            />
+                            <InputError message={addErrors.password_confirmation} className="mt-2" />
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton onClick={closeAddModal}>
+                            {__('Cancel')}
+                        </SecondaryButton>
+                        <PrimaryButton disabled={addProcessing}>
+                            {__('Add Admin')}
+                        </PrimaryButton>
+                    </div>
+                </form>
             </Modal>
 
             <Modal show={!!editingUser} onClose={closeEditModal}>

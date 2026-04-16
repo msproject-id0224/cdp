@@ -60,9 +60,11 @@ export default function ScheduleTab() {
     });
 
     // ── Mentor Meetings calendar state ─────────────────────────────────────
-    const [mentorMeetings, setMentorMeetings] = useState([]);
-    const [showBanner, setShowBanner]         = useState(true);
-    const [dayModal, setDayModal]             = useState({ show: false, date: '', meetings: [] });
+    const [mentorMeetings, setMentorMeetings]       = useState([]);
+    const [showBanner, setShowBanner]               = useState(true);
+    const [dayModal, setDayModal]                   = useState({ show: false, date: '', meetings: [] });
+    const [generalMeetingDates, setGeneralMeetingDates] = useState(new Set());
+    const [detailModal, setDetailModal]             = useState({ show: false, meeting: null, loading: false });
 
     // ── Fetch admin schedules (existing) ──────────────────────────────────
     const fetchSchedules = async () => {
@@ -97,7 +99,44 @@ export default function ScheduleTab() {
         }
     };
 
-    useEffect(() => { fetchMentorMeetings(); }, []);
+    useEffect(() => {
+        fetchMentorMeetings();
+        fetchGeneralMeetingDates();
+    }, []);
+
+    const fetchGeneralMeetingDates = async () => {
+        try {
+            const res = await window.axios.get(route('api.general-meeting-dates'));
+            setGeneralMeetingDates(new Set(res.data));
+        } catch (e) {
+            console.error('Error fetching general meeting dates:', e);
+        }
+    };
+
+    const toggleGeneralMeetingDate = async (dateStr, e) => {
+        e.stopPropagation();
+        try {
+            const res = await window.axios.post(route('api.admin.general-meeting-dates.toggle'), { date: dateStr });
+            setGeneralMeetingDates(prev => {
+                const next = new Set(prev);
+                res.data.enabled ? next.add(dateStr) : next.delete(dateStr);
+                return next;
+            });
+        } catch (e) {
+            console.error('Error toggling general meeting date:', e);
+        }
+    };
+
+    const openMeetingDetail = async (meetingId) => {
+        setDetailModal({ show: true, meeting: null, loading: true });
+        try {
+            const res = await window.axios.get(route('api.admin.schedules.details', meetingId));
+            setDetailModal({ show: true, meeting: res.data, loading: false });
+        } catch (e) {
+            console.error('Error fetching meeting details:', e);
+            setDetailModal({ show: false, meeting: null, loading: false });
+        }
+    };
 
     // ── Compute date → meetings map (treat stored times as UTC, same as MentorScheduleTab) ──
     const dateMeetingMap = useMemo(() => {
@@ -142,14 +181,40 @@ export default function ScheduleTab() {
         }),
     [mentorMeetings]);
 
-    // ── Calendar date-cell class names (use local date, same as MentorScheduleTab) ──
+    // ── Calendar date-cell class names ────────────────────────────────────
     const dayCellClassNames = (arg) => {
         const dateStr = arg.date.toLocaleDateString('en-CA');
         const dayData = dateMeetingMap[dateStr];
-        if (!dayData) return [];
-        if (dayData.pending > 0) return ['fc-day-mentor-pending'];
-        if (dayData.total > 0)   return ['fc-day-mentor-approved'];
-        return [];
+        const classes = [];
+        if (generalMeetingDates.has(dateStr)) classes.push('fc-day-general-meeting');
+        if (dayData?.pending > 0) classes.push('fc-day-mentor-pending');
+        else if (dayData?.total > 0) classes.push('fc-day-mentor-approved');
+        return classes;
+    };
+
+    // ── Calendar date-cell content (with General Meeting checkbox) ────────
+    const dayCellContent = (arg) => {
+        const dateStr = arg.date.toLocaleDateString('en-CA');
+        const isGM = generalMeetingDates.has(dateStr);
+        return (
+            <div className="fc-daygrid-day-top-inner w-full">
+                <span className="fc-daygrid-day-number">{arg.dayNumberText}</span>
+                <label
+                    className="flex items-center gap-0.5 cursor-pointer mt-0.5 select-none"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <input
+                        type="checkbox"
+                        checked={isGM}
+                        onChange={(e) => toggleGeneralMeetingDate(dateStr, e)}
+                        className="w-3 h-3 accent-green-600 cursor-pointer"
+                    />
+                    <span className={`text-[9px] font-bold leading-tight ${isGM ? 'text-green-700' : 'text-red-500'}`}>
+                        {isGM ? 'A' : 'N'}
+                    </span>
+                </label>
+            </div>
+        );
     };
 
     // ── Handle date cell click ─────────────────────────────────────────────
@@ -298,6 +363,10 @@ export default function ScheduleTab() {
                             <span className="w-3 h-3 rounded-sm bg-green-400 inline-block"></span>
                             {__('All Approved')}
                         </span>
+                        <span className="flex items-center gap-1 text-green-700">
+                            <span className="w-3 h-3 rounded-sm bg-green-300 inline-block"></span>
+                            {__('General Meeting')}
+                        </span>
                     </span>
                 </h3>
 
@@ -314,18 +383,58 @@ export default function ScheduleTab() {
                     eventClick={handleEventClick}
                     dateClick={handleDateClick}
                     dayCellClassNames={dayCellClassNames}
+                    dayCellContent={dayCellContent}
                     dayMaxEvents={3}
                     height="auto"
                     eventTimeFormat={{ hour: '2-digit', minute: '2-digit', hour12: false }}
                 />
 
                 <style>{`
+                    .fc-day-general-meeting { background-color: #DCFCE7 !important; }
+                    .fc-day-general-meeting .fc-daygrid-day-number { color: #15803D; font-weight: 700; }
                     .fc-day-mentor-pending { background-color: #FED7AA !important; }
                     .fc-day-mentor-pending .fc-daygrid-day-number { color: #C2410C; font-weight: 700; }
                     .fc-day-mentor-approved { background-color: #BBF7D0 !important; cursor: pointer; }
                     .fc-day-mentor-approved .fc-daygrid-day-number { color: #15803D; font-weight: 700; }
                     .fc-day-mentor-pending:hover, .fc-day-mentor-approved:hover { filter: brightness(0.94); }
+                    .fc-daygrid-day-top-inner { display: flex; flex-direction: column; align-items: flex-end; padding: 2px 4px; }
                     .fc-event { cursor: pointer; border-radius: 4px; font-size: 0.72rem; }
+
+                    /* ── Dark mode ── */
+                    .dark .fc { color: #e5e7eb; }
+                    .dark .fc-toolbar-title { color: #f3f4f6 !important; }
+                    .dark .fc th,
+                    .dark .fc td,
+                    .dark .fc-scrollgrid,
+                    .dark .fc-scrollgrid-section > td { border-color: #374151 !important; }
+                    .dark .fc .fc-col-header-cell { background-color: #1f2937; }
+                    .dark .fc .fc-col-header-cell-cushion { color: #9ca3af !important; }
+                    .dark .fc .fc-daygrid-day { background-color: #1f2937; }
+                    .dark .fc .fc-daygrid-day-number { color: #d1d5db !important; }
+                    .dark .fc .fc-day-other .fc-daygrid-day-number { color: #6b7280 !important; }
+                    .dark .fc .fc-day-today { background-color: #312e81 !important; }
+                    .dark .fc .fc-day-today .fc-daygrid-day-number { color: #a5b4fc !important; }
+                    .dark .fc .fc-daygrid-more-link { color: #818cf8 !important; }
+                    .dark .fc .fc-button {
+                        background-color: #374151 !important;
+                        border-color: #4b5563 !important;
+                        color: #e5e7eb !important;
+                    }
+                    .dark .fc .fc-button:hover {
+                        background-color: #4b5563 !important;
+                        border-color: #6b7280 !important;
+                    }
+                    .dark .fc .fc-button:not(:disabled):active,
+                    .dark .fc .fc-button-active {
+                        background-color: #4f46e5 !important;
+                        border-color: #4338ca !important;
+                    }
+                    .dark .fc-day-general-meeting { background-color: #14532d !important; }
+                    .dark .fc-day-general-meeting .fc-daygrid-day-number { color: #86efac !important; }
+                    .dark .fc-day-mentor-pending  { background-color: #7c2d12 !important; }
+                    .dark .fc-day-mentor-pending  .fc-daygrid-day-number { color: #fdba74 !important; }
+                    .dark .fc-day-mentor-approved { background-color: #14532d !important; }
+                    .dark .fc-day-mentor-approved .fc-daygrid-day-number { color: #86efac !important; }
 
                     @media (max-width: 640px) {
                         .fc .fc-toolbar {
@@ -547,6 +656,14 @@ export default function ScheduleTab() {
                                                     {STATUS_LABELS[m.status] ?? m.status}
                                                 </span>
                                             </div>
+                                            <div className="mt-2 flex justify-end">
+                                                <button
+                                                    onClick={() => openMeetingDetail(m.id)}
+                                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-800 underline"
+                                                >
+                                                    {__('View Details')}
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -573,6 +690,169 @@ export default function ScheduleTab() {
                                     {__('Close')}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Meeting Detail Modal ──────────────────────────────────── */}
+            {detailModal.show && (
+                <div className="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 bg-gray-700 bg-opacity-75 transition-opacity" onClick={() => setDetailModal({ show: false, meeting: null, loading: false })} />
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                            {detailModal.loading ? (
+                                <div className="px-6 py-10 flex items-center justify-center">
+                                    <svg className="animate-spin h-6 w-6 text-indigo-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                    </svg>
+                                    <span className="text-sm text-gray-500">{__('Loading')}…</span>
+                                </div>
+                            ) : detailModal.meeting && (() => {
+                                const m = detailModal.meeting;
+                                const mentorName = m.mentor ? `${m.mentor.first_name ?? ''} ${m.mentor.last_name ?? ''}`.trim() : __('Mentor');
+                                const approverName = m.approved_by ? (m.approved_by_user ? `${m.approved_by_user.first_name ?? ''} ${m.approved_by_user.last_name ?? ''}`.trim() : String(m.approved_by)) : null;
+                                const approvedByUser = m.approvedBy ?? null;
+                                const approvedByName = approvedByUser ? `${approvedByUser.first_name ?? ''} ${approvedByUser.last_name ?? ''}`.trim() : null;
+                                return (
+                                    <>
+                                        <div className="bg-white px-6 pt-5 pb-4">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-base font-semibold text-gray-900">
+                                                    {__('Meeting Details')}
+                                                </h3>
+                                                <button
+                                                    onClick={() => setDetailModal({ show: false, meeting: null, loading: false })}
+                                                    className="text-gray-400 hover:text-gray-600"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                                                {/* Mentor */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Mentor')}</p>
+                                                    <p className="mt-0.5 text-gray-800 font-medium">{mentorName}</p>
+                                                    {m.mentor?.email && <p className="text-xs text-gray-500">{m.mentor.email}</p>}
+                                                </div>
+
+                                                {/* Status */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Status')}</p>
+                                                    <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_BADGE[m.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                                                        {STATUS_LABELS[m.status] ?? m.status}
+                                                    </span>
+                                                </div>
+
+                                                {/* Agenda Type */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Agenda Type')}</p>
+                                                    <p className="mt-0.5 text-gray-800">{AGENDA_LABELS[m.agenda_type] ?? m.agenda_type ?? '—'}</p>
+                                                </div>
+
+                                                {/* Date & Time */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Date & Time')}</p>
+                                                    <p className="mt-0.5 text-gray-800">{fmtDate(m.scheduled_at)} {fmtTime(m.scheduled_at)} – {fmtTime(m.end_time)}</p>
+                                                </div>
+
+                                                {/* Location */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Location')}</p>
+                                                    <p className="mt-0.5 text-gray-800">{m.location || '—'}</p>
+                                                </div>
+
+                                                {/* Meeting Link */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Meeting Link')}</p>
+                                                    {m.meeting_link
+                                                        ? <a href={m.meeting_link} target="_blank" rel="noopener noreferrer" className="mt-0.5 text-indigo-600 underline break-all">{m.meeting_link}</a>
+                                                        : <p className="mt-0.5 text-gray-800">—</p>}
+                                                </div>
+
+                                                {/* Max Participants */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Max Participants')}</p>
+                                                    <p className="mt-0.5 text-gray-800">{m.max_participants ?? '—'}</p>
+                                                </div>
+
+                                                {/* Approved By */}
+                                                {m.approved_at && (
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Approved By')}</p>
+                                                        <p className="mt-0.5 text-gray-800">{approvedByName ?? '—'}</p>
+                                                        <p className="text-xs text-gray-500">{fmtDate(m.approved_at)}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Agenda (full width) */}
+                                                {m.agenda && (
+                                                    <div className="sm:col-span-2">
+                                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Agenda')}</p>
+                                                        <p className="mt-0.5 text-gray-800 whitespace-pre-wrap">{m.agenda}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Tools & Materials */}
+                                                {m.tools_materials && (
+                                                    <div className="sm:col-span-2">
+                                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Tools & Materials')}</p>
+                                                        <p className="mt-0.5 text-gray-800 whitespace-pre-wrap">{m.tools_materials}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Notes */}
+                                                {m.notes && (
+                                                    <div className="sm:col-span-2">
+                                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{__('Notes')}</p>
+                                                        <p className="mt-0.5 text-gray-800 whitespace-pre-wrap">{m.notes}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Rejection Reason */}
+                                                {m.rejection_reason && (
+                                                    <div className="sm:col-span-2">
+                                                        <p className="text-xs font-semibold text-red-400 uppercase tracking-wide">{__('Rejection / Modification Reason')}</p>
+                                                        <p className="mt-0.5 text-red-700 whitespace-pre-wrap">{m.rejection_reason}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Participants */}
+                                                {m.participants && m.participants.length > 0 && (
+                                                    <div className="sm:col-span-2">
+                                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{__('Participants')} ({m.participants.length})</p>
+                                                        <ul className="divide-y divide-gray-100 border border-gray-100 rounded-lg overflow-hidden">
+                                                            {m.participants.map(p => (
+                                                                <li key={p.id} className="flex items-center justify-between px-3 py-1.5 bg-white">
+                                                                    <span className="text-sm text-gray-800">{`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()}</span>
+                                                                    {p.pivot?.status && (
+                                                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.pivot.status === 'confirmed' ? 'bg-green-100 text-green-700' : p.pivot.status === 'declined' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                                            {p.pivot.status}
+                                                                        </span>
+                                                                    )}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-50 px-6 py-3 flex justify-end">
+                                            <button
+                                                onClick={() => setDetailModal({ show: false, meeting: null, loading: false })}
+                                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm"
+                                            >
+                                                {__('Close')}
+                                            </button>
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>

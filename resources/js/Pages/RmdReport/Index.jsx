@@ -155,6 +155,49 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
         return <Doughnut options={options} data={data} />;
     };
 
+    const renderCareerChoiceChart = () => {
+        const dist = chartData.career_choice_distribution;
+        if (!dist || !dist.labels || dist.labels.length === 0) return null;
+
+        const totalEligible = dist.total_eligible || 0;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Final Career Choice Distribution') },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const count = ctx.parsed.y;
+                            const pct = totalEligible > 0
+                                ? ((count / totalEligible) * 100).toFixed(1)
+                                : 0;
+                            return ` ${count} ${__('participants')} (${pct}% ${__('of total eligible')})`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: __('Number of Participants') },
+                },
+                x: {
+                    title: { display: true, text: __('Career Choice') },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 30,
+                    },
+                },
+            },
+        };
+
+        return <Bar options={options} data={dist} />;
+    };
+
     const renderProgressChart = () => {
         const data = chartData.progress_distribution;
         if (!data || !data.datasets || data.datasets.length === 0) return null;
@@ -250,6 +293,21 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                             <div className="absolute top-0 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-75">
                                 {__('Data only includes participants aged 12 and above')}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Final Career Choice Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Final Career Choice Distribution')}</h3>
+                            {chartData?.career_choice_distribution?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
+                                    {chartData.career_choice_distribution.total} / {chartData.career_choice_distribution.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderCareerChoiceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                         </div>
                     </div>
                 </div>

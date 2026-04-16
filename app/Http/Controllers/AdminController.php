@@ -48,6 +48,31 @@ class AdminController extends Controller
         return response()->json($admins);
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name'   => ['required', 'string', 'max:255'],
+            'last_name'    => ['nullable', 'string', 'max:255'],
+            'email'        => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone_number' => ['nullable', 'string', 'max:20'],
+            'job_title'    => ['nullable', 'string', 'max:255'],
+            'password'     => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        User::create([
+            'first_name'   => $validated['first_name'],
+            'last_name'    => $validated['last_name'] ?? null,
+            'email'        => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'job_title'    => $validated['job_title'] ?? null,
+            'password'     => Hash::make($validated['password']),
+            'role'         => 'admin',
+            'is_active'    => true,
+        ]);
+
+        return back()->with('success', 'Admin created successfully.');
+    }
+
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([

@@ -10,7 +10,8 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
 import DeleteUserForm from './Partials/DeleteUserForm';
 import AdminList from '../Admin/Partials/AdminList';
 import ProfilePhoto from '@/Components/ProfilePhoto';
-import { useState } from 'react';
+import MentorDocuments from '@/Components/MentorDocuments';
+import { useState, useRef } from 'react';
 
 const EditableInfoRow = ({ label, value, field, user, onUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -93,6 +94,7 @@ export default function Edit({ mustVerifyEmail, status }) {
     const { auth, locale } = usePage().props;
     const user = auth.user;
     const isAdmin = user.role === 'admin';
+    const photoInputRef = useRef(null);
 
     const { data: photoData, setData: setPhotoData, post: postPhoto, processing: photoProcessing, errors: photoErrors, reset: resetPhoto } = useForm({
         photo: null,
@@ -202,14 +204,25 @@ export default function Edit({ mustVerifyEmail, status }) {
                                                 )}
                                                 
                                                 <InputLabel htmlFor="photo" value={isAdmin ? __('Change Profile Photo') : __('Request Photo Update')} />
-                                                <div className="flex items-center gap-4 mt-2">
-                                                    <input 
-                                                        type="file" 
-                                                        id="photo" 
+                                                <div className="flex items-center gap-3 mt-2">
+                                                    <input
+                                                        ref={photoInputRef}
+                                                        type="file"
+                                                        id="photo"
                                                         onChange={e => setPhotoData('photo', e.target.files[0])}
-                                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900 dark:file:text-indigo-300"
+                                                        className="hidden"
                                                         accept="image/*"
                                                     />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => photoInputRef.current?.click()}
+                                                        className="px-4 py-2 text-sm font-semibold rounded-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-800 transition-colors"
+                                                    >
+                                                        {__('Choose File')}
+                                                    </button>
+                                                    <span className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                                                        {photoData.photo ? photoData.photo.name : __('No file chosen')}
+                                                    </span>
                                                     <PrimaryButton disabled={photoProcessing}>
                                                         {isAdmin ? __('Save Photo') : __('Submit Request')}
                                                     </PrimaryButton>
@@ -263,6 +276,12 @@ export default function Edit({ mustVerifyEmail, status }) {
                                 status={status}
                                 className="max-w-xl"
                             />
+                        </div>
+                    )}
+
+                    {user.role === 'mentor' && (
+                        <div className="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg mt-6">
+                            <MentorDocuments />
                         </div>
                     )}
 
