@@ -293,13 +293,17 @@ class RmdReportController extends Controller
              }
         }
 
+        $mentor = $user->mentor_id ? \App\Models\User::find($user->mentor_id) : null;
+
         return response()->json([
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'id_number' => $user->id_number,
-                'age' => $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : '-',
-                'email' => $user->email,
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'id_number'         => $user->id_number,
+                'age'               => $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : '-',
+                'email'             => $user->email,
+                'profile_photo_url' => $user->profile_photo_url ?? null,
+                'mentor_name'       => $mentor?->name ?? null,
             ],
             'summary' => [
                 'status' => $status,

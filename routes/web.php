@@ -42,6 +42,7 @@ Route::get('/', function () {
 
 Route::get('/verify-otp', [OtpController::class, 'show'])->name('otp.view');
 Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
+Route::post('/verify-otp/resend', [OtpController::class, 'resend'])->name('otp.resend');
 
 use App\Http\Controllers\DashboardController;
 

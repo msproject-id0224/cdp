@@ -441,6 +441,9 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             <th scope="col" className="px-6 py-3">
                                                 {__('Last Updated')}
                                             </th>
+                                            <th scope="col" className="px-6 py-3 text-center">
+                                                {__('Action')}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -448,29 +451,31 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             reports.data.map((item) => (
                                                 <tr
                                                     key={item.user_id}
-                                                    onClick={() => handleUserClick(item.user_id)}
-                                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
+                                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40"
                                                 >
                                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                        <span className="text-indigo-600 dark:text-indigo-400">
-                                                            {item.user_name}
-                                                        </span>
+                                                        {item.user_name}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         {item.user_id_number || '-'}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 flex-grow">
-                                                                <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${item.percentage}%` }}></div>
+                                                            <div className="flex-grow bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                                                <div
+                                                                    className={`h-2 rounded-full transition-all ${
+                                                                        item.status === 'Selesai'
+                                                                            ? 'bg-green-500'
+                                                                            : item.percentage > 0
+                                                                            ? 'bg-indigo-500'
+                                                                            : 'bg-gray-300 dark:bg-gray-600'
+                                                                    }`}
+                                                                    style={{ width: `${item.percentage}%` }}
+                                                                />
                                                             </div>
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-right">
-                                                                {item.filled_modules_count} / {item.total_modules}
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">
+                                                                {item.filled_modules_count}/{item.total_modules}
                                                             </span>
-                                                            <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title={__('Click for details')}>
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
@@ -478,14 +483,26 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                             {STATUS_DISPLAY[item.status] ?? item.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                         {item.last_updated}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleUserClick(item.user_id)}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                            </svg>
+                                                            {__('Module Progress')}
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                                <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                                     {__('No data found.')}
                                                 </td>
                                             </tr>
