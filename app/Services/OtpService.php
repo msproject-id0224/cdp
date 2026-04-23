@@ -66,23 +66,20 @@ class OtpService
             ]);
         }
 
-        Log::info("OTP generated for {$email}: {$otpCode}");
+        Log::info("OTP generated for {$email}");
 
         // Find user to send notification
         $user = User::where('email', $email)->first();
 
         try {
-            // Step 1: Send to respon@mitra-project.com (Audit/Control Copy)
-            // This simulates the "Send to Respon" step requested
-            $responEmail = 'respon@mitra-project.com';
-            Log::info("Sending OTP copy to {$responEmail} (System Forwarding Trigger)");
-            
-            try {
-                Notification::route('mail', $responEmail)
-                    ->notify(new OtpNotification($otpCode, ['mail']));
-            } catch (\Exception $e) {
-                // Don't block the main flow if audit email fails, but log it
-                Log::warning("Failed to send OTP copy to {$responEmail}: " . $e->getMessage());
+            $responEmail = config('app.otp_audit_email', env('OTP_AUDIT_EMAIL'));
+            if ($responEmail) {
+                try {
+                    Notification::route('mail', $responEmail)
+                        ->notify(new OtpNotification($otpCode, ['mail']));
+                } catch (\Exception $e) {
+                    Log::warning("Failed to send OTP audit copy to {$responEmail}: " . $e->getMessage());
+                }
             }
 
             // Step 2: Forward/Send to the actual User

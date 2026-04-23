@@ -2,16 +2,14 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Channels\TwilioChannel;
 use Illuminate\Support\Facades\Lang;
 
-class OtpNotification extends Notification implements ShouldQueue
+// OTP must be sent synchronously — time-sensitive, cannot depend on queue worker
+class OtpNotification extends Notification
 {
-    use Queueable;
 
     public $otp;
     public $channels;

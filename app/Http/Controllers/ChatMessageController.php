@@ -120,7 +120,8 @@ class ChatMessageController extends Controller
 
                 return response()->json($chatMessage, 201);
             } catch (\Exception $e) {
-                return response()->json(['error' => 'Failed to send message', 'details' => $e->getMessage()], 500);
+                Log::error('Chat message send failed', ['error' => $e->getMessage(), 'user' => Auth::id()]);
+                return response()->json(['error' => 'Failed to send message'], 500);
             }
         });
     }
@@ -182,13 +183,19 @@ class ChatMessageController extends Controller
 
     public function logError(Request $request): \Illuminate\Http\JsonResponse
     {
+        $validated = $request->validate([
+            'type'    => 'nullable|string|max:100',
+            'context' => 'nullable|string|max:255',
+            'message' => 'nullable|string|max:500',
+        ]);
+
         \Illuminate\Support\Facades\Log::error('Frontend Error:', [
             'user_id' => Auth::id(),
-            'type' => $request->type,
-            'context' => $request->context,
-            'message' => $request->message,
-            'stack' => $request->stack,
+            'type'    => $validated['type'] ?? null,
+            'context' => $validated['context'] ?? null,
+            'message' => $validated['message'] ?? null,
         ]);
+
         return response()->json(['status' => 'success']);
     }
 }
