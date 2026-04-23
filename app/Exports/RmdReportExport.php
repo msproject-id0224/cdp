@@ -28,6 +28,8 @@ class RmdReportExport implements FromCollection, WithHeadings, WithMapping, Shou
         return [
             'Nama Partisipan',
             'Nomor Identitas',
+            'Cita-cita',
+            'Gaya Belajar',
             'Status',
             'Persentase (%)',
             'Modul Terisi',
@@ -41,6 +43,8 @@ class RmdReportExport implements FromCollection, WithHeadings, WithMapping, Shou
         return [
             $row->user_name,
             $row->user_id_number,
+            $row->cita_cita ?? '-',
+            $row->gaya_belajar ?? '-',
             $row->status,
             $row->percentage . '%',
             $row->filled_modules_count,

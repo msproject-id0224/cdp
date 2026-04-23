@@ -183,24 +183,25 @@ class RmdReportController extends Controller
             $query->withCount($relation);
         }
 
-        // Get data
-        // If filtering by status, we might need to fetch all matching search/age first, then filter in PHP.
-        // Assuming participant count isn't massive (< 10,000).
-        
+        // Eager load cita-cita dan gaya belajar
+        $query->with([
+            'rmdCareerExplorationP2:user_id,final_career_choice',
+            'rmdTheOnlyOne:user_id,visual_checklist,auditory_checklist,kinesthetic_checklist',
+        ]);
+
         $users = $query->get();
-        
+
         $processedData = $users->map(function ($user) use ($relations, $totalModules) {
             $filledCount = 0;
             foreach ($relations as $relation) {
-                // Laravel withCount creates {relation_snake_case}_count
                 $countAttribute = Str::snake($relation) . '_count';
                 $count = $user->$countAttribute;
                 if ($count > 0) $filledCount++;
             }
-            
+
             $status = 'Belum Mulai';
             $percentage = 0;
-            
+
             if ($filledCount > 0) {
                 if ($filledCount == $totalModules) {
                     $status = 'Selesai';
@@ -210,18 +211,20 @@ class RmdReportController extends Controller
                     $percentage = round(($filledCount / $totalModules) * 100);
                 }
             }
-            
+
             return (object) [
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'user_id_number' => $user->id_number,
-                'status' => $status,
-                'percentage' => $percentage,
+                'user_id'            => $user->id,
+                'user_name'          => $user->name,
+                'user_id_number'     => $user->id_number,
+                'status'             => $status,
+                'percentage'         => $percentage,
                 'filled_modules_count' => $filledCount,
-                'total_modules' => $totalModules,
-                'last_updated' => $user->updated_at->format('Y-m-d H:i:s'), // Approximation
-                'module_name' => 'Summary', // For export compatibility
-                'filled_at' => null
+                'total_modules'      => $totalModules,
+                'last_updated'       => $user->updated_at->format('Y-m-d H:i:s'),
+                'cita_cita'          => $user->rmdCareerExplorationP2?->final_career_choice ?? '-',
+                'gaya_belajar'       => $this->resolveGayaBelajar($user->rmdTheOnlyOne),
+                'module_name'        => 'Summary',
+                'filled_at'          => null,
             ];
         });
 
@@ -249,6 +252,22 @@ class RmdReportController extends Controller
         }
 
         return $processedData->values();
+    }
+
+    private function resolveGayaBelajar($rmdTheOnlyOne): string
+    {
+        if (!$rmdTheOnlyOne) return '-';
+
+        $counts = [
+            'Visual'     => count(array_filter((array) ($rmdTheOnlyOne->visual_checklist ?? []))),
+            'Auditori'   => count(array_filter((array) ($rmdTheOnlyOne->auditory_checklist ?? []))),
+            'Kinestetik' => count(array_filter((array) ($rmdTheOnlyOne->kinesthetic_checklist ?? []))),
+        ];
+
+        $max = max($counts);
+        if ($max === 0) return '-';
+
+        return implode(' & ', array_keys(array_filter($counts, fn($v) => $v === $max)));
     }
 
     /**

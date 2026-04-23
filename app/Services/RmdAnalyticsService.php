@@ -7,6 +7,22 @@ use Illuminate\Support\Str;
 
 class RmdAnalyticsService
 {
+    private function resolveGayaBelajar($rmdTheOnlyOne): string
+    {
+        if (!$rmdTheOnlyOne) return '-';
+
+        $counts = [
+            'Visual'     => count(array_filter((array) ($rmdTheOnlyOne->visual_checklist ?? []))),
+            'Auditori'   => count(array_filter((array) ($rmdTheOnlyOne->auditory_checklist ?? []))),
+            'Kinestetik' => count(array_filter((array) ($rmdTheOnlyOne->kinesthetic_checklist ?? []))),
+        ];
+
+        $max = max($counts);
+        if ($max === 0) return '-';
+
+        return implode(' & ', array_keys(array_filter($counts, fn($v) => $v === $max)));
+    }
+
     /**
      * Get detailed analytics data for all participants >= 12 years old.
      * Includes module-level details.
@@ -42,7 +58,10 @@ class RmdAnalyticsService
         return User::where('role', 'participant')
             ->whereNotNull('date_of_birth')
             ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
-            ->with($relations)
+            ->with(array_merge($relations, [
+                'rmdCareerExplorationP2:user_id,final_career_choice',
+                'rmdTheOnlyOne:user_id,visual_checklist,auditory_checklist,kinesthetic_checklist',
+            ]))
             ->get()
             ->map(function ($user) use ($moduleMap) {
                 $userAge = \Carbon\Carbon::parse($user->date_of_birth)->age;
@@ -98,15 +117,17 @@ class RmdAnalyticsService
                 elseif ($filledModulesCount >= 7 && $filledModulesCount <= 9) $progressCategory = '7-9 Modul';
                 elseif ($filledModulesCount > 9) $progressCategory = '> 9 Modul';
 
-                return (object) [ // Return as object for easier access
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'id_number' => $user->id_number,
-                    'age' => \Carbon\Carbon::parse($user->date_of_birth)->age,
-                    'age_category' => $ageCategory,
+                return (object) [
+                    'id'                  => $user->id,
+                    'name'                => $user->name,
+                    'id_number'           => $user->id_number,
+                    'age'                 => \Carbon\Carbon::parse($user->date_of_birth)->age,
+                    'age_category'        => $ageCategory,
+                    'cita_cita'           => $user->rmdCareerExplorationP2?->final_career_choice ?? '-',
+                    'gaya_belajar'        => $this->resolveGayaBelajar($user->rmdTheOnlyOne),
                     'filled_modules_count' => $filledModulesCount,
-                    'progress_category' => $progressCategory,
-                    'modules' => $moduleDetails,
+                    'progress_category'   => $progressCategory,
+                    'modules'             => $moduleDetails,
                 ];
             });
     }

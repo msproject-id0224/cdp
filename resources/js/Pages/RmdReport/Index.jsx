@@ -432,6 +432,12 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             <th scope="col" className="px-6 py-3">
                                                 {__('ID Number')}
                                             </th>
+                                            <th scope="col" className="px-6 py-3">
+                                                {__('Cita-cita')}
+                                            </th>
+                                            <th scope="col" className="px-6 py-3">
+                                                {__('Gaya Belajar')}
+                                            </th>
                                             <th scope="col" className="px-6 py-3 text-center">
                                                 {__('Module Progress')}
                                             </th>
@@ -458,6 +464,12 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         {item.user_id_number || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {item.cita_cita || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {item.gaya_belajar || '-'}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
@@ -502,7 +514,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                                <td colSpan="8" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                                     {__('No data found.')}
                                                 </td>
                                             </tr>

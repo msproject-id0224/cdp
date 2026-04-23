@@ -31,6 +31,8 @@ class RmdAnalyticsExport implements FromCollection, WithHeadings, WithMapping, S
             'Nomor Identitas',
             'Usia',
             'Kategori Usia',
+            'Cita-cita',
+            'Gaya Belajar',
             'Jumlah Modul Terisi',
             'Kategori Progress',
         ];
@@ -59,6 +61,8 @@ class RmdAnalyticsExport implements FromCollection, WithHeadings, WithMapping, S
             $row->id_number,
             $row->age,
             $row->age_category,
+            $row->cita_cita ?? '-',
+            $row->gaya_belajar ?? '-',
             $row->filled_modules_count,
             $row->progress_category,
         ];

@@ -68,6 +68,8 @@
                 <th>No</th>
                 <th>Nama Partisipan</th>
                 <th>Nomor Identitas</th>
+                <th>Cita-cita</th>
+                <th>Gaya Belajar</th>
                 <th>Status</th>
                 <th>%</th>
                 <th>Modul</th>
@@ -80,6 +82,8 @@
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $row->user_name }}</td>
                 <td>{{ $row->user_id_number }}</td>
+                <td>{{ $row->cita_cita ?? '-' }}</td>
+                <td>{{ $row->gaya_belajar ?? '-' }}</td>
                 <td>
                     @php
                         $statusClass = match($row->status) {
