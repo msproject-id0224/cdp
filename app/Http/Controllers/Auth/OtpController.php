@@ -170,6 +170,12 @@ class OtpController extends Controller
                     return back()->withErrors(['otp' => $msg]);
                 }
 
+                // OTP verification proves email ownership — mark as verified if not already
+                if (!$user->email_verified_at) {
+                    $user->email_verified_at = now();
+                    $user->save();
+                }
+
                 Auth::login($user);
 
                 AuditLog::create([

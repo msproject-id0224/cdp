@@ -138,6 +138,50 @@ class RmdController extends Controller
 
     public function index()
     {
+        $user = Auth::user();
+
+        // Smart redirect: participants who have already started go to their first incomplete module
+        if ($user->isParticipant()) {
+            // Map each module name (from RmdProgressService) to its route name
+            $moduleRoutes = [
+                'Profil RMD'             => 'rmd.profile',
+                'Refleksi Alkitab'       => 'rmd.what-the-bible-says',
+                'Sukses Sejati'          => 'rmd.true-success',
+                'The Only One'           => 'rmd.the-only-one',
+                'Kecerdasan Majemuk'     => 'rmd.the-only-one-meeting-2',
+                'Sosial Emosional'       => 'rmd.the-only-one-meeting-3',
+                'Eksplorasi Karir'       => 'rmd.career-exploration',
+                'Eksplorasi Karir P2'    => 'rmd.career-exploration-p2',
+                'Persiapan Pulau Impian' => 'rmd.preparation-dream-island',
+            ];
+
+            $hasStarted         = false;
+            $firstIncomplete    = null;
+
+            foreach (RmdProgressService::getModules() as $moduleName => $modelClass) {
+                $progress = RmdProgressService::calculateProgress($user, $moduleName, $modelClass);
+
+                if ($progress['percentage'] > 0) {
+                    $hasStarted = true;
+                }
+
+                if ($firstIncomplete === null && $progress['percentage'] < 100) {
+                    $firstIncomplete = $moduleRoutes[$moduleName] ?? null;
+                }
+            }
+
+            if ($hasStarted) {
+                // Still have incomplete modules → jump straight there
+                if ($firstIncomplete) {
+                    return redirect()->route($firstIncomplete)
+                        ->with('info', 'Melanjutkan dari bagian yang belum selesai.');
+                }
+
+                // Everything 100 % → chapters / completion page
+                return redirect()->route('rmd.chapters');
+            }
+        }
+
         return Inertia::render('Rmd/Index');
     }
 
@@ -157,25 +201,42 @@ class RmdController extends Controller
             $graduationPlanDate = Carbon::parse($user->date_of_birth)->addYears(21)->format('Y-m-d');
         }
 
+        // Progress for all modules so the profile page can show a checklist
+        $rmdModules  = RmdProgressService::getModules();
+        $rmdProgress = collect($rmdModules)->map(function ($modelClass, $moduleName) use ($user) {
+            return array_merge(
+                ['name' => $moduleName],
+                RmdProgressService::calculateProgress($user, $moduleName, $modelClass)
+            );
+        })->values();
+
+        $isFirstFill = !$user->rmdProfile || !$user->rmdProfile->first_filled_at;
+
         return Inertia::render('Rmd/Profile', [
-            'rmdProfile' => $user->rmdProfile,
+            'rmdProfile'         => $user->rmdProfile,
             'graduationPlanDate' => $graduationPlanDate,
+            'rmdProgress'        => $rmdProgress,
+            'isFirstFill'        => $isFirstFill,
         ]);
     }
 
     public function storeProfile(Request $request)
     {
+        $existingForValidation = RmdProfile::where('user_id', Auth::id())->first();
+        $isFirstFillValidation = !$existingForValidation || !$existingForValidation->first_filled_at;
+
         $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'date_of_birth' => 'nullable|date',
-            'gender' => 'nullable|in:Male,Female',
-            'profile_photo' => 'nullable|image|max:2048',
-            'first_filled_at' => 'required|date',
-            'first_filled_age' => 'required|integer|min:1',
-            'first_filled_education' => 'required|string|max:255',
+            'first_name'                         => 'required|string|max:255',
+            'last_name'                          => 'nullable|string|max:255',
+            'phone_number'                       => 'nullable|string|max:20',
+            'address'                            => 'nullable|string|max:500',
+            'date_of_birth'                      => 'nullable|date',
+            'gender'                             => 'nullable|in:Male,Female',
+            'profile_photo'                      => 'nullable|image|max:2048',
+            'first_filled_at'                    => $isFirstFillValidation ? 'required|date' : 'nullable|date',
+            'first_filled_age'                   => 'required|integer|min:1',
+            'first_filled_education'             => 'required|string|max:255',
+            'first_filled_education_institution' => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
@@ -207,16 +268,23 @@ class RmdController extends Controller
                 $graduationPlanDate = Carbon::parse($user->date_of_birth)->addYears(21)->format('Y-m-d');
             }
 
-            // Update RmdProfile
-            RmdProfile::updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'graduation_plan_date' => $graduationPlanDate,
-                    'first_filled_at' => $request->first_filled_at,
-                    'first_filled_age' => $request->first_filled_age,
-                    'first_filled_education' => $request->first_filled_education,
-                ]
-            );
+            // Update RmdProfile — only first_filled_at is locked once set
+            $existingProfile = RmdProfile::where('user_id', $user->id)->first();
+            $isFirstFill     = !$existingProfile || !$existingProfile->first_filled_at;
+
+            $profileData = [
+                'graduation_plan_date'               => $graduationPlanDate,
+                'first_filled_age'                   => $request->first_filled_age,
+                'first_filled_education'             => $request->first_filled_education,
+                'first_filled_education_institution' => $request->first_filled_education_institution,
+            ];
+
+            // first_filled_at is only written on the very first save — never overwritten
+            if ($isFirstFill) {
+                $profileData['first_filled_at'] = $request->first_filled_at;
+            }
+
+            RmdProfile::updateOrCreate(['user_id' => $user->id], $profileData);
         });
 
         return $this->redirectToFirstIncomplete('Profil berhasil diperbarui.');
@@ -611,28 +679,7 @@ class RmdController extends Controller
 
     private function redirectToFirstIncomplete(string $message = 'Jawaban berhasil disimpan.')
     {
-        $user = Auth::user();
-
-        $moduleRoutes = [
-            'Profil RMD'             => 'rmd.profile',
-            'Refleksi Alkitab'       => 'rmd.what-the-bible-says',
-            'Sukses Sejati'          => 'rmd.true-success',
-            'The Only One'           => 'rmd.the-only-one',
-            'Kecerdasan Majemuk'     => 'rmd.the-only-one-meeting-2',
-            'Sosial Emosional'       => 'rmd.the-only-one-meeting-3',
-            'Eksplorasi Karir'       => 'rmd.career-exploration',
-            'Eksplorasi Karir P2'    => 'rmd.career-exploration-p2',
-            'Persiapan Pulau Impian' => 'rmd.preparation-dream-island',
-        ];
-
-        foreach (RmdProgressService::getModules() as $name => $modelClass) {
-            $progress = RmdProgressService::calculateProgress($user, $name, $modelClass);
-            if ($progress['percentage'] < 100) {
-                return redirect()->route($moduleRoutes[$name])->with('success', $message);
-            }
-        }
-
-        return redirect()->route('rmd.chapters')->with('success', 'Semua modul RMD telah selesai diisi!');
+        return back()->with('success', $message);
     }
 
     public function downloadMeetingFile(\App\Models\RmdMeetingFile $file)

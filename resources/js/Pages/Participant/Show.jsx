@@ -7,9 +7,10 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import ProfilePhoto from '@/Components/ProfilePhoto';
+import RmdDetailSummary from './RmdDetailSummary';
 import axios from 'axios';
 
-export default function ParticipantShow({ auth, participant, notes, tasks, meetings, messages, metrics, analytics, rmdProgress }) {
+export default function ParticipantShow({ auth, participant, notes, tasks, meetings, messages, metrics, analytics, rmdProgress, rmdDetail }) {
     const { locale } = usePage().props;
     const isAdmin = auth?.user?.role === 'admin';
     const [status, setStatus] = useState(participant.is_active ? 'active' : 'inactive');
@@ -271,6 +272,10 @@ export default function ParticipantShow({ auth, participant, notes, tasks, meeti
                     </div>
 
                     {/* RMD Progress Section - Only for 12+ years old */}
+                    {isAdmin && rmdDetail && participantAge >= 12 && (
+                        <RmdDetailSummary rmdDetail={rmdDetail} rmdProgress={rmdProgress} />
+                    )}
+
                     {rmdProgress && participantAge >= 12 && (
                         <div className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
                             <div className="flex items-center justify-between mb-4">

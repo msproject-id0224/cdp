@@ -18,6 +18,7 @@ export default function ParticipantCreate({ auth }) {
         age: '',
         gender: '',
         education: '',
+        education_institution: '',
         age_group: '',
         height: '',
         weight: '',
@@ -225,10 +226,26 @@ export default function ParticipantCreate({ auth }) {
                                                 <option value="D2">{__('D2')}</option>
                                                 <option value="D3">{__('D3')}</option>
                                                 <option value="S1">{__('S1')}</option>
+                                                <option value="S1/D4">{__('S1/D4')}</option>
                                             </select>
                                         </DisabledWrapper>
                                         <InputError className="mt-2" message={errors.education} />
                                     </div>
+
+                                    {isFormEnabled && (data.education === 'S1' || data.education === 'S1/D4') && (
+                                        <div>
+                                            <InputLabel htmlFor="education_institution" value={__('University / Institute')} />
+                                            <TextInput
+                                                id="education_institution"
+                                                type="text"
+                                                className="mt-1 block w-full"
+                                                value={data.education_institution}
+                                                onChange={(e) => setData('education_institution', e.target.value)}
+                                                placeholder={__('e.g., Universitas Indonesia / Politeknik Negeri Bandung')}
+                                            />
+                                            <InputError className="mt-2" message={errors.education_institution} />
+                                        </div>
+                                    )}
 
                                     <div>
                                         <InputLabel htmlFor="age_group" value={__('Age Group')} />

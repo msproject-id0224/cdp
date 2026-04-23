@@ -27,7 +27,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email:rfc,dns', 'exists:users,email'],
+            'email' => ['required', 'string', 'email:rfc', 'exists:users,email'],
         ];
     }
 
@@ -40,7 +40,25 @@ class LoginRequest extends FormRequest
     {
         return [
             'email.required' => __('Email is required'),
+            'email.exists'   => __('Email tidak terdaftar.'),
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(\Illuminate\Contracts\Validation\Validator $validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->has('email')) {
+                return;
+            }
+
+            $user = \App\Models\User::where('email', $this->email)->first();
+            if ($user && !$user->is_active) {
+                $validator->errors()->add('email', __('Akun Anda tidak aktif. Silakan hubungi admin.'));
+            }
+        });
     }
 
     /**

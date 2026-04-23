@@ -155,6 +155,49 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
         return <Doughnut options={options} data={data} />;
     };
 
+    const renderCareerChoiceChart = () => {
+        const dist = chartData.career_choice_distribution;
+        if (!dist || !dist.labels || dist.labels.length === 0) return null;
+
+        const totalEligible = dist.total_eligible || 0;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Final Career Choice Distribution') },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const count = ctx.parsed.y;
+                            const pct = totalEligible > 0
+                                ? ((count / totalEligible) * 100).toFixed(1)
+                                : 0;
+                            return ` ${count} ${__('participants')} (${pct}% ${__('of total eligible')})`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: __('Number of Participants') },
+                },
+                x: {
+                    title: { display: true, text: __('Career Choice') },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 30,
+                    },
+                },
+            },
+        };
+
+        return <Bar options={options} data={dist} />;
+    };
+
     const renderProgressChart = () => {
         const data = chartData.progress_distribution;
         if (!data || !data.datasets || data.datasets.length === 0) return null;
@@ -250,6 +293,21 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                             <div className="absolute top-0 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-75">
                                 {__('Data only includes participants aged 12 and above')}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Final Career Choice Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Final Career Choice Distribution')}</h3>
+                            {chartData?.career_choice_distribution?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
+                                    {chartData.career_choice_distribution.total} / {chartData.career_choice_distribution.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderCareerChoiceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                         </div>
                     </div>
                 </div>
@@ -383,6 +441,9 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             <th scope="col" className="px-6 py-3">
                                                 {__('Last Updated')}
                                             </th>
+                                            <th scope="col" className="px-6 py-3 text-center">
+                                                {__('Action')}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -390,29 +451,31 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             reports.data.map((item) => (
                                                 <tr
                                                     key={item.user_id}
-                                                    onClick={() => handleUserClick(item.user_id)}
-                                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
+                                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40"
                                                 >
                                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                        <span className="text-indigo-600 dark:text-indigo-400">
-                                                            {item.user_name}
-                                                        </span>
+                                                        {item.user_name}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         {item.user_id_number || '-'}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 flex-grow">
-                                                                <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${item.percentage}%` }}></div>
+                                                            <div className="flex-grow bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                                                <div
+                                                                    className={`h-2 rounded-full transition-all ${
+                                                                        item.status === 'Selesai'
+                                                                            ? 'bg-green-500'
+                                                                            : item.percentage > 0
+                                                                            ? 'bg-indigo-500'
+                                                                            : 'bg-gray-300 dark:bg-gray-600'
+                                                                    }`}
+                                                                    style={{ width: `${item.percentage}%` }}
+                                                                />
                                                             </div>
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-right">
-                                                                {item.filled_modules_count} / {item.total_modules}
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">
+                                                                {item.filled_modules_count}/{item.total_modules}
                                                             </span>
-                                                            <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title={__('Click for details')}>
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
@@ -420,14 +483,26 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                             {STATUS_DISPLAY[item.status] ?? item.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                         {item.last_updated}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleUserClick(item.user_id)}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                            </svg>
+                                                            {__('Module Progress')}
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                                <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                                     {__('No data found.')}
                                                 </td>
                                             </tr>

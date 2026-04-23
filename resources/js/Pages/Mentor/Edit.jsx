@@ -4,6 +4,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import ProfilePhoto from '@/Components/ProfilePhoto';
+import MentorDocuments from '@/Components/MentorDocuments';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { __ } from '@/Utils/lang';
@@ -276,6 +277,13 @@ export default function MentorEdit({ auth, mentor }) {
                                     </Link>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    {/* Personal Documents — read-only admin view */}
+                    <div className="mt-6 overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                        <div className="p-6 text-gray-900 dark:text-gray-100">
+                            <MentorDocuments readOnly={true} mentorId={mentor.id} />
                         </div>
                     </div>
                 </div>

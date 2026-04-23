@@ -201,6 +201,11 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'mentor_id');
     }
 
+    public function mentorDocuments()
+    {
+        return $this->hasMany(MentorDocument::class);
+    }
+
     public function assignedParticipants()
     {
         return $this->hasMany(User::class, 'mentor_id');

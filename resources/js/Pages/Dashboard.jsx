@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Head, Link } from '@inertiajs/react'
-import { __ } from '@/Utils/lang'
+import { useTrans } from '@/Utils/lang'
 import { useState } from 'react'
 import PhotoRequestsTab from '@/Components/Dashboard/PhotoRequestsTab'
 import ProfilePhoto from '@/Components/ProfilePhoto'
@@ -8,12 +8,12 @@ import ScheduleTab from '@/Components/Dashboard/ScheduleTab'
 import LetterHistory from '@/Components/Dashboard/LetterHistory'
 import GiftHistory from '@/Components/Dashboard/GiftHistory'
 
-const PERF_CRITERIA = [
-    { key: 'jadwal',      label: 'Jadwal',    desc: 'Kelengkapan pengisian form jadwal' },
-    { key: 'kehadiran',   label: 'Kehadiran', desc: 'Kehadiran & ketepatan waktu' },
-    { key: 'surat',       label: 'Surat',     desc: 'Penulisan surat anak' },
-    { key: 'gift',        label: 'Gift',      desc: 'Pendampingan gift anak' },
-    { key: 'update_anak', label: 'Update',    desc: 'Update catatan anak' },
+const PERF_CRITERIA_KEYS = [
+    { key: 'jadwal',      labelKey: 'Jadwal',    descKey: 'Schedule criteria desc' },
+    { key: 'kehadiran',   labelKey: 'Kehadiran', descKey: 'Attendance criteria desc' },
+    { key: 'surat',       labelKey: 'Surat',     descKey: 'Letter criteria desc' },
+    { key: 'gift',        labelKey: 'Gift',      descKey: 'Gift criteria desc' },
+    { key: 'update_anak', labelKey: 'Update',    descKey: 'Child Update criteria desc' },
 ]
 
 function PerfBar ({ value }) {
@@ -27,8 +27,14 @@ function PerfBar ({ value }) {
 }
 
 export default function Dashboard ({ auth, photoRequests, letters, gifts, filters, mentorPerformance }) {
+    const __ = useTrans()
     const user = auth.user
     const role = user?.role ? String(user.role) : 'participant'
+    const PERF_CRITERIA = PERF_CRITERIA_KEYS.map(c => ({
+        key: c.key,
+        label: __(c.labelKey),
+        desc: __(c.descKey),
+    }))
     const [activeTab, setActiveTab] = useState(() => {
         try {
             // Check if active_tab is passed from backend (via filters)
@@ -164,7 +170,7 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
                                                                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
                                                         } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                                                     >
-                                                        {__('Riwayat Surat')}
+                                                        {__('Letter History')}
                                                     </button>
                                                     <button
                                                         onClick={() => changeTab('gifts')}
@@ -174,7 +180,7 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
                                                                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
                                                         } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                                                     >
-                                                        {__('Riwayat Gift')}
+                                                        {__('Gift History')}
                                                     </button>
                                                 </>
                                             )}
@@ -287,10 +293,10 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
                                                         className='p-6 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition shadow-sm dark:bg-indigo-900/20 dark:border-indigo-800 dark:hover:bg-indigo-900/30'
                                                     >
                                                         <h4 className='font-semibold text-indigo-700 dark:text-indigo-400'>
-                                                            {__('Daftar Admin')}
+                                                            {__('Admin List')}
                                                         </h4>
                                                         <p className='text-sm text-indigo-600 mt-2 dark:text-indigo-500'>
-                                                            {__('Kelola dan lihat semua admin yang terdaftar.')}
+                                                            {__('Manage registered administrators.')}
                                                         </p>
                                                     </Link>
                                                 )}
@@ -317,16 +323,16 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
                                                         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5'>
                                                             <div>
                                                                 <h4 className='font-bold text-indigo-700 dark:text-indigo-300 text-base'>
-                                                                    Penilaian Kinerja Saya
+                                                                    {__('My Performance Assessment')}
                                                                 </h4>
                                                                 <p className='text-xs text-indigo-500 dark:text-indigo-400 mt-0.5'>
-                                                                    Rentang poin 1–10 per kriteria
+                                                                    {__('Score range 1–10 points per criteria')}
                                                                 </p>
                                                             </div>
                                                             {/* Total badge */}
                                                             <div className='flex items-center gap-3'>
                                                                 <div className='text-right'>
-                                                                    <div className='text-xs text-gray-500 dark:text-gray-400'>Total Poin</div>
+                                                                    <div className='text-xs text-gray-500 dark:text-gray-400'>{__('Total Points')}</div>
                                                                     <div className={`text-3xl font-black tabular-nums ${
                                                                         mentorPerformance.total >= 8 ? 'text-green-600 dark:text-green-400'
                                                                         : mentorPerformance.total >= 5 ? 'text-yellow-600 dark:text-yellow-400'
@@ -340,9 +346,9 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
                                                                         : mentorPerformance.total >= 5 ? 'text-yellow-600 dark:text-yellow-400'
                                                                         : 'text-red-600 dark:text-red-400'
                                                                     }`}>
-                                                                        {mentorPerformance.total >= 8 ? 'Kinerja Baik'
-                                                                        : mentorPerformance.total >= 5 ? 'Kinerja Cukup'
-                                                                        : 'Perlu Peningkatan'}
+                                                                        {mentorPerformance.total >= 8 ? __('Good Performance')
+                                                                        : mentorPerformance.total >= 5 ? __('Fair Performance')
+                                                                        : __('Needs Improvement')}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -373,17 +379,31 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
 
                                                 {user.role === 'admin' && (
                                                     <Link
+                                                        href={route('participants.update-log')}
+                                                        className='p-6 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition shadow-sm dark:bg-teal-900/20 dark:border-teal-800 dark:hover:bg-teal-900/30'
+                                                    >
+                                                        <h4 className='font-semibold text-teal-700 dark:text-teal-400'>
+                                                            {__('Daftar Pembaruan Partisipan')}
+                                                        </h4>
+                                                        <p className='text-sm text-teal-600 mt-2 dark:text-teal-500'>
+                                                            {__('View participants sorted by latest update.')}
+                                                        </p>
+                                                    </Link>
+                                                )}
+
+                                                {user.role === 'admin' && (
+                                                    <Link
                                                         href={route(
                                                             'gifts.index'
                                                         )}
                                                         className='p-6 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition shadow-sm dark:bg-yellow-900/20 dark:border-yellow-800 dark:hover:bg-yellow-900/30'
                                                     >
                                                         <h4 className='font-semibold text-yellow-700 dark:text-yellow-400'>
-                                                            {__('Daftar Penerima Hadiah')}
+                                                            {__('Gift Recipients List')}
                                                         </h4>
                                                         <p className='text-sm text-yellow-600 mt-2 dark:text-yellow-500'>
                                                             {__(
-                                                                'Kelola daftar hadiah partisipan.'
+                                                                'Manage gift recipients list.'
                                                             )}
                                                         </p>
                                                     </Link>
@@ -395,11 +415,11 @@ export default function Dashboard ({ auth, photoRequests, letters, gifts, filter
                                                         className='p-6 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition shadow-sm dark:bg-yellow-900/20 dark:border-yellow-800 dark:hover:bg-yellow-900/30'
                                                     >
                                                         <h4 className='font-semibold text-yellow-700 dark:text-yellow-400'>
-                                                            {__('Daftar Penerima Hadiah')}
+                                                            {__('Gift Recipients List')}
                                                         </h4>
                                                         <p className='text-sm text-yellow-600 mt-2 dark:text-yellow-500'>
                                                             {__(
-                                                                'Lihat hadiah yang diterima partisipan Anda.'
+                                                                'View gifts received by your participants.'
                                                             )}
                                                         </p>
                                                     </Link>

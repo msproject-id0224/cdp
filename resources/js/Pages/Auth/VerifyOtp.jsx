@@ -71,8 +71,8 @@ export default function VerifyOtp() {
     };
 
     const handleResend = () => {
+        setCountdown(60);
         router.post(route('otp.resend'), {}, {
-            onFinish: () => setCountdown(60),
             preserveScroll: true,
         });
     };

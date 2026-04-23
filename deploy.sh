@@ -1,60 +1,91 @@
 #!/bin/bash
 
-# Deploy Script for Child Development Program (CDP) on Hostinger/CloudPanel
+# ============================================================
+# Deploy Script — Child Development Program (CDP)
+# CloudPanel VPS Deployment
 # Usage: ./deploy.sh
+# ============================================================
 
 set -e
 
-echo "🚀 Starting deployment..."
+APP_DIR="/home/cdp/htdocs/yourdomain.com"
+PHP_BIN="php8.2"
+COMPOSER_BIN="composer"
 
-# 1. Pull latest changes (SKIPPED - Git Removed)
-# echo "📥 Pulling latest code..."
-# git pull origin main
+echo "=============================="
+echo " CDP Deployment Started"
+echo " $(date '+%Y-%m-%d %H:%M:%S')"
+echo "=============================="
 
-# 2. Install PHP dependencies
-echo "📦 Installing PHP dependencies..."
-# Ensure we are using the correct PHP version if multiple are installed, or default 'composer'
-composer install --no-dev --optimize-autoloader --no-interaction
+cd "$APP_DIR"
 
-# 3. Install Node dependencies & Build Assets
-echo "🎨 Building frontend assets..."
+# 1. Maintenance mode ON
+echo "[1/9] Enabling maintenance mode..."
+if [ -n "${DEPLOY_BYPASS_TOKEN:-}" ]; then
+    $PHP_BIN artisan down --secret="$DEPLOY_BYPASS_TOKEN" --render="errors::503" || true
+else
+    $PHP_BIN artisan down --render="errors::503" || true
+fi
+
+# 2. Pull latest code from GitHub
+echo "[2/9] Pulling latest code from GitHub..."
+git pull origin main
+
+# 3. Install PHP dependencies (production only)
+echo "[3/9] Installing PHP dependencies..."
+$COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction --quiet
+
+# 4. Copy .env.production to .env if .env does not exist
+if [ ! -f .env ]; then
+    echo "[4/9] Creating .env from .env.production..."
+    cp .env.production .env
+    $PHP_BIN artisan key:generate
+else
+    echo "[4/9] .env already exists, skipping..."
+fi
+
+# 5. Build frontend assets
+echo "[5/9] Building frontend assets..."
 if command -v npm &> /dev/null; then
-    npm ci
+    npm ci --silent
     npm run build
 else
-    echo "⚠️ npm not found. Skipping frontend build. Ensure assets are built or npm is installed."
+    echo "      WARNING: npm not found. Skipping frontend build."
 fi
 
-# 4. Clear & Cache Config/Routes/Views
-echo "🧹 Optimizing Laravel..."
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan event:cache
+# 6. Clear & cache Laravel configs
+echo "[6/9] Optimizing Laravel..."
+$PHP_BIN artisan optimize:clear
+$PHP_BIN artisan config:cache
+$PHP_BIN artisan route:cache
+$PHP_BIN artisan view:cache
+$PHP_BIN artisan event:cache
 
-# 5. Run Database Migrations
-echo "🗄️ Running migrations..."
-php artisan migrate --force
+# 7. Run database migrations
+echo "[7/9] Running database migrations..."
+$PHP_BIN artisan migrate --force
 
-# 6. Restart Queue Workers (Supervisor)
-# CloudPanel uses 'supervisorctl' usually accessible by root, but if configured with user permissions or via sudo:
-if command -v supervisorctl &> /dev/null; then
-    echo "🔄 Restarting queue workers..."
-    # Attempt restart (might require sudo or root, depending on setup)
-    sudo supervisorctl restart all || echo "⚠️ Could not restart supervisor automatically. Run 'sudo supervisorctl restart all' manually if needed."
-else
-    echo "⚠️ Supervisor not found. Please restart queue workers manually if needed."
-fi
-
-# 7. Fix Permissions
-# In CloudPanel, the site user usually owns the files. We ensure storage is writable.
-echo "🔒 Fixing permissions..."
+# 8. Fix permissions (CloudPanel site user)
+echo "[8/9] Fixing file permissions..."
 chmod -R 775 storage bootstrap/cache
+chown -R $(whoami):$(whoami) storage bootstrap/cache
 
-# 8. Maintenance Mode (Optional: php artisan up)
-if [ -f artisan ]; then
-    php artisan up
+# 9. Restart queue workers
+echo "[9/9] Restarting queue workers..."
+if command -v supervisorctl &> /dev/null; then
+    sudo supervisorctl restart cdp-worker:* 2>/dev/null || \
+    sudo supervisorctl restart all 2>/dev/null || \
+    echo "      WARNING: Could not restart supervisor. Run manually: sudo supervisorctl restart all"
+else
+    $PHP_BIN artisan queue:restart || true
+    echo "      INFO: Supervisor not found. Queue restarted via artisan."
 fi
 
-echo "✅ Deployment complete!"
+# Done — disable maintenance mode
+$PHP_BIN artisan up
+
+echo ""
+echo "=============================="
+echo " Deployment COMPLETE!"
+echo " $(date '+%Y-%m-%d %H:%M:%S')"
+echo "=============================="

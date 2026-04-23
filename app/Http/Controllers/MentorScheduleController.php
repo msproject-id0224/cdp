@@ -148,7 +148,7 @@ class MentorScheduleController extends Controller
         $validated = $request->validate([
             'participant_ids' => 'required|array|min:1',
             'participant_ids.*' => 'exists:users,id',
-            'scheduled_at' => 'required|date',
+            'scheduled_at' => 'required|date|after:now',
             'end_time' => 'required|date|after:scheduled_at',
             'location' => 'nullable|string',
             'meeting_link' => 'nullable|string',
@@ -163,6 +163,14 @@ class MentorScheduleController extends Controller
             // Parse dates to ensure consistent comparison format (Y-m-d H:i:s)
             $start = \Carbon\Carbon::parse($validated['scheduled_at']);
             $end = \Carbon\Carbon::parse($validated['end_time']);
+
+            // Ensure the date has been approved by admin
+            $meetingDate = $start->format('Y-m-d');
+            $isApproved = \App\Models\GeneralMeetingDate::where('date', $meetingDate)->exists();
+            if (!$isApproved) {
+                return response()->json(['message' => 'This date has not been approved by admin for scheduling.'], 422);
+            }
+
             $maxParticipants = $validated['max_participants'] ?? count($validated['participant_ids']);
             if ($maxParticipants < count($validated['participant_ids'])) {
                 $maxParticipants = count($validated['participant_ids']);

@@ -1,0 +1,79 @@
+name: Deploy to VPS (CloudPanel)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            APP_DIR="/home/cdp/htdocs/${{ secrets.APP_DOMAIN }}"
+            PHP="php8.2"
+
+            echo "=============================="
+            echo " CDP Deploy — $(date '+%Y-%m-%d %H:%M:%S')"
+            echo "=============================="
+
+            cd "$APP_DIR"
+
+            echo "[1] Maintenance mode ON..."
+            $PHP artisan down --secret="${{ secrets.DEPLOY_BYPASS_TOKEN }}" --render="errors::503" || true
+
+            echo "[2] Pulling latest code..."
+            git pull origin main
+
+            echo "[3] Installing PHP dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction --quiet
+
+            echo "[4] Ensuring .env exists..."
+            if [ ! -f .env ]; then
+              cp .env.production .env
+              $PHP artisan key:generate --force
+            fi
+
+            echo "[5] Building frontend assets..."
+            npm ci --silent
+            npm run build
+
+            echo "[6] Optimizing Laravel..."
+            $PHP artisan optimize:clear
+            $PHP artisan config:cache
+            $PHP artisan route:cache
+            $PHP artisan view:cache
+            $PHP artisan event:cache
+
+            echo "[7] Running migrations..."
+            $PHP artisan migrate --force
+
+            echo "[8] Fixing permissions..."
+            chmod -R 775 storage bootstrap/cache
+            chown -R $(whoami):$(whoami) storage bootstrap/cache
+
+            echo "[9] Restarting queue workers..."
+            $PHP artisan queue:restart || true
+
+            echo "[10] Maintenance mode OFF..."
+            $PHP artisan up
+
+            echo ""
+            echo "=============================="
+            echo " Deployment COMPLETE!"
+            echo " $(date '+%Y-%m-%d %H:%M:%S')"
+            echo "=============================="
