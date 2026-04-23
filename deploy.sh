@@ -21,7 +21,11 @@ cd "$APP_DIR"
 
 # 1. Maintenance mode ON
 echo "[1/9] Enabling maintenance mode..."
-$PHP_BIN artisan down --secret="bypass-token-123" --render="errors::503" || true
+if [ -n "${DEPLOY_BYPASS_TOKEN:-}" ]; then
+    $PHP_BIN artisan down --secret="$DEPLOY_BYPASS_TOKEN" --render="errors::503" || true
+else
+    $PHP_BIN artisan down --render="errors::503" || true
+fi
 
 # 2. Pull latest code from GitHub
 echo "[2/9] Pulling latest code from GitHub..."

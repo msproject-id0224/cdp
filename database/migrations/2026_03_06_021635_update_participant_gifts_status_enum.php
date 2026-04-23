@@ -12,10 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Modify ENUM by using raw SQL statement (SQLite/MySQL specific usually, assuming MySQL/Postgres here)
-        // Laravel doesn't support changing ENUM values natively in Blueprint easily without raw DB statement or doctrine/dbal (which might be limited for enum)
-        // Alternative: Change column to string to allow any value, or recreate column.
-        // Let's assume standard MySQL behavior:
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         DB::statement("ALTER TABLE participant_gifts MODIFY COLUMN status ENUM('pending', 'received', 'returned', 'draft', 'pending_verification') DEFAULT 'pending'");
     }
 
@@ -24,8 +23,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert to original ENUM
-        // Warning: Data with new statuses might be truncated or cause error
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         DB::statement("ALTER TABLE participant_gifts MODIFY COLUMN status ENUM('pending', 'received', 'returned') DEFAULT 'pending'");
     }
 };

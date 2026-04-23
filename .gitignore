@@ -1,6 +1,8 @@
 /node_modules
 /public/hot
 /public/storage
+/bootstrap/cache/*.php
+/storage/
 /storage/*.key
 /storage/app/public
 /storage/logs
@@ -28,3 +30,6 @@ yarn-error.log
 # Large/sensitive files
 *.zip
 *.pdf
+*.sql
+*.csv
+*.xlsx
