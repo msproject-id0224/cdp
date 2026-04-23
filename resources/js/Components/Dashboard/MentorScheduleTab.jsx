@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import idLocale from '@fullcalendar/core/locales/id';
@@ -620,10 +619,19 @@ export default function MentorScheduleTab() {
     const handleExportExcel = () => {
         const rows = buildExportRows();
         if (!rows.length) return;
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
-        XLSX.writeFile(wb, 'mentor-schedule.xlsx');
+        const headers = Object.keys(rows[0]);
+        const ths = headers.map(h => `<th>${h}</th>`).join('');
+        const trs = rows.map(row =>
+            `<tr>${headers.map(h => `<td>${String(row[h] ?? '').replace(/</g, '&lt;')}</td>`).join('')}</tr>`
+        ).join('');
+        const html = `<html><head><meta charset="utf-8"/></head><body><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></body></html>`;
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'mentor-schedule.xls';
+        a.click();
+        URL.revokeObjectURL(url);
         setExportDropdownOpen(false);
     };
 
