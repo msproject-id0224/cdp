@@ -57,35 +57,46 @@ class ParticipantRmdSeeder extends Seeder
     {
         $mentor = User::where('role', 'mentor')->where('is_active', true)->first();
 
-        foreach ($this->participants as $index => $data) {
-            $idNumber = 'PAR' . str_pad(100 + $index + 1, 3, '0', STR_PAD_LEFT);
+        // Ambil id_number tertinggi yang ada agar tidak bentrok
+        $lastIdNumber = User::where('id_number', 'like', 'PAR%')
+            ->orderByDesc('id_number')
+            ->value('id_number');
+        $counter = $lastIdNumber ? ((int) substr($lastIdNumber, 3)) + 1 : 101;
+
+        foreach ($this->participants as $data) {
+            // Skip jika email sudah ada di database
+            if (User::where('email', $data['email'])->exists()) {
+                $this->command->warn("⚠ Skip: {$data['email']} sudah ada.");
+                continue;
+            }
+
             $citaCitaPilihan = $this->citaCita[array_rand($this->citaCita)];
             $dob = Carbon::parse($data['dob']);
             $age = $dob->age;
+            $idNumber = 'PAR' . str_pad($counter++, 3, '0', STR_PAD_LEFT);
 
-            $user = User::updateOrCreate(
-                ['email' => $data['email']],
-                [
-                    'id_number'         => $idNumber,
-                    'first_name'        => $data['first_name'],
-                    'last_name'         => $data['last_name'],
-                    'nickname'          => $data['first_name'],
-                    'role'              => 'participant',
-                    'gender'            => $data['gender'],
-                    'date_of_birth'     => $data['dob'],
-                    'age'               => $age,
-                    'education'         => 'Perguruan Tinggi',
-                    'is_active'         => true,
-                    'email_verified_at' => now(),
-                    'mentor_id'         => $mentor?->id,
-                    'phone_number'      => '08' . rand(100000000, 999999999),
-                    'address'           => 'Manado, Sulawesi Utara',
-                ]
-            );
+            $user = User::create([
+                'id_number'         => $idNumber,
+                'first_name'        => $data['first_name'],
+                'last_name'         => $data['last_name'],
+                'nickname'          => $data['first_name'],
+                'email'             => $data['email'],
+                'role'              => 'participant',
+                'gender'            => $data['gender'],
+                'date_of_birth'     => $data['dob'],
+                'age'               => $age,
+                'education'         => 'Perguruan Tinggi',
+                'is_active'         => true,
+                'email_verified_at' => now(),
+                'mentor_id'         => $mentor?->id,
+                'phone_number'      => '08' . rand(100000000, 999999999),
+                'address'           => 'Manado, Sulawesi Utara',
+            ]);
 
             $this->seedRmd($user, $age, $citaCitaPilihan);
 
-            $this->command->info("✓ {$user->first_name} {$user->last_name} (usia {$age}) — cita-cita: {$citaCitaPilihan}");
+            $this->command->info("✓ [{$idNumber}] {$user->first_name} {$user->last_name} (usia {$age}) — cita-cita: {$citaCitaPilihan}");
+            $counter++;
         }
     }
 
@@ -94,7 +105,7 @@ class ParticipantRmdSeeder extends Seeder
         $filledAt = Carbon::now()->subMonths(rand(1, 6));
 
         // 1. Profil RMD
-        RmdProfile::updateOrCreate(['user_id' => $user->id], [
+        RmdProfile::firstOrCreate(['user_id' => $user->id], [
             'graduation_plan_date'               => Carbon::now()->addYears(2)->format('Y-m-d'),
             'first_filled_at'                    => $filledAt->format('Y-m-d'),
             'first_filled_age'                   => $age,
@@ -103,7 +114,7 @@ class ParticipantRmdSeeder extends Seeder
         ]);
 
         // 2. Refleksi Alkitab
-        RmdBibleReflection::updateOrCreate(['user_id' => $user->id], [
+        RmdBibleReflection::firstOrCreate(['user_id' => $user->id], [
             'jeremiah_29_11_who_knows'   => 'Allah yang mengetahui rancangan-Nya untuk masa depan saya.',
             'jeremiah_29_11_plans'       => 'Rancangan damai sejahtera dan bukan rancangan kecelakaan.',
             'ephesians_2_10_made_by'     => 'Saya diciptakan oleh Allah sebagai hasil karya-Nya.',
@@ -124,7 +135,7 @@ class ParticipantRmdSeeder extends Seeder
         ]);
 
         // 3. Sukses Sejati
-        RmdTrueSuccess::updateOrCreate(['user_id' => $user->id], [
+        RmdTrueSuccess::firstOrCreate(['user_id' => $user->id], [
             'successful_life_definition'    => 'Sukses adalah hidup sesuai kehendak Allah dan memberikan dampak positif bagi sesama.',
             'general_success_measure'       => 'Ukuran sukses dunia adalah kekayaan dan jabatan, tetapi sukses sejati adalah pertumbuhan karakter.',
             'luke_2_52_growth'              => 'Bertumbuh dalam hikmat, tubuh, kasih karunia, dan pengetahuan.',
@@ -137,7 +148,7 @@ class ParticipantRmdSeeder extends Seeder
 
         // 4. The Only One
         $checklist = ['item1' => true, 'item2' => true, 'item3' => true];
-        RmdTheOnlyOne::updateOrCreate(['user_id' => $user->id], [
+        RmdTheOnlyOne::firstOrCreate(['user_id' => $user->id], [
             'unique_traits'                => 'Saya memiliki kemampuan komunikasi yang baik dan kreativitas tinggi.',
             'current_education_level'      => 'S1 / Sarjana',
             'favorite_subject'             => 'Matematika',
@@ -157,7 +168,7 @@ class ParticipantRmdSeeder extends Seeder
 
         // 5. Kecerdasan Majemuk
         $intelligenceChecklist = ['item1' => true, 'item2' => true];
-        RmdMultipleIntelligence::updateOrCreate(['user_id' => $user->id], [
+        RmdMultipleIntelligence::firstOrCreate(['user_id' => $user->id], [
             'linguistic_checklist'             => json_encode($intelligenceChecklist),
             'logical_mathematical_checklist'   => json_encode($intelligenceChecklist),
             'visual_spatial_checklist'         => json_encode($intelligenceChecklist),
@@ -172,7 +183,7 @@ class ParticipantRmdSeeder extends Seeder
         ]);
 
         // 6. Sosial Emosional
-        RmdSocioEmotional::updateOrCreate(['user_id' => $user->id], [
+        RmdSocioEmotional::firstOrCreate(['user_id' => $user->id], [
             'learning_style_practice'        => 'Belajar sambil berdiskusi dan mempraktikkan langsung.',
             'learning_style_impact'          => 'Pemahaman lebih mendalam dan mudah diingat.',
             'birth_order_siblings'           => 'Anak pertama dari 2 bersaudara.',
@@ -218,7 +229,7 @@ class ParticipantRmdSeeder extends Seeder
             ['faktor' => 'Kemampuan', 'bobot' => 4, 'nilai' => 4],
             ['faktor' => 'Prospek', 'bobot' => 3, 'nilai' => 5],
         ]);
-        RmdCareerExploration::updateOrCreate(['user_id' => $user->id], [
+        RmdCareerExploration::firstOrCreate(['user_id' => $user->id], [
             'visual_professions'               => 'Desainer, Arsitek, Fotografer.',
             'auditory_professions'             => 'Musisi, Broadcaster, Guru.',
             'kinesthetic_professions_style'    => 'Atlet, Dokter, Teknisi.',
@@ -249,7 +260,7 @@ class ParticipantRmdSeeder extends Seeder
         ]);
 
         // 8. Eksplorasi Karir P2 — berisi CITA-CITA utama
-        RmdCareerExplorationP2::updateOrCreate(['user_id' => $user->id], [
+        RmdCareerExplorationP2::firstOrCreate(['user_id' => $user->id], [
             'final_career_choice'  => $citaCita,
             'final_career_reason'  => "Saya memilih {$citaCita} karena sesuai dengan minat, kemampuan, dan panggilan hidup saya untuk melayani sesama.",
             'swot_definition'      => 'SWOT adalah alat analisis untuk mengevaluasi kekuatan, kelemahan, peluang, dan ancaman dalam pengambilan keputusan karir.',
@@ -272,7 +283,7 @@ class ParticipantRmdSeeder extends Seeder
             'opportunities' => ['Banyak peluang di bidang ini'],
             'threats'       => ['Persaingan semakin ketat'],
         ]);
-        RmdPreparationDreamIsland::updateOrCreate(['user_id' => $user->id], [
+        RmdPreparationDreamIsland::firstOrCreate(['user_id' => $user->id], [
             'profession_questions' => $professionQuestions,
             'swot_analysis'        => $swotIsland,
             'improvement_plan'     => "Rencana saya untuk menjadi {$citaCita}: (1) Menyelesaikan pendidikan S1, (2) Magang/praktik kerja, (3) Mengikuti pelatihan profesional, (4) Membangun jaringan, (5) Terus berdoa dan mengandalkan Tuhan.",
