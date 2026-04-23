@@ -256,7 +256,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/api/chat/{message}/flag', [ChatMessageController::class, 'flagMessage'])->name('api.chat.flag');
     Route::patch('/api/chat/{user}/read', [ChatMessageController::class, 'markAsRead'])->name('api.chat.read');
     Route::get('/api/chat-unread', [ChatMessageController::class, 'getUnreadCount'])->name('api.chat.unread-count');
-    Route::post('/api/log-error', [ChatMessageController::class, 'logError'])->name('api.log-error');
+    Route::post('/api/log-error', [ChatMessageController::class, 'logError'])
+        ->middleware('throttle:10,1')
+        ->name('api.log-error');
 
     Route::get('/rmd/meeting-files/{file}/download', [RmdController::class, 'downloadMeetingFile'])->name('rmd.files.download');
     Route::delete('/rmd/meeting-files/{file}', [RmdController::class, 'deleteMeetingFile'])->name('rmd.files.delete');
