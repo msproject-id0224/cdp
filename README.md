@@ -131,6 +131,21 @@ Note: Ensure you have a testing database configured or use SQLite (limited suppo
 4. Push to the branch (`git push origin feature/amazing-feature`).
 5. Open a Pull Request.
 
+## AI Features (feature-ai branch)
+
+This branch introduces AI-powered enhancements to the Child Development Program:
+
+-   **AI Development Insights**: Automated analysis of children's progress data to generate personalized recommendations.
+-   **Smart Scheduling**: AI-assisted meeting scheduling based on mentor and participant availability patterns.
+-   **Natural Language Reports**: Auto-generated progress reports using AI summarization.
+-   **Behavioral Pattern Detection**: Early identification of developmental milestones and areas needing attention.
+
+### AI Tech Stack
+
+-   **AI Provider**: Anthropic Claude API (claude-sonnet-4-6)
+-   **Integration**: Laravel service layer with async queue processing
+-   **Data Privacy**: All AI processing respects child data protection regulations
+
 ## License
 
 Proprietary / Closed Source (Mitra Project).
