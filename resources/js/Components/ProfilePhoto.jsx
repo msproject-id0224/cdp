@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ProfilePhoto({ src, alt, className, fallback, fallbackClassName }) {
     const [error, setError] = useState(false);
+
+    useEffect(() => {
+        setError(false);
+    }, [src]);
 
     // If src is empty string or null, don't even try to render img
     if (src && !error) {

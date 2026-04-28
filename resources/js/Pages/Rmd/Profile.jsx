@@ -153,7 +153,7 @@ export default function RmdProfile ({ auth, rmdProfile, graduationPlanDate, rmdP
             <Head title={__('RMD_PROFILE_TITLE')} />
 
             <div className='py-12'>
-                <div className='max-w-3xl mx-auto sm:px-6 lg:px-8'>
+                <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
                     {/* Flash Message removed here as it will be shown in modal */}
 
                     <div className='bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg'>
@@ -694,7 +694,7 @@ export default function RmdProfile ({ auth, rmdProfile, graduationPlanDate, rmdP
 
             {/* ── RMD Module Checklist ─────────────────────────────────────── */}
             {rmdProgress && (
-                <div className='max-w-3xl mx-auto sm:px-6 lg:px-8 pb-8'>
+                <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8'>
                     <div className='bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg'>
                         <div className='p-6'>
                             {/* Header */}

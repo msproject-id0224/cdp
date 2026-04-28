@@ -93,7 +93,7 @@ class OtpService
                     ->notify(new OtpNotification($otpCode, ['mail']));
             }
             
-            Log::info("OTP notification successfully queued for {$email}");
+            Log::info("OTP notification sent successfully for {$email}");
         } catch (\Exception $e) {
             Log::error("Failed to queue OTP notification for {$email}: " . $e->getMessage(), [
                 'exception' => $e
