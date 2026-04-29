@@ -38,7 +38,7 @@ function NoteCard({ note }) {
     const isSelf = note.mentor_id === note.participant_id;
     return (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex items-center gap-2 min-w-0">
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${isSelf ? 'bg-emerald-100 dark:bg-emerald-900/40' : 'bg-blue-100 dark:bg-blue-900/40'}`}>
                         <span className={`text-sm font-bold ${isSelf ? 'text-emerald-600 dark:text-emerald-300' : 'text-blue-600 dark:text-blue-300'}`}>
@@ -51,6 +51,9 @@ function NoteCard({ note }) {
                 </div>
                 <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{formatDate(note.created_at)}</span>
             </div>
+            {note.subject && (
+                <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm mb-2">{note.subject}</p>
+            )}
             <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{note.note}</p>
         </div>
     );
@@ -160,10 +163,11 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
     const [letters, setLetters] = useState(initialLetters);
 
     /* note modal */
-    const [noteModal, setNoteModal]   = useState(false);
-    const [noteText, setNoteText]     = useState('');
-    const [noteSaving, setNoteSaving] = useState(false);
-    const [noteError, setNoteError]   = useState('');
+    const [noteModal, setNoteModal]       = useState(false);
+    const [noteSubject, setNoteSubject]   = useState('');
+    const [noteText, setNoteText]         = useState('');
+    const [noteSaving, setNoteSaving]     = useState(false);
+    const [noteError, setNoteError]       = useState('');
 
     /* letter modal */
     const [letterModal, setLetterModal]     = useState(false);
@@ -175,7 +179,7 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
     const currentLetters = letters[letterTab] ?? [];
 
     /* ── handlers ── */
-    function openNoteModal()   { setNoteText(''); setNoteError(''); setNoteModal(true); }
+    function openNoteModal()   { setNoteSubject(''); setNoteText(''); setNoteError(''); setNoteModal(true); }
     function closeNoteModal()  { setNoteModal(false); }
 
     function openLetterModal()  { setLetterSubject(''); setLetterContent(''); setLetterError(''); setLetterModal(true); }
@@ -187,7 +191,7 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
         setNoteSaving(true);
         setNoteError('');
         try {
-            const { data } = await axios.post(route('participant.notes.store'), { note: noteText });
+            const { data } = await axios.post(route('participant.notes.store'), { subject: noteSubject, note: noteText });
             setNotes(prev => [data, ...prev]);
             closeNoteModal();
         } catch (err) {
@@ -328,6 +332,19 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
             {/* ── Modal: Tambah Catatan ────────────────────────────── */}
             <Modal show={noteModal} onClose={closeNoteModal} title={__('Tambah Catatan')}>
                 <form onSubmit={handleSaveNote} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {__('Subjek')} <span className="text-gray-400 text-xs font-normal">({__('opsional')})</span>
+                        </label>
+                        <input
+                            type="text"
+                            maxLength={255}
+                            value={noteSubject}
+                            onChange={e => setNoteSubject(e.target.value)}
+                            placeholder={__('Judul catatan...')}
+                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {__('Catatan')}

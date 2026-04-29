@@ -805,12 +805,14 @@ class ParticipantController extends Controller
         }
 
         $validated = $request->validate([
-            'note' => 'required|string|max:2000',
+            'subject' => 'nullable|string|max:255',
+            'note'    => 'required|string|max:2000',
         ]);
 
         $note = ParticipantNote::create([
             'participant_id' => $user->id,
             'mentor_id'      => $user->id,
+            'subject'        => $validated['subject'] ?? null,
             'note'           => $validated['note'],
         ]);
 

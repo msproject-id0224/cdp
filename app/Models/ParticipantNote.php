@@ -9,6 +9,7 @@ class ParticipantNote extends Model
     protected $fillable = [
         'participant_id',
         'mentor_id',
+        'subject',
         'note',
     ];
 
