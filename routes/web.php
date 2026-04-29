@@ -218,6 +218,8 @@ Route::middleware(['auth', 'verified', 'role:participant'])->group(function () {
     Route::get('/participant/communication', [CommunicationController::class, 'participantIndex'])->name('participant.communication.index');
     Route::post('/participant/profile-photo/request', [ProfilePhotoController::class, 'userRequestUpload'])->name('participant.profile-photo.request');
     Route::get('/participant/notes', [ParticipantController::class, 'myNotes'])->name('participant.notes');
+    Route::post('/participant/notes/store', [ParticipantController::class, 'storeMyNote'])->name('participant.notes.store');
+    Route::post('/participant/letters/store', [ParticipantController::class, 'storeMyLetter'])->name('participant.letters.store');
     Route::get('/participant/schedule', [ParticipantController::class, 'mySchedule'])->name('participant.schedule');
 });
 

@@ -797,6 +797,59 @@ class ParticipantController extends Controller
         ]);
     }
 
+    public function storeMyNote(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'note' => 'required|string|max:2000',
+        ]);
+
+        $note = ParticipantNote::create([
+            'participant_id' => $user->id,
+            'mentor_id'      => $user->id,
+            'note'           => $validated['note'],
+        ]);
+
+        $note->load('mentor');
+        return response()->json($note, 201);
+    }
+
+    public function storeMyLetter(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'subject'     => 'required|string|max:255',
+            'letter_type' => 'required|in:perkenalan,terjadwal,ucapan_terima_kasih',
+            'content'     => 'nullable|string|max:5000',
+        ]);
+
+        $recipientId = $user->mentor_id
+            ?? User::where('role', User::ROLE_ADMIN)->value('id')
+            ?? $user->id;
+
+        $letter = Letter::create([
+            'sender_id'    => $user->id,
+            'recipient_id' => $recipientId,
+            'letter_number'=> 'LTR-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6)),
+            'subject'      => $validated['subject'],
+            'letter_type'  => $validated['letter_type'],
+            'content'      => $validated['content'] ?? null,
+            'status'       => 'sent',
+            'sent_at'      => now(),
+        ]);
+
+        $letter->load('sender', 'recipient');
+        return response()->json($letter, 201);
+    }
+
     public function mySchedule(): Response
     {
         $user = Auth::user();
