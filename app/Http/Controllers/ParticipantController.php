@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\AttendanceSession;
 use App\Models\ChatMessage;
+use App\Models\Letter;
 use App\Models\ParticipantNote;
 use App\Models\ParticipantTask;
 use App\Models\ParticipantMeeting;
@@ -783,8 +784,16 @@ class ParticipantController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        $letters = Letter::where('recipient_id', $user->id)
+            ->orWhere('sender_id', $user->id)
+            ->with('sender', 'recipient')
+            ->orderByDesc('sent_at')
+            ->get()
+            ->groupBy(fn ($l) => $l->letter_type ?? 'other');
+
         return Inertia::render('Participant/Notes', [
-            'notes' => $notes,
+            'notes'   => $notes,
+            'letters' => $letters,
         ]);
     }
 

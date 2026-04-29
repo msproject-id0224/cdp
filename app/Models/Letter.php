@@ -14,6 +14,7 @@ class Letter extends Model
         'recipient_id',
         'letter_number',
         'subject',
+        'letter_type',
         'content',
         'file_path',
         'status',
