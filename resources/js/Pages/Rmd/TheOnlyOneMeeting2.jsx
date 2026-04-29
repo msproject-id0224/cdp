@@ -5,6 +5,7 @@ import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 // ─── Intelligence profiles ────────────────────────────────────────────────
 const INTELLIGENCE_DATA = {
@@ -163,6 +164,9 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
     const [navError, setNavError] = useState(null);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     // Helper to safely parse initial data.
     // PHP may encode sequential checklist as a JSON array [1,2,3,...] instead of
@@ -375,9 +379,11 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
     };
 
     const handleDeleteFile = (fileId) => {
-        if (confirm(__('RMD_CONFIRM_DELETE_FILE'))) {
-            router.delete(route('rmd.files.delete', fileId));
-        }
+        askConfirm(
+            __('RMD_DELETE'),
+            __('RMD_CONFIRM_DELETE_FILE'),
+            () => router.delete(route('rmd.files.delete', fileId))
+        );
     };
 
     const navigateToMeeting3 = () => {
@@ -1063,6 +1069,15 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('RMD_DELETE')}
+                danger={true}
+            />
         </AuthenticatedLayout>
     );
 }

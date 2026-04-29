@@ -5,6 +5,7 @@ import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Pagination from '@/Components/Pagination';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function Index({ auth, screenings, filters }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -29,10 +30,16 @@ export default function Index({ auth, screenings, filters }) {
         return () => clearTimeout(timer);
     }, [search, status, date]);
 
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
+
     const handleDelete = (id) => {
-        if (confirm('Apakah Anda yakin ingin menghapus data pemeriksaan ini?')) {
-            router.delete(route('health-screenings.destroy', id));
-        }
+        askConfirm(
+            'Hapus Data Pemeriksaan',
+            'Apakah Anda yakin ingin menghapus data pemeriksaan ini? Tindakan ini tidak dapat dibatalkan.',
+            () => router.delete(route('health-screenings.destroy', id))
+        );
     };
 
     return (
@@ -180,6 +187,14 @@ export default function Index({ auth, screenings, filters }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel="Ya, Hapus"
+            />
         </AuthenticatedLayout>
     );
 }

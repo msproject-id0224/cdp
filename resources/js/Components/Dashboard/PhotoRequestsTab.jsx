@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
+import ConfirmModal from '@/Components/ConfirmModal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -15,6 +16,9 @@ export default function PhotoRequestsTab({ initialRequests }) {
     const [search, setSearch] = useState('');
     const [rejectingRequest, setRejectingRequest] = useState(null);
     const [processingId, setProcessingId] = useState(null);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     useEffect(() => {
         setRequests(initialRequests || []);
@@ -34,18 +38,22 @@ export default function PhotoRequestsTab({ initialRequests }) {
     });
 
     const approve = (id) => {
-        if (confirm(__('Are you sure you want to approve this photo?'))) {
-            setProcessingId(id);
-            router.post(route('admin.profile-photos.approve', id), {}, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    setRequests(prev => prev.filter(r => r.id !== id));
-                    setProcessingId(null);
-                },
-                onError: () => setProcessingId(null)
-            });
-        }
+        askConfirm(
+            __('Setujui Foto'),
+            __('Are you sure you want to approve this photo?'),
+            () => {
+                setProcessingId(id);
+                router.post(route('admin.profile-photos.approve', id), {}, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        setRequests(prev => prev.filter(r => r.id !== id));
+                        setProcessingId(null);
+                    },
+                    onError: () => setProcessingId(null)
+                });
+            }
+        );
     };
 
     const openRejectModal = (request) => {
@@ -178,6 +186,15 @@ export default function PhotoRequestsTab({ initialRequests }) {
                     </div>
                 </div>
             </Modal>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Ya, Setujui')}
+                danger={false}
+            />
         </div>
     );
 }

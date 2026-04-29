@@ -5,6 +5,7 @@ import { __ } from '@/Utils/lang';
 import TextInput from '@/Components/TextInput';
 import ProfilePhoto from '@/Components/ProfilePhoto';
 import axios from 'axios';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function CommunicationIndex({ auth }) {
     
@@ -13,6 +14,9 @@ export default function CommunicationIndex({ auth }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [chatTarget, setChatTarget] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, msg, fn) => setConfirmState({ show: true, title, message: msg, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
     const [message, setMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
@@ -121,14 +125,19 @@ export default function CommunicationIndex({ auth }) {
         }
     };
 
-    const handleFlagMessage = async (msgId) => {
-        if (!confirm(__('Are you sure you want to flag this message?'))) return;
-        try {
-            await axios.patch(`/api/chat/${msgId}/flag`);
-            setMessages(prev => prev.map(m => m.id === msgId ? { ...m, is_flagged: true } : m));
-        } catch (error) {
-            console.error('Failed to flag message', error);
-        }
+    const handleFlagMessage = (msgId) => {
+        askConfirm(
+            __('Tandai Pesan'),
+            __('Are you sure you want to flag this message?'),
+            async () => {
+                try {
+                    await axios.patch(`/api/chat/${msgId}/flag`);
+                    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, is_flagged: true } : m));
+                } catch (error) {
+                    console.error('Failed to flag message', error);
+                }
+            }
+        );
     };
 
     const filteredMessages = messages.filter(m => 
@@ -343,6 +352,15 @@ export default function CommunicationIndex({ auth }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Ya, Tandai')}
+                danger={false}
+            />
         </AuthenticatedLayout>
     );
 }

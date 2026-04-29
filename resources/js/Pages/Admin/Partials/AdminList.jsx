@@ -10,6 +10,7 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import { useForm } from '@inertiajs/react';
 import ProfilePhoto from '@/Components/ProfilePhoto';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function AdminList() {
     const [admins, setAdmins] = useState({ data: [] });
@@ -19,6 +20,9 @@ export default function AdminList() {
     const [viewingAdmin, setViewingAdmin] = useState(null);
     const [addingAdmin, setAddingAdmin] = useState(false);
     const { auth } = usePage().props;
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     // Form for editing admin
     const { data, setData, patch, processing, errors, reset, clearErrors } = useForm({
@@ -139,17 +143,21 @@ export default function AdminList() {
         }
     };
 
-    const deleteUser = async (user) => {
-        if (!confirm(__('Are you sure you want to delete this admin?'))) return;
-        
-        try {
-            await router.delete(route('api.admins.destroy', user.id), {
-                preserveScroll: true,
-                onSuccess: () => fetchAdmins()
-            });
-        } catch (error) {
-            console.error('Failed to delete user', error);
-        }
+    const deleteUser = (user) => {
+        askConfirm(
+            __('Hapus Admin'),
+            __('Are you sure you want to delete this admin?'),
+            async () => {
+                try {
+                    await router.delete(route('api.admins.destroy', user.id), {
+                        preserveScroll: true,
+                        onSuccess: () => fetchAdmins()
+                    });
+                } catch (error) {
+                    console.error('Failed to delete user', error);
+                }
+            }
+        );
     };
 
     return (
@@ -536,6 +544,14 @@ export default function AdminList() {
                     </div>
                 </form>
             </Modal>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Ya, Hapus')}
+            />
         </section>
     );
 }

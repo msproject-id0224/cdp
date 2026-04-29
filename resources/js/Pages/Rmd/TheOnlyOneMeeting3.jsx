@@ -5,10 +5,14 @@ import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const { data, setData, post, processing, recentlySuccessful, errors } = useForm({
         learning_style_practice: socioEmotional?.learning_style_practice || '',
@@ -82,9 +86,11 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
     };
 
     const deleteFile = (fileId) => {
-        if (confirm(__('RMD_DELETE_CONFIRMATION'))) {
-            router.delete(route('rmd.files.delete', fileId));
-        }
+        askConfirm(
+            __('RMD_DELETE'),
+            __('RMD_DELETE_CONFIRMATION'),
+            () => router.delete(route('rmd.files.delete', fileId))
+        );
     };
 
     return (
@@ -719,6 +725,15 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('RMD_DELETE')}
+                danger={true}
+            />
         </AuthenticatedLayout>
     );
 }

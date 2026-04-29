@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import axios from 'axios';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 const fmtTime = (dt) =>
     dt ? new Date(dt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-';
@@ -42,6 +43,9 @@ function SessionStatus({ session, meetingStatus }) {
 export default function Sessions({ auth, meetings }) {
     const [loading, setLoading] = useState({});
     const [flash, setFlash]     = useState(null);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const notify = (text, type = 'success') => {
         setFlash({ text, type });
@@ -63,20 +67,25 @@ export default function Sessions({ auth, meetings }) {
         }
     };
 
-    const deactivate = async (meeting) => {
-        if (!confirm('Yakin ingin menonaktifkan sesi absensi ini?')) return;
-        setLoading((p) => ({ ...p, [meeting.id]: 'deactivate' }));
-        try {
-            const res = await axios.post(
-                route('api.admin.attendance.deactivate', { session: meeting.session.id })
-            );
-            notify(res.data.message);
-            router.reload({ only: ['meetings'] });
-        } catch (err) {
-            notify(err.response?.data?.message ?? 'Gagal menonaktifkan.', 'error');
-        } finally {
-            setLoading((p) => ({ ...p, [meeting.id]: null }));
-        }
+    const deactivate = (meeting) => {
+        askConfirm(
+            'Nonaktifkan Sesi Absensi',
+            'Yakin ingin menonaktifkan sesi absensi ini? Peserta tidak akan bisa melakukan absen setelah sesi dinonaktifkan.',
+            async () => {
+                setLoading((p) => ({ ...p, [meeting.id]: 'deactivate' }));
+                try {
+                    const res = await axios.post(
+                        route('api.admin.attendance.deactivate', { session: meeting.session.id })
+                    );
+                    notify(res.data.message);
+                    router.reload({ only: ['meetings'] });
+                } catch (err) {
+                    notify(err.response?.data?.message ?? 'Gagal menonaktifkan.', 'error');
+                } finally {
+                    setLoading((p) => ({ ...p, [meeting.id]: null }));
+                }
+            }
+        );
     };
 
     return (
@@ -234,6 +243,15 @@ export default function Sessions({ auth, meetings }) {
                     )}
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel="Ya, Nonaktifkan"
+                danger={false}
+            />
         </AuthenticatedLayout>
     );
 }

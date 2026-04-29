@@ -4,10 +4,14 @@ import { Head, useForm, Link, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function PersiapanPulauImpian({ auth, preparationDreamIsland, files }) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const defaultProfessionQuestions = [
         { question: '', answer: '' },
@@ -78,9 +82,11 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
     };
 
     const deleteFile = (fileId) => {
-        if (confirm(__('RMD_DELETE_CONFIRMATION'))) {
-            router.delete(route('rmd.files.delete', fileId));
-        }
+        askConfirm(
+            __('RMD_DELETE'),
+            __('RMD_DELETE_CONFIRMATION'),
+            () => router.delete(route('rmd.files.delete', fileId))
+        );
     };
 
     const swotLabels = [
@@ -370,6 +376,15 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
 
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('RMD_DELETE')}
+                danger={true}
+            />
         </AuthenticatedLayout>
     );
 }

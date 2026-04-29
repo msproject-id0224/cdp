@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
+import ConfirmModal from '@/Components/ConfirmModal';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -52,6 +53,9 @@ export default function ScheduleTab() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode]     = useState('add');
     const [selectedSchedule, setSelectedSchedule] = useState(null);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const { data, setData, post, patch, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         name: '', date: '', start_time: '', end_time: '', all_day: false,
@@ -283,11 +287,11 @@ export default function ScheduleTab() {
     };
 
     const handleDelete = () => {
-        if (confirm(__('Are you sure you want to delete this activity?'))) {
-            destroy(route('schedule.destroy', selectedSchedule.id), {
-                onSuccess: () => { closeModal(); fetchSchedules(); },
-            });
-        }
+        askConfirm(
+            __('Hapus Jadwal'),
+            __('Are you sure you want to delete this activity?'),
+            () => destroy(route('schedule.destroy', selectedSchedule.id), { onSuccess: () => { closeModal(); fetchSchedules(); } })
+        );
     };
 
     const getPriorityColor = (priority) => {
@@ -1041,6 +1045,14 @@ export default function ScheduleTab() {
                     </div>
                 </form>
             </Modal>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Ya, Hapus')}
+            />
         </div>
     );
 }

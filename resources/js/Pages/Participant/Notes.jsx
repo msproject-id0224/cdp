@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { __ } from '@/Utils/lang';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 const LETTER_TYPES = [
     { key: 'perkenalan',          label: 'Perkenalan' },
@@ -65,7 +66,6 @@ function IconBtn({ onClick, title, className, children }) {
 
 /* ── Note card ─────────────────────────────────────────────── */
 function NoteCard({ note, onEdit, onDelete }) {
-    const [confirmDelete, setConfirmDelete] = useState(false);
     const mentorName = note.mentor
         ? `${note.mentor.first_name ?? ''} ${note.mentor.last_name ?? ''}`.trim()
         : __('Me');
@@ -87,7 +87,7 @@ function NoteCard({ note, onEdit, onDelete }) {
                 <div className="flex items-center gap-1.5 shrink-0">
                     {isSelf && <VisibilityBadge visibility={note.visibility} />}
                     <span className="text-xs text-gray-400 dark:text-gray-500">{formatDate(note.created_at)}</span>
-                    {isSelf && !confirmDelete && (
+                    {isSelf && (
                         <>
                             <IconBtn onClick={onEdit} title={__('Edit')}
                                 className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30">
@@ -95,7 +95,7 @@ function NoteCard({ note, onEdit, onDelete }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </IconBtn>
-                            <IconBtn onClick={() => setConfirmDelete(true)} title={__('Hapus')}
+                            <IconBtn onClick={() => onDelete(note)} title={__('Hapus')}
                                 className="text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -109,23 +109,6 @@ function NoteCard({ note, onEdit, onDelete }) {
                 <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm mb-2">{note.subject}</p>
             )}
             <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{note.note}</p>
-
-            {/* Inline delete confirmation */}
-            {confirmDelete && (
-                <div className="mt-3 flex items-center justify-between gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
-                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">{__('Hapus catatan ini?')}</p>
-                    <div className="flex gap-2">
-                        <button type="button" onClick={() => setConfirmDelete(false)}
-                            className="text-xs px-2.5 py-1 rounded bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50">
-                            {__('Batal')}
-                        </button>
-                        <button type="button" onClick={() => onDelete(note)}
-                            className="text-xs px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white font-medium">
-                            {__('Hapus')}
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
@@ -133,7 +116,6 @@ function NoteCard({ note, onEdit, onDelete }) {
 /* ── Letter card ───────────────────────────────────────────── */
 function LetterCard({ letter, userId, onEdit, onDelete }) {
     const [open, setOpen] = useState(false);
-    const [confirmDelete, setConfirmDelete] = useState(false);
     const isOwner = letter.sender_id === userId;
     const senderName = letter.sender
         ? `${letter.sender.first_name ?? ''} ${letter.sender.last_name ?? ''}`.trim()
@@ -156,7 +138,7 @@ function LetterCard({ letter, userId, onEdit, onDelete }) {
 
                 {/* Actions + chevron */}
                 <div className="flex items-center gap-1 shrink-0">
-                    {isOwner && !confirmDelete && (
+                    {isOwner && (
                         <>
                             <IconBtn onClick={onEdit} title={__('Edit')}
                                 className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30">
@@ -164,7 +146,7 @@ function LetterCard({ letter, userId, onEdit, onDelete }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </IconBtn>
-                            <IconBtn onClick={() => setConfirmDelete(true)} title={__('Hapus')}
+                            <IconBtn onClick={() => onDelete(letter)} title={__('Hapus')}
                                 className="text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -181,23 +163,6 @@ function LetterCard({ letter, userId, onEdit, onDelete }) {
                     </button>
                 </div>
             </div>
-
-            {/* Inline delete confirmation */}
-            {confirmDelete && (
-                <div className="mx-5 mb-4 flex items-center justify-between gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
-                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">{__('Hapus surat ini?')}</p>
-                    <div className="flex gap-2">
-                        <button type="button" onClick={() => setConfirmDelete(false)}
-                            className="text-xs px-2.5 py-1 rounded bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50">
-                            {__('Batal')}
-                        </button>
-                        <button type="button" onClick={() => onDelete(letter)}
-                            className="text-xs px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white font-medium">
-                            {__('Hapus')}
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {/* Expandable content */}
             {open && (
@@ -274,6 +239,11 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
 
     const [notes, setNotes]     = useState(initialNotes);
     const [letters, setLetters] = useState(initialLetters);
+
+    /* confirm modal */
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     /* note modal */
     const [noteModal, setNoteModal]           = useState(false);
@@ -457,7 +427,7 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                                     {notes.map(note => (
                                         <NoteCard key={note.id} note={note}
                                             onEdit={() => openNoteModal(note)}
-                                            onDelete={handleDeleteNote} />
+                                            onDelete={(n) => askConfirm(__('Hapus Catatan'), __('Hapus catatan ini?'), () => handleDeleteNote(n))} />
                                     ))}
                                 </div>
                             )}
@@ -499,7 +469,7 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                                     {currentLetters.map(letter => (
                                         <LetterCard key={letter.id} letter={letter} userId={userId}
                                             onEdit={() => openLetterModal(letter)}
-                                            onDelete={handleDeleteLetter} />
+                                            onDelete={(l) => askConfirm(__('Hapus Surat'), __('Hapus surat ini?'), () => handleDeleteLetter(l))} />
                                     ))}
                                 </div>
                             )}
@@ -585,6 +555,16 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                     </div>
                 </form>
             </Modal>
+
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Hapus')}
+                danger={true}
+            />
 
             {/* ── Modal: Surat (create / edit) ─────────────────────── */}
             <Modal show={letterModal} onClose={closeLetterModal}

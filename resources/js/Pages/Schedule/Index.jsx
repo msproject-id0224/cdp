@@ -3,6 +3,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import { useState, useEffect, useMemo } from 'react';
 import Modal from '@/Components/Modal';
+import ConfirmModal from '@/Components/ConfirmModal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
@@ -49,6 +50,9 @@ export default function ScheduleIndex({ auth, schedules }) {
     const [activeTab, setActiveTab]     = useState('details');
     const [messages, setMessages]       = useState([]);
     const [loadingMessages, setLoadingMessages] = useState(false);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     // ── Mentor meetings state ──────────────────────────────────────────────
     const [mentorMeetings, setMentorMeetings] = useState([]);
@@ -299,11 +303,11 @@ export default function ScheduleIndex({ auth, schedules }) {
     };
 
     const handleDelete = () => {
-        if (confirm(__('Are you sure you want to delete this activity?'))) {
-            destroy(route('schedule.destroy', selectedSchedule.id), {
-                onSuccess: () => closeModal(),
-            });
-        }
+        askConfirm(
+            __('Hapus Jadwal'),
+            __('Are you sure you want to delete this activity?'),
+            () => destroy(route('schedule.destroy', selectedSchedule.id), { onSuccess: () => closeModal() })
+        );
     };
 
     const currentMonthSchedules = schedules.filter(s => {
@@ -874,6 +878,14 @@ export default function ScheduleIndex({ auth, schedules }) {
                     )}
                 </div>
             </Modal>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Ya, Hapus')}
+            />
         </AuthenticatedLayout>
     );
 }
