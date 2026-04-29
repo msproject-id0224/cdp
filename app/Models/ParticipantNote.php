@@ -10,6 +10,7 @@ class ParticipantNote extends Model
         'participant_id',
         'mentor_id',
         'subject',
+        'visibility',
         'note',
     ];
 

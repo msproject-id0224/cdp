@@ -30,6 +30,29 @@ function StatusBadge({ status }) {
     );
 }
 
+/* ── Visibility badge ──────────────────────────────────────── */
+function VisibilityBadge({ visibility }) {
+    const isPrivate = visibility === 'private' || !visibility;
+    return (
+        <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+            isPrivate
+                ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+        }`}>
+            {isPrivate ? (
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            ) : (
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            )}
+            {isPrivate ? __('Private') : __('Public')}
+        </span>
+    );
+}
+
 /* ── Note card ─────────────────────────────────────────────── */
 function NoteCard({ note }) {
     const mentorName = note.mentor
@@ -49,7 +72,10 @@ function NoteCard({ note }) {
                         {isSelf ? __('Catatan Saya') : mentorName}
                     </span>
                 </div>
-                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{formatDate(note.created_at)}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                    {isSelf && <VisibilityBadge visibility={note.visibility} />}
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{formatDate(note.created_at)}</span>
+                </div>
             </div>
             {note.subject && (
                 <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm mb-2">{note.subject}</p>
@@ -163,11 +189,12 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
     const [letters, setLetters] = useState(initialLetters);
 
     /* note modal */
-    const [noteModal, setNoteModal]       = useState(false);
-    const [noteSubject, setNoteSubject]   = useState('');
-    const [noteText, setNoteText]         = useState('');
-    const [noteSaving, setNoteSaving]     = useState(false);
-    const [noteError, setNoteError]       = useState('');
+    const [noteModal, setNoteModal]           = useState(false);
+    const [noteSubject, setNoteSubject]       = useState('');
+    const [noteText, setNoteText]             = useState('');
+    const [noteVisibility, setNoteVisibility] = useState('private');
+    const [noteSaving, setNoteSaving]         = useState(false);
+    const [noteError, setNoteError]           = useState('');
 
     /* letter modal */
     const [letterModal, setLetterModal]     = useState(false);
@@ -179,7 +206,7 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
     const currentLetters = letters[letterTab] ?? [];
 
     /* ── handlers ── */
-    function openNoteModal()   { setNoteSubject(''); setNoteText(''); setNoteError(''); setNoteModal(true); }
+    function openNoteModal()   { setNoteSubject(''); setNoteText(''); setNoteVisibility('private'); setNoteError(''); setNoteModal(true); }
     function closeNoteModal()  { setNoteModal(false); }
 
     function openLetterModal()  { setLetterSubject(''); setLetterContent(''); setLetterError(''); setLetterModal(true); }
@@ -191,7 +218,7 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
         setNoteSaving(true);
         setNoteError('');
         try {
-            const { data } = await axios.post(route('participant.notes.store'), { subject: noteSubject, note: noteText });
+            const { data } = await axios.post(route('participant.notes.store'), { subject: noteSubject, note: noteText, visibility: noteVisibility });
             setNotes(prev => [data, ...prev]);
             closeNoteModal();
         } catch (err) {
@@ -359,6 +386,56 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                         />
                         <p className="text-xs text-gray-400 text-right mt-1">{noteText.length}/2000</p>
                     </div>
+                    {/* Visibility toggle */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {__('Visibilitas')}
+                        </label>
+                        <div className="flex gap-2">
+                            {[
+                                {
+                                    value: 'private',
+                                    label: __('Private'),
+                                    desc: __('Hanya saya'),
+                                    icon: (
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    ),
+                                },
+                                {
+                                    value: 'public',
+                                    label: __('Public'),
+                                    desc: __('Saya & Mentor'),
+                                    icon: (
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    ),
+                                },
+                            ].map(opt => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setNoteVisibility(opt.value)}
+                                    className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                                        noteVisibility === opt.value
+                                            ? opt.value === 'private'
+                                                ? 'border-gray-400 bg-gray-100 text-gray-700 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-200'
+                                                : 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                            : 'border-gray-200 bg-white text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500'
+                                    }`}
+                                >
+                                    {opt.icon}
+                                    <span>
+                                        <span className="font-medium">{opt.label}</span>
+                                        <span className="block text-xs opacity-70">{opt.desc}</span>
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {noteError && <p className="text-sm text-red-500">{noteError}</p>}
                     <div className="flex justify-end gap-3">
                         <button type="button" onClick={closeNoteModal}

@@ -212,6 +212,15 @@ class ParticipantController extends Controller
         }
 
         $notes = ParticipantNote::where('participant_id', $participant->id)
+            ->where(function ($q) use ($participant) {
+                // Notes written by mentor/admin are always visible
+                $q->where('mentor_id', '!=', $participant->id)
+                  // Self-written notes only if marked public
+                  ->orWhere(function ($q2) use ($participant) {
+                      $q2->where('mentor_id', $participant->id)
+                         ->where('visibility', 'public');
+                  });
+            })
             ->orderByDesc('created_at')
             ->get();
 
@@ -805,14 +814,16 @@ class ParticipantController extends Controller
         }
 
         $validated = $request->validate([
-            'subject' => 'nullable|string|max:255',
-            'note'    => 'required|string|max:2000',
+            'subject'    => 'nullable|string|max:255',
+            'note'       => 'required|string|max:2000',
+            'visibility' => 'nullable|in:private,public',
         ]);
 
         $note = ParticipantNote::create([
             'participant_id' => $user->id,
             'mentor_id'      => $user->id,
             'subject'        => $validated['subject'] ?? null,
+            'visibility'     => $validated['visibility'] ?? 'private',
             'note'           => $validated['note'],
         ]);
 
