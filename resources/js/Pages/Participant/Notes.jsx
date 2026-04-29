@@ -53,12 +53,24 @@ function VisibilityBadge({ visibility }) {
     );
 }
 
+/* ── Icon button ───────────────────────────────────────────── */
+function IconBtn({ onClick, title, className, children }) {
+    return (
+        <button type="button" onClick={e => { e.stopPropagation(); onClick(); }} title={title}
+            className={`p-1.5 rounded-md transition-colors ${className}`}>
+            {children}
+        </button>
+    );
+}
+
 /* ── Note card ─────────────────────────────────────────────── */
-function NoteCard({ note }) {
+function NoteCard({ note, onEdit, onDelete }) {
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const mentorName = note.mentor
         ? `${note.mentor.first_name ?? ''} ${note.mentor.last_name ?? ''}`.trim()
         : __('Me');
     const isSelf = note.mentor_id === note.participant_id;
+
     return (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between gap-3 mb-2">
@@ -72,33 +84,66 @@ function NoteCard({ note }) {
                         {isSelf ? __('Catatan Saya') : mentorName}
                     </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                     {isSelf && <VisibilityBadge visibility={note.visibility} />}
                     <span className="text-xs text-gray-400 dark:text-gray-500">{formatDate(note.created_at)}</span>
+                    {isSelf && !confirmDelete && (
+                        <>
+                            <IconBtn onClick={onEdit} title={__('Edit')}
+                                className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </IconBtn>
+                            <IconBtn onClick={() => setConfirmDelete(true)} title={__('Hapus')}
+                                className="text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </IconBtn>
+                        </>
+                    )}
                 </div>
             </div>
             {note.subject && (
                 <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm mb-2">{note.subject}</p>
             )}
             <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{note.note}</p>
+
+            {/* Inline delete confirmation */}
+            {confirmDelete && (
+                <div className="mt-3 flex items-center justify-between gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
+                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">{__('Hapus catatan ini?')}</p>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={() => setConfirmDelete(false)}
+                            className="text-xs px-2.5 py-1 rounded bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50">
+                            {__('Batal')}
+                        </button>
+                        <button type="button" onClick={() => onDelete(note)}
+                            className="text-xs px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white font-medium">
+                            {__('Hapus')}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
 /* ── Letter card ───────────────────────────────────────────── */
-function LetterCard({ letter }) {
+function LetterCard({ letter, userId, onEdit, onDelete }) {
     const [open, setOpen] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const isOwner = letter.sender_id === userId;
     const senderName = letter.sender
         ? `${letter.sender.first_name ?? ''} ${letter.sender.last_name ?? ''}`.trim()
         : '-';
+
     return (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            <button
-                type="button"
-                onClick={() => setOpen(v => !v)}
-                className="w-full text-left p-5 flex items-start justify-between gap-3"
-            >
-                <div className="min-w-0 flex-1">
+            <div className="w-full p-5 flex items-start justify-between gap-3">
+                {/* Clickable title area */}
+                <button type="button" onClick={() => setOpen(v => !v)} className="min-w-0 flex-1 text-left">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-xs font-mono text-gray-400 dark:text-gray-500">{letter.letter_number}</span>
                         <StatusBadge status={letter.status} />
@@ -107,12 +152,54 @@ function LetterCard({ letter }) {
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                         {__('From')}: {senderName} &middot; {formatDate(letter.sent_at)}
                     </p>
+                </button>
+
+                {/* Actions + chevron */}
+                <div className="flex items-center gap-1 shrink-0">
+                    {isOwner && !confirmDelete && (
+                        <>
+                            <IconBtn onClick={onEdit} title={__('Edit')}
+                                className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </IconBtn>
+                            <IconBtn onClick={() => setConfirmDelete(true)} title={__('Hapus')}
+                                className="text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </IconBtn>
+                        </>
+                    )}
+                    <button type="button" onClick={() => setOpen(v => !v)}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
                 </div>
-                <svg className={`h-4 w-4 text-gray-400 shrink-0 mt-1 transition-transform ${open ? 'rotate-180' : ''}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
+            </div>
+
+            {/* Inline delete confirmation */}
+            {confirmDelete && (
+                <div className="mx-5 mb-4 flex items-center justify-between gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
+                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">{__('Hapus surat ini?')}</p>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={() => setConfirmDelete(false)}
+                            className="text-xs px-2.5 py-1 rounded bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50">
+                            {__('Batal')}
+                        </button>
+                        <button type="button" onClick={() => onDelete(letter)}
+                            className="text-xs px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white font-medium">
+                            {__('Hapus')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Expandable content */}
             {open && (
                 <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
                     {letter.content && (
@@ -160,7 +247,7 @@ function Modal({ show, onClose, title, children }) {
                         </svg>
                     </button>
                 </div>
-                <div className="px-6 py-5">{children}</div>
+                <div className="px-6 py-5 max-h-[80vh] overflow-y-auto">{children}</div>
             </div>
         </div>
     );
@@ -181,15 +268,16 @@ function AddButton({ onClick, label }) {
 
 /* ── Main page ─────────────────────────────────────────────── */
 export default function Notes({ auth, notes: initialNotes = [], letters: initialLetters = {} }) {
+    const userId = auth.user.id;
     const [mainTab, setMainTab]     = useState('catatan_pribadi');
     const [letterTab, setLetterTab] = useState('perkenalan');
 
-    /* lists – local state so we can optimistically prepend */
     const [notes, setNotes]     = useState(initialNotes);
     const [letters, setLetters] = useState(initialLetters);
 
     /* note modal */
     const [noteModal, setNoteModal]           = useState(false);
+    const [editingNote, setEditingNote]       = useState(null);
     const [noteSubject, setNoteSubject]       = useState('');
     const [noteText, setNoteText]             = useState('');
     const [noteVisibility, setNoteVisibility] = useState('private');
@@ -197,20 +285,25 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
     const [noteError, setNoteError]           = useState('');
 
     /* letter modal */
-    const [letterModal, setLetterModal]     = useState(false);
-    const [letterSubject, setLetterSubject] = useState('');
-    const [letterContent, setLetterContent] = useState('');
-    const [letterSaving, setLetterSaving]   = useState(false);
-    const [letterError, setLetterError]     = useState('');
+    const [letterModal, setLetterModal]       = useState(false);
+    const [editingLetter, setEditingLetter]   = useState(null);
+    const [letterSubject, setLetterSubject]   = useState('');
+    const [letterContent, setLetterContent]   = useState('');
+    const [letterSaving, setLetterSaving]     = useState(false);
+    const [letterError, setLetterError]       = useState('');
 
     const currentLetters = letters[letterTab] ?? [];
 
-    /* ── handlers ── */
-    function openNoteModal()   { setNoteSubject(''); setNoteText(''); setNoteVisibility('private'); setNoteError(''); setNoteModal(true); }
-    function closeNoteModal()  { setNoteModal(false); }
-
-    function openLetterModal()  { setLetterSubject(''); setLetterContent(''); setLetterError(''); setLetterModal(true); }
-    function closeLetterModal() { setLetterModal(false); }
+    /* ── note handlers ── */
+    function openNoteModal(note = null) {
+        setEditingNote(note);
+        setNoteSubject(note?.subject ?? '');
+        setNoteText(note?.note ?? '');
+        setNoteVisibility(note?.visibility ?? 'private');
+        setNoteError('');
+        setNoteModal(true);
+    }
+    function closeNoteModal() { setNoteModal(false); setEditingNote(null); }
 
     async function handleSaveNote(e) {
         e.preventDefault();
@@ -218,8 +311,17 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
         setNoteSaving(true);
         setNoteError('');
         try {
-            const { data } = await axios.post(route('participant.notes.store'), { subject: noteSubject, note: noteText, visibility: noteVisibility });
-            setNotes(prev => [data, ...prev]);
+            if (editingNote) {
+                const { data } = await axios.patch(route('participant.notes.update', editingNote.id), {
+                    subject: noteSubject, note: noteText, visibility: noteVisibility,
+                });
+                setNotes(prev => prev.map(n => n.id === data.id ? data : n));
+            } else {
+                const { data } = await axios.post(route('participant.notes.store'), {
+                    subject: noteSubject, note: noteText, visibility: noteVisibility,
+                });
+                setNotes(prev => [data, ...prev]);
+            }
             closeNoteModal();
         } catch (err) {
             setNoteError(err.response?.data?.message ?? __('Failed to save note.'));
@@ -228,26 +330,73 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
         }
     }
 
+    async function handleDeleteNote(note) {
+        try {
+            await axios.delete(route('participant.notes.destroy', note.id));
+            setNotes(prev => prev.filter(n => n.id !== note.id));
+        } catch {
+            // silent
+        }
+    }
+
+    /* ── letter handlers ── */
+    function openLetterModal(letter = null) {
+        setEditingLetter(letter);
+        setLetterSubject(letter?.subject ?? '');
+        setLetterContent(letter?.content ?? '');
+        if (letter) setLetterTab(letter.letter_type ?? 'perkenalan');
+        setLetterError('');
+        setLetterModal(true);
+    }
+    function closeLetterModal() { setLetterModal(false); setEditingLetter(null); }
+
     async function handleSaveLetter(e) {
         e.preventDefault();
         if (!letterSubject.trim()) return;
         setLetterSaving(true);
         setLetterError('');
         try {
-            const { data } = await axios.post(route('participant.letters.store'), {
-                subject:     letterSubject,
-                content:     letterContent,
-                letter_type: letterTab,
-            });
-            setLetters(prev => ({
-                ...prev,
-                [letterTab]: [data, ...(prev[letterTab] ?? [])],
-            }));
+            if (editingLetter) {
+                const { data } = await axios.patch(route('participant.letters.update', editingLetter.id), {
+                    subject: letterSubject, content: letterContent, letter_type: letterTab,
+                });
+                const { letter, old_type } = data;
+                setLetters(prev => {
+                    const updated = { ...prev };
+                    if (old_type !== letter.letter_type) {
+                        updated[old_type] = (updated[old_type] ?? []).filter(l => l.id !== letter.id);
+                        updated[letter.letter_type] = [letter, ...(updated[letter.letter_type] ?? [])];
+                    } else {
+                        updated[letter.letter_type] = (updated[letter.letter_type] ?? []).map(l => l.id === letter.id ? letter : l);
+                    }
+                    return updated;
+                });
+            } else {
+                const { data } = await axios.post(route('participant.letters.store'), {
+                    subject: letterSubject, content: letterContent, letter_type: letterTab,
+                });
+                setLetters(prev => ({
+                    ...prev,
+                    [letterTab]: [data, ...(prev[letterTab] ?? [])],
+                }));
+            }
             closeLetterModal();
         } catch (err) {
             setLetterError(err.response?.data?.message ?? __('Failed to send letter.'));
         } finally {
             setLetterSaving(false);
+        }
+    }
+
+    async function handleDeleteLetter(letter) {
+        try {
+            await axios.delete(route('participant.letters.destroy', letter.id));
+            setLetters(prev => ({
+                ...prev,
+                [letter.letter_type]: (prev[letter.letter_type] ?? []).filter(l => l.id !== letter.id),
+            }));
+        } catch {
+            // silent
         }
     }
 
@@ -283,14 +432,12 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                                 </button>
                             ))}
                         </nav>
-
-                        {/* (+) button changes based on active tab */}
                         <div className="mb-3">
                             {mainTab === 'catatan_pribadi' && (
-                                <AddButton onClick={openNoteModal} label={__('Tambah Catatan')} />
+                                <AddButton onClick={() => openNoteModal()} label={__('Tambah Catatan')} />
                             )}
                             {mainTab === 'surat' && (
-                                <AddButton onClick={openLetterModal} label={__('Tulis Surat')} />
+                                <AddButton onClick={() => openLetterModal()} label={__('Tulis Surat')} />
                             )}
                         </div>
                     </div>
@@ -307,7 +454,11 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                                 </div>
                             ) : (
                                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    {notes.map(note => <NoteCard key={note.id} note={note} />)}
+                                    {notes.map(note => (
+                                        <NoteCard key={note.id} note={note}
+                                            onEdit={() => openNoteModal(note)}
+                                            onDelete={handleDeleteNote} />
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -316,7 +467,6 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                     {/* ── Surat ───────────────────────────────────────── */}
                     {mainTab === 'surat' && (
                         <div>
-                            {/* Letter type sub-tabs */}
                             <div className="flex gap-2 mb-6 flex-wrap">
                                 {LETTER_TYPES.map(lt => {
                                     const count  = (letters[lt.key] ?? []).length;
@@ -337,7 +487,6 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                                 })}
                             </div>
 
-                            {/* Letter list */}
                             {currentLetters.length === 0 ? (
                                 <div className="text-center py-20 text-gray-400 dark:text-gray-500">
                                     <svg className="mx-auto h-12 w-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -347,7 +496,11 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-3">
-                                    {currentLetters.map(letter => <LetterCard key={letter.id} letter={letter} />)}
+                                    {currentLetters.map(letter => (
+                                        <LetterCard key={letter.id} letter={letter} userId={userId}
+                                            onEdit={() => openLetterModal(letter)}
+                                            onDelete={handleDeleteLetter} />
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -356,8 +509,9 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                 </div>
             </div>
 
-            {/* ── Modal: Tambah Catatan ────────────────────────────── */}
-            <Modal show={noteModal} onClose={closeNoteModal} title={__('Tambah Catatan')}>
+            {/* ── Modal: Catatan (create / edit) ───────────────────── */}
+            <Modal show={noteModal} onClose={closeNoteModal}
+                title={editingNote ? __('Edit Catatan') : __('Tambah Catatan')}>
                 <form onSubmit={handleSaveNote} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -386,7 +540,6 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                         />
                         <p className="text-xs text-gray-400 text-right mt-1">{noteText.length}/2000</p>
                     </div>
-                    {/* Visibility toggle */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {__('Visibilitas')}
@@ -394,38 +547,22 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                         <div className="flex gap-2">
                             {[
                                 {
-                                    value: 'private',
-                                    label: __('Private'),
-                                    desc: __('Hanya saya'),
-                                    icon: (
-                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
-                                    ),
+                                    value: 'private', label: __('Private'), desc: __('Hanya saya'),
+                                    icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
                                 },
                                 {
-                                    value: 'public',
-                                    label: __('Public'),
-                                    desc: __('Saya & Mentor'),
-                                    icon: (
-                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    ),
+                                    value: 'public', label: __('Public'), desc: __('Saya & Mentor'),
+                                    icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
                                 },
                             ].map(opt => (
-                                <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => setNoteVisibility(opt.value)}
+                                <button key={opt.value} type="button" onClick={() => setNoteVisibility(opt.value)}
                                     className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
                                         noteVisibility === opt.value
                                             ? opt.value === 'private'
                                                 ? 'border-gray-400 bg-gray-100 text-gray-700 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-200'
                                                 : 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300'
                                             : 'border-gray-200 bg-white text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500'
-                                    }`}
-                                >
+                                    }`}>
                                     {opt.icon}
                                     <span>
                                         <span className="font-medium">{opt.label}</span>
@@ -435,12 +572,11 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                             ))}
                         </div>
                     </div>
-
                     {noteError && <p className="text-sm text-red-500">{noteError}</p>}
                     <div className="flex justify-end gap-3">
                         <button type="button" onClick={closeNoteModal}
                             className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            {__('Cancel')}
+                            {__('Batal')}
                         </button>
                         <button type="submit" disabled={noteSaving || !noteText.trim()}
                             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors">
@@ -450,10 +586,28 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                 </form>
             </Modal>
 
-            {/* ── Modal: Tulis Surat ───────────────────────────────── */}
+            {/* ── Modal: Surat (create / edit) ─────────────────────── */}
             <Modal show={letterModal} onClose={closeLetterModal}
-                title={`${__('Tulis Surat')} — ${__(LETTER_TYPES.find(l => l.key === letterTab)?.label ?? '')}`}>
+                title={editingLetter ? __('Edit Surat') : __('Tulis Surat')}>
                 <form onSubmit={handleSaveLetter} className="space-y-4">
+                    {/* Letter type selector */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {__('Jenis Surat')}
+                        </label>
+                        <div className="flex gap-2 flex-wrap">
+                            {LETTER_TYPES.map(lt => (
+                                <button key={lt.key} type="button" onClick={() => setLetterTab(lt.key)}
+                                    className={`flex-1 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                                        letterTab === lt.key
+                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                    }`}>
+                                    {__(lt.label)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {__('Subjek')} <span className="text-red-500">*</span>
@@ -485,11 +639,11 @@ export default function Notes({ auth, notes: initialNotes = [], letters: initial
                     <div className="flex justify-end gap-3">
                         <button type="button" onClick={closeLetterModal}
                             className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            {__('Cancel')}
+                            {__('Batal')}
                         </button>
                         <button type="submit" disabled={letterSaving || !letterSubject.trim()}
                             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors">
-                            {letterSaving ? __('Mengirim...') : __('Kirim Surat')}
+                            {letterSaving ? __('Mengirim...') : (editingLetter ? __('Simpan') : __('Kirim Surat'))}
                         </button>
                     </div>
                 </form>

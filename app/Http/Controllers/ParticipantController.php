@@ -863,6 +863,71 @@ class ParticipantController extends Controller
         return response()->json($letter, 201);
     }
 
+    public function updateMyNote(Request $request, ParticipantNote $note): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) abort(403);
+        if ($note->participant_id !== $user->id || $note->mentor_id !== $user->id) abort(403);
+
+        $validated = $request->validate([
+            'subject'    => 'nullable|string|max:255',
+            'note'       => 'required|string|max:2000',
+            'visibility' => 'nullable|in:private,public',
+        ]);
+
+        $note->update([
+            'subject'    => $validated['subject'] ?? null,
+            'note'       => $validated['note'],
+            'visibility' => $validated['visibility'] ?? 'private',
+        ]);
+
+        $note->load('mentor');
+        return response()->json($note);
+    }
+
+    public function destroyMyNote(ParticipantNote $note): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) abort(403);
+        if ($note->participant_id !== $user->id || $note->mentor_id !== $user->id) abort(403);
+
+        $note->delete();
+        return response()->json(['deleted' => true]);
+    }
+
+    public function updateMyLetter(Request $request, Letter $letter): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) abort(403);
+        if ($letter->sender_id !== $user->id) abort(403);
+
+        $validated = $request->validate([
+            'subject'     => 'required|string|max:255',
+            'letter_type' => 'required|in:perkenalan,terjadwal,ucapan_terima_kasih',
+            'content'     => 'nullable|string|max:5000',
+        ]);
+
+        $oldType = $letter->letter_type;
+        $letter->update([
+            'subject'     => $validated['subject'],
+            'letter_type' => $validated['letter_type'],
+            'content'     => $validated['content'] ?? null,
+        ]);
+
+        $letter->load('sender', 'recipient');
+        return response()->json(['letter' => $letter, 'old_type' => $oldType]);
+    }
+
+    public function destroyMyLetter(Letter $letter): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user->isParticipant()) abort(403);
+        if ($letter->sender_id !== $user->id) abort(403);
+
+        $letter->delete();
+        return response()->json(['deleted' => true]);
+    }
+
     public function mySchedule(): Response
     {
         $user = Auth::user();

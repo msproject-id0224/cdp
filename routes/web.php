@@ -219,7 +219,11 @@ Route::middleware(['auth', 'verified', 'role:participant'])->group(function () {
     Route::post('/participant/profile-photo/request', [ProfilePhotoController::class, 'userRequestUpload'])->name('participant.profile-photo.request');
     Route::get('/participant/notes', [ParticipantController::class, 'myNotes'])->name('participant.notes');
     Route::post('/participant/notes/store', [ParticipantController::class, 'storeMyNote'])->name('participant.notes.store');
+    Route::patch('/participant/notes/{note}', [ParticipantController::class, 'updateMyNote'])->name('participant.notes.update');
+    Route::delete('/participant/notes/{note}', [ParticipantController::class, 'destroyMyNote'])->name('participant.notes.destroy');
     Route::post('/participant/letters/store', [ParticipantController::class, 'storeMyLetter'])->name('participant.letters.store');
+    Route::patch('/participant/letters/{letter}', [ParticipantController::class, 'updateMyLetter'])->name('participant.letters.update');
+    Route::delete('/participant/letters/{letter}', [ParticipantController::class, 'destroyMyLetter'])->name('participant.letters.destroy');
     Route::get('/participant/schedule', [ParticipantController::class, 'mySchedule'])->name('participant.schedule');
 });
 
