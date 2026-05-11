@@ -42,6 +42,7 @@ Route::get('/', function () {
 
 Route::get('/verify-otp', [OtpController::class, 'show'])->name('otp.view');
 Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
+Route::post('/verify-otp/resend', [OtpController::class, 'resend'])->name('otp.resend');
 
 use App\Http\Controllers\DashboardController;
 
@@ -218,6 +219,13 @@ Route::middleware(['auth', 'verified', 'role:participant'])->group(function () {
     Route::post('/participant/profile-photo/request', [ProfilePhotoController::class, 'userRequestUpload'])->name('participant.profile-photo.request');
     Route::get('/participant/notes', [ParticipantController::class, 'myNotes'])->name('participant.notes');
     Route::get('/participant/schedule', [ParticipantController::class, 'mySchedule'])->name('participant.schedule');
+
+    Route::post('/participant/notes/store', [ParticipantController::class, 'storeMyNote'])->name('participant.notes.store');
+    Route::patch('/participant/notes/{note}', [ParticipantController::class, 'updateMyNote'])->name('participant.notes.update');
+    Route::delete('/participant/notes/{note}', [ParticipantController::class, 'destroyMyNote'])->name('participant.notes.destroy');
+    Route::post('/participant/letters/store', [ParticipantController::class, 'storeMyLetter'])->name('participant.letters.store');
+    Route::patch('/participant/letters/{letter}', [ParticipantController::class, 'updateMyLetter'])->name('participant.letters.update');
+    Route::delete('/participant/letters/{letter}', [ParticipantController::class, 'destroyMyLetter'])->name('participant.letters.destroy');
 });
 
 Route::middleware('auth')->group(function () {
@@ -255,7 +263,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/api/chat/{message}/flag', [ChatMessageController::class, 'flagMessage'])->name('api.chat.flag');
     Route::patch('/api/chat/{user}/read', [ChatMessageController::class, 'markAsRead'])->name('api.chat.read');
     Route::get('/api/chat-unread', [ChatMessageController::class, 'getUnreadCount'])->name('api.chat.unread-count');
-    Route::post('/api/log-error', [ChatMessageController::class, 'logError'])->name('api.log-error');
+    Route::post('/api/log-error', [ChatMessageController::class, 'logError'])
+        ->middleware('throttle:10,1')
+        ->name('api.log-error');
 
     Route::get('/rmd/meeting-files/{file}/download', [RmdController::class, 'downloadMeetingFile'])->name('rmd.files.download');
     Route::delete('/rmd/meeting-files/{file}', [RmdController::class, 'deleteMeetingFile'])->name('rmd.files.delete');

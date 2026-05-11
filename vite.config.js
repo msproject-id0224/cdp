@@ -25,7 +25,7 @@ export default defineConfig({
                         '@fullcalendar/interaction',
                     ],
                     'vendor-charts':  ['chart.js', 'react-chartjs-2'],
-                    'vendor-export':  ['jspdf', 'jspdf-autotable', 'xlsx'],
+                    'vendor-export':  ['jspdf', 'jspdf-autotable'],
                     'vendor-qr':      ['html5-qrcode', 'qrcode.react'],
                     'vendor-realtime': ['laravel-echo', 'pusher-js'],
                 },
