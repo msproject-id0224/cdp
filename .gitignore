@@ -1,0 +1,49 @@
+/node_modules
+/vendor
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/public
+/storage/logs
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/testing
+/storage/framework/views
+/.env
+/.env.backup
+/.env.production
+/.phpunit.result.cache
+/vendor/_laravel_ide
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+/.idea
+/.vscode
+/.claude
+/update
+/public/hot
+
+# Sensitive data files — never commit real data
+*.sql
+*.xlsx
+*.csv
+test_output.txt
+fix_and_seed.php
+fix_db_permissions.sql
+verify_admin.php
+validate_json.php
+audit_report.md
+create_deploy_zip.ps1
+
+# Auto-generated bootstrap cache
+/bootstrap/cache/*.php
+
+# Uploaded/generated storage files
+/storage/app/*.json
+/storage/app/public/
+
+# Large/sensitive files
+*.zip
+*.pdf

@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --bg-main: #f3f4f6; /* gray-100 */
+        --bg-card: #ffffff;
+        --text-main: #111827; /* gray-900 */
+        --text-muted: #4b5563; /* gray-600 */
+    }
+
+    .dark {
+        --bg-main: #111827; /* gray-900 */
+        --bg-card: #1f2937; /* gray-800 */
+        --text-main: #f9fafb; /* gray-50 */
+        --text-muted: #9ca3af; /* gray-400 */
+    }
+
+    body {
+        @apply transition-colors duration-200;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+    }
+}
+
+@layer components {
+    .theme-card {
+        background-color: var(--bg-card);
+        color: var(--text-main);
+    }
+    
+    .theme-text-muted {
+        color: var(--text-muted);
+    }
+}
