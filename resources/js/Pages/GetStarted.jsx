@@ -72,7 +72,7 @@ export default function GetStarted () {
                                 <ProfilePhoto
                                     src='/assets/img/globe.png'
                                     alt={__('Language')}
-                                    className='h-8 w-8 object-contain drop-shadow-md hover:scale-110 transition-transform duration-200'
+                                    className='h-8 w-8 object-contain drop-shadow-md hover:scale-110 transition-transform duration-200 brightness-0 invert'
                                     fallbackClassName='h-8 w-8 bg-white/50 rounded-full flex items-center justify-center text-xs'
                                     fallback='🌐'
                                 />
