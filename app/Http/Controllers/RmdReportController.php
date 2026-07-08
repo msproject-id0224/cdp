@@ -66,7 +66,7 @@ class RmdReportController extends Controller
         return Inertia::render('RmdReport/Index', [
             'reports' => $paginatedItems,
             'chartData' => $chartData,
-            'filters' => $request->only(['search', 'status', 'date_start', 'date_end', 'sort', 'direction']),
+            'filters' => $request->only(['search', 'status', 'date_start', 'date_end', 'sort', 'direction', 'per_page']),
             'totalParticipants' => $totalParticipants,
             'userRole' => $currentUser->role,
         ]);
@@ -108,7 +108,11 @@ class RmdReportController extends Controller
         $statusFilter = $request->input('status'); // Belum Mulai, Sedang Mengisi, Selesai
         $sortColumn = $request->input('sort', 'user_name');
         $sortDirection = $request->input('direction', 'asc');
-        $perPage = 20;
+        $allowedPerPage = [10, 50, 100];
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 10;
+        }
 
         // Base Query: Participants > 12 years old
         // Note: Using 'age' column if available or calculating from DOB

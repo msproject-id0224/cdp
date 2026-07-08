@@ -39,6 +39,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
 
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
+    const [perPage, setPerPage] = useState(filters.per_page || '10');
     const [isLoading, setIsLoading] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -497,6 +498,20 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             <option value="Belum Mulai">{__('Not Started')}</option>
                                             <option value="Sedang Mengisi">{__('In Progress')}</option>
                                             <option value="Selesai">{__('Completed')}</option>
+                                        </SelectInput>
+                                    </div>
+                                    <div className="w-full md:w-40">
+                                        <SelectInput
+                                            value={perPage}
+                                            onChange={(e) => {
+                                                setPerPage(e.target.value);
+                                                handleFilterChange('per_page', e.target.value);
+                                            }}
+                                            className="w-full"
+                                        >
+                                            <option value="10">10 {__('per page')}</option>
+                                            <option value="50">50 {__('per page')}</option>
+                                            <option value="100">100 {__('per page')}</option>
                                         </SelectInput>
                                     </div>
                                 </div>
