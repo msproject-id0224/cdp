@@ -40,6 +40,25 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [perPage, setPerPage] = useState(filters.per_page || '10');
+    const [activeTab, setActiveTab] = useState(() => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('active_tab');
+            if (tabParam === 'charts' || tabParam === 'participants') return tabParam;
+
+            const stored = localStorage.getItem('rmd_report_tab');
+            return stored === 'charts' || stored === 'participants' ? stored : 'participants';
+        } catch {
+            return 'participants';
+        }
+    });
+
+    const changeTab = (tab) => {
+        setActiveTab(tab);
+        try {
+            localStorage.setItem('rmd_report_tab', tab);
+        } catch {}
+    };
     const [isLoading, setIsLoading] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -791,9 +810,39 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                         </div>
                     )}
 
-                    {userRole !== 'mentor' && renderCharts()}
+                    {userRole !== 'mentor' && (
+                        <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 px-4 sm:px-6">
+                            <nav className="-mb-px flex space-x-8">
+                                <button
+                                    type="button"
+                                    onClick={() => changeTab('participants')}
+                                    className={`${
+                                        activeTab === 'participants'
+                                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                                >
+                                    {__('Participant List (> 12 Years)')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => changeTab('charts')}
+                                    className={`${
+                                        activeTab === 'charts'
+                                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                                >
+                                    {__('Charts')}
+                                </button>
+                            </nav>
+                        </div>
+                    )}
+
+                    {userRole !== 'mentor' && activeTab === 'charts' && renderCharts()}
 
                     {/* Table Section */}
+                    {(userRole === 'mentor' || activeTab === 'participants') && (
                     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-between items-center mb-4">
@@ -988,6 +1037,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
         </AuthenticatedLayout>
