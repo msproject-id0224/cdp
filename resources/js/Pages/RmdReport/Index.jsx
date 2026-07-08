@@ -930,7 +930,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
-                                            <th scope="col" className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('user_name')}>
+                                            <th scope="col" className="px-6 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('user_name')}>
                                                 <div className="flex items-center">
                                                     {__('Participant Name')}
                                                     {filters.sort === 'user_name' && (
@@ -938,25 +938,19 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                     )}
                                                 </div>
                                             </th>
-                                            <th scope="col" className="px-6 py-3">
+                                            <th scope="col" className="px-6 py-2">
                                                 {__('ID Number')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3">
-                                                {__('Cita-cita')}
-                                            </th>
-                                            <th scope="col" className="px-6 py-3">
-                                                {__('Gaya Belajar')}
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-center">
+                                            <th scope="col" className="px-6 py-2 text-center">
                                                 {__('Module Progress')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-center">
+                                            <th scope="col" className="px-6 py-2 text-center">
                                                 {__('Status')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3">
+                                            <th scope="col" className="px-6 py-2">
                                                 {__('Last Updated')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-center">
+                                            <th scope="col" className="px-6 py-2 text-center">
                                                 {__('Action')}
                                             </th>
                                         </tr>
@@ -968,19 +962,13 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                     key={item.user_id}
                                                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40"
                                                 >
-                                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                    <td className="px-6 py-2.5 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                                         {item.user_name}
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-2.5">
                                                         {item.user_id_number || '-'}
                                                     </td>
-                                                    <td className="px-6 py-4">
-                                                        {item.cita_cita || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        {item.gaya_belajar || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-2.5">
                                                         <div className="flex items-center gap-2">
                                                             <div className="flex-grow bg-gray-200 rounded-full h-2 dark:bg-gray-700">
                                                                 <div
@@ -999,15 +987,15 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
+                                                    <td className="px-6 py-2.5 text-center whitespace-nowrap">
+                                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusColor(item.status)}`}>
                                                             {STATUS_DISPLAY[item.status] ?? item.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                                    <td className="px-6 py-2.5 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                         {item.last_updated}
                                                     </td>
-                                                    <td className="px-6 py-4 text-center">
+                                                    <td className="px-6 py-2.5 text-center">
                                                         <button
                                                             type="button"
                                                             onClick={() => handleUserClick(item.user_id)}
@@ -1023,7 +1011,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="8" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                                <td colSpan="6" className="px-6 py-2.5 text-center text-gray-500 dark:text-gray-400">
                                                     {__('No data found.')}
                                                 </td>
                                             </tr>
