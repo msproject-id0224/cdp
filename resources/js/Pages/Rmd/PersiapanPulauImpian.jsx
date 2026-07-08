@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
@@ -161,16 +162,16 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                                                     {index + 1}
                                                 </td>
                                                 <td className="p-2 border-r-2 border-orange-400 dark:border-orange-700">
-                                                    <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
+                                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                        className="w-full max-w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.question}
                                                         onChange={e => updateProfessionQuestion(index, 'question', e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_PROFESSION_Q_PLACEHOLDER')}
                                                     />
                                                 </td>
                                                 <td className="p-2">
-                                                    <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
+                                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                        className="w-full max-w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.answer}
                                                         onChange={e => updateProfessionQuestion(index, 'answer', e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_PROFESSION_ANS_PLACEHOLDER')}
@@ -225,8 +226,8 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                                                     </span>
                                                 </td>
                                                 <td className="p-2">
-                                                    <textarea
-                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
+                                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                        className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.description}
                                                         onChange={e => updateSwot(index, e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_SWOT_PLACEHOLDER')}
@@ -252,8 +253,8 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                                 {__('RMD_DREAM_ISLAND_IMPROVEMENT_DESC')}
                             </p>
-                            <textarea
-                                className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[150px]"
+                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                className="w-full max-w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[150px]"
                                 value={data.improvement_plan}
                                 onChange={e => setData('improvement_plan', e.target.value)}
                                 placeholder={__('RMD_DREAM_ISLAND_IMPROVEMENT_PLACEHOLDER')}

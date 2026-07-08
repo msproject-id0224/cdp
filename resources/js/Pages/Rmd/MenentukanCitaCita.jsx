@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Head, useForm, Link } from '@inertiajs/react'
 import { __ } from '@/Utils/lang'
@@ -1847,8 +1848,8 @@ export default function MenentukanCitaCita ({ auth, careerExploration }) {
                                 <h5 className='font-bold text-gray-800 dark:text-gray-200'>
                                     {__('RMD_CH4_ADDITIONAL_CONSIDERATIONS')}
                                 </h5>
-                                <textarea
-                                    className='w-full bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-gray-200 dark:border-gray-700 focus:ring-orange-400 min-h-[128px] resize-y'
+                                <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                    className='w-full max-w-full bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-gray-200 dark:border-gray-700 focus:ring-orange-400 min-h-[128px] resize'
                                     value={data.additional_considerations}
                                     onChange={e =>
                                         setData(
@@ -1922,8 +1923,8 @@ export default function MenentukanCitaCita ({ auth, careerExploration }) {
                                                         />
                                                     </td>
                                                     <td className='p-4'>
-                                                        <textarea
-                                                            className='w-full min-h-[160px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200'
+                                                        <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                            className='w-full max-w-full min-h-[160px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200'
                                                             value={row.factors}
                                                             onChange={e =>
                                                                 updateMatrix(

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
@@ -48,12 +49,12 @@ const VerseHeading = ({ label, verseKey, onOpen }) => (
 );
 
 const TextArea = ({ id, value, onChange, placeholder }) => (
-    <textarea
+    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
         id={id}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 mt-1 block resize-y"
+        className="w-full max-w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 mt-1 block resize"
         rows="3"
     />
 );
