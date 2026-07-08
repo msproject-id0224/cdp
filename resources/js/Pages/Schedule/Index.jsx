@@ -256,7 +256,9 @@ export default function ScheduleIndex({ auth, schedules }) {
     }, [activeTab, selectedSchedule]);
 
     // ── Deletion request approve / reject ──────────────────────────────────
-    const handleApproveDeletion = async (meeting) => {
+    const [rejectDeletionModal, setRejectDeletionModal] = useState({ show: false, meeting: null, reason: '' });
+
+    const doApproveDeletion = async (meeting) => {
         setDeletionLoading(p => ({ ...p, [meeting.id]: 'approve' }));
         try {
             await window.axios.post(route('api.admin.schedules.approve-deletion', meeting.id));
@@ -272,10 +274,31 @@ export default function ScheduleIndex({ auth, schedules }) {
         }
     };
 
-    const handleRejectDeletion = async (meeting) => {
+    const handleApproveDeletion = (meeting) => {
+        askConfirm(
+            __('Approve Deletion'),
+            __('This will permanently delete the meeting requested by the mentor. This action cannot be undone.'),
+            () => doApproveDeletion(meeting)
+        );
+    };
+
+    const openRejectDeletionModal = (meeting) => {
+        setRejectDeletionModal({ show: true, meeting, reason: '' });
+    };
+
+    const closeRejectDeletionModal = () => {
+        setRejectDeletionModal({ show: false, meeting: null, reason: '' });
+    };
+
+    const submitRejectDeletion = async () => {
+        const meeting = rejectDeletionModal.meeting;
+        if (!meeting || !rejectDeletionModal.reason.trim()) return;
+
         setDeletionLoading(p => ({ ...p, [meeting.id]: 'reject' }));
         try {
-            await window.axios.post(route('api.admin.schedules.reject-deletion', meeting.id));
+            await window.axios.post(route('api.admin.schedules.reject-deletion', meeting.id), {
+                reason: rejectDeletionModal.reason.trim(),
+            });
             await fetchMentorMeetings();
             setDayModal(prev => ({
                 ...prev,
@@ -283,6 +306,7 @@ export default function ScheduleIndex({ auth, schedules }) {
                     m.id === meeting.id ? { ...m, status: 'scheduled' } : m
                 ),
             }));
+            closeRejectDeletionModal();
         } catch (e) {
             console.error('Reject deletion failed', e);
         } finally {
@@ -623,7 +647,7 @@ export default function ScheduleIndex({ auth, schedules }) {
                                                         {deletionLoading[m.id] === 'approve' ? __('Deleting…') : __('Approve Deletion')}
                                                     </button>
                                                     <button
-                                                        onClick={() => handleRejectDeletion(m)}
+                                                        onClick={() => openRejectDeletionModal(m)}
                                                         disabled={!!deletionLoading[m.id]}
                                                         className="flex-1 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 border border-gray-300 rounded-md transition dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
                                                     >
@@ -886,6 +910,34 @@ export default function ScheduleIndex({ auth, schedules }) {
                 onCancel={closeConfirm}
                 confirmLabel={__('Ya, Hapus')}
             />
+
+            {/* Reject Deletion Request — reason required */}
+            <Modal show={rejectDeletionModal.show} onClose={closeRejectDeletionModal} maxWidth="md">
+                <div className="p-6">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        {__('Reject Deletion Request')}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        {__('Provide a reason for rejecting the deletion request. The meeting will be restored to scheduled.')}
+                    </p>
+                    <textarea
+                        className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        rows="3"
+                        placeholder={__('Enter reason...')}
+                        value={rejectDeletionModal.reason}
+                        onChange={(e) => setRejectDeletionModal(prev => ({ ...prev, reason: e.target.value }))}
+                    />
+                    <div className="flex justify-end gap-2 mt-4">
+                        <SecondaryButton onClick={closeRejectDeletionModal}>{__('Cancel')}</SecondaryButton>
+                        <DangerButton
+                            onClick={submitRejectDeletion}
+                            disabled={!rejectDeletionModal.reason.trim() || !!deletionLoading[rejectDeletionModal.meeting?.id]}
+                        >
+                            {deletionLoading[rejectDeletionModal.meeting?.id] === 'reject' ? __('Rejecting…') : __('Confirm')}
+                        </DangerButton>
+                    </div>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }

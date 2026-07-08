@@ -362,7 +362,7 @@ class MentorScheduleController extends Controller
                     if (!$m) return;
                     $admins = \App\Models\User::where('role', 'admin')->get();
                     foreach ($admins as $admin) {
-                        $admin->notify(new \App\Notifications\ScheduleApprovalRequest($m));
+                        $admin->notify(new \App\Notifications\ScheduleApprovalRequest($m, 'deletion'));
                     }
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to notify admins of deletion request for meeting {$meetingId}: " . $e->getMessage());
