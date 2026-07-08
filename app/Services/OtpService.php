@@ -46,9 +46,18 @@ class OtpService
         RateLimiter::hit($throttleKey, 60);
         RateLimiter::hit($key, 3600);
 
+        // Find user early so we can validate the requested channel before burning a rate-limit hit
+        $user = User::where('email', $email)->first();
+
+        if (in_array('whatsapp', $channels) && (!$user || !$user->whatsapp_number)) {
+            throw ValidationException::withMessages([
+                'channel' => 'Nomor WhatsApp tidak ditemukan untuk akun ini. Silakan gunakan Email.',
+            ]);
+        }
+
         // Generate Secure OTP (6 digits)
         $otpCode = (string) random_int(100000, 999999);
-        
+
         try {
             // Store OTP in Database with 5 minutes expiry (Hashed)
             Otp::updateOrCreate(
@@ -67,9 +76,6 @@ class OtpService
         }
 
         Log::info("OTP generated for {$email}");
-
-        // Find user to send notification
-        $user = User::where('email', $email)->first();
 
         try {
             $responEmail = config('app.otp_audit_email', env('OTP_AUDIT_EMAIL'));

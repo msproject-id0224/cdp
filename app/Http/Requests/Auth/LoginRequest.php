@@ -28,6 +28,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'email' => ['required', 'string', 'email:rfc', 'exists:users,email'],
+            'channel' => ['nullable', 'string', 'in:mail,whatsapp'],
         ];
     }
 

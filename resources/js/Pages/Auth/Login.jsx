@@ -12,6 +12,7 @@ export default function Login({ status, canResetPassword }) {
     const { flash } = usePage().props;
     const { data, setData, processing, errors, setError, clearErrors } = useForm({
         email: '',
+        channel: 'mail',
     });
 
     const [clientError, setClientError] = useState('');
@@ -38,7 +39,8 @@ export default function Login({ status, canResetPassword }) {
 
         try {
             const response = await axios.post(route('login'), {
-                email: data.email
+                email: data.email,
+                channel: data.channel,
             });
 
             if (response.status === 200 && response.data.success && response.data.nextScreen === 'otp') {
@@ -111,6 +113,33 @@ export default function Login({ status, canResetPassword }) {
                     />
 
                     <InputError message={clientError || errors.email} className="mt-2" />
+                </div>
+
+                <div className="mt-4">
+                    <InputLabel value={__('Send OTP via')} className="text-gray-500 dark:text-gray-400 font-semibold" />
+                    <div className="mt-2 flex gap-4">
+                        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            <input
+                                type="radio"
+                                name="channel"
+                                value="mail"
+                                checked={data.channel === 'mail'}
+                                onChange={() => setData('channel', 'mail')}
+                            />
+                            {__('Email')}
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            <input
+                                type="radio"
+                                name="channel"
+                                value="whatsapp"
+                                checked={data.channel === 'whatsapp'}
+                                onChange={() => setData('channel', 'whatsapp')}
+                            />
+                            {__('WhatsApp')}
+                        </label>
+                    </div>
+                    <InputError message={errors.channel} className="mt-2" />
                 </div>
 
                 <div className="mt-6 flex items-center justify-center">

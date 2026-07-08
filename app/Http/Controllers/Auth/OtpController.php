@@ -30,6 +30,7 @@ class OtpController extends Controller
     {
         return Inertia::render('Auth/VerifyOtp', [
             'email' => session('email', 'user@example.com'),
+            'channel' => session('otp_channel', 'mail'),
         ]);
     }
 
@@ -236,15 +237,19 @@ class OtpController extends Controller
         }
 
         try {
-            $this->otpService->generateAndSend($email);
-            
+            $channel = session('otp_channel', 'mail');
+            $this->otpService->generateAndSend($email, [$channel]);
+
             if ($isApi) {
                 return response()->json([
                     'message' => 'Kode OTP baru telah dikirim.',
                     'timestamp' => now()->toIso8601String(),
                 ], 200);
             }
-            return back()->with('success', 'Kode OTP baru telah dikirim ke email Anda.');
+            $message = $channel === 'whatsapp'
+                ? 'Kode OTP baru telah dikirim ke WhatsApp Anda.'
+                : 'Kode OTP baru telah dikirim ke email Anda.';
+            return back()->with('success', $message);
         } catch (ValidationException $e) {
             if ($isApi) {
                 return response()->json([

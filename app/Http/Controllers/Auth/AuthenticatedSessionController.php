@@ -40,9 +40,12 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $email = $request->email;
-        $request->session()->put('email', $email);
+        $channels = [$request->input('channel', 'mail')];
 
-        $this->otpService->generateAndSend($email);
+        $request->session()->put('email', $email);
+        $request->session()->put('otp_channel', $channels[0]);
+
+        $this->otpService->generateAndSend($email, $channels);
 
         return response()->json([
             'success' => true,
