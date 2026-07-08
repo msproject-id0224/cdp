@@ -940,22 +940,22 @@ export default function MentorScheduleTab() {
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     {__('Date & Time')}
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     {__('Mentor')}
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     {__('Type')}
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     {__('Participants')}
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     {__('Status')}
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     {__('Action')}
                                 </th>
                             </tr>
@@ -969,17 +969,17 @@ export default function MentorScheduleTab() {
                                     
                                     return (
                                         <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 <div className="font-medium">{date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
                                                 <div className="text-gray-500 text-xs">
                                                     {date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}
                                                     {endDate && ` – ${endDate.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}`}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {auth.user.name}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                     ${type === 'meeting' ? 'bg-purple-100 text-purple-800' : 'bg-teal-100 text-teal-800'}`}>
                                                     {type === 'meeting' ? __('Meeting') : __('Availability')}
@@ -991,7 +991,7 @@ export default function MentorScheduleTab() {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                            <td className="px-6 py-2.5 text-sm text-gray-900 dark:text-gray-100">
                                                 {type === 'meeting' && data.participants && data.participants.length > 0 ? (
                                                     <div className="flex -space-x-2 overflow-hidden">
                                                         {data.participants.slice(0, 3).map(p => (
@@ -1014,7 +1014,7 @@ export default function MentorScheduleTab() {
                                                     <span className="text-gray-400 italic text-xs">{__('No participants')}</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 {type === 'meeting' ? (
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                         ${data.status === 'confirmed' ? 'bg-green-100 text-green-800' :
@@ -1030,7 +1030,7 @@ export default function MentorScheduleTab() {
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium">
                                                 {type === 'meeting' && (
                                                     <button
                                                         onClick={() => handleShowQr(data.id)}

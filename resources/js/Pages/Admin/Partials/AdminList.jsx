@@ -187,26 +187,26 @@ export default function AdminList() {
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" className="px-6 py-3">{__('Name')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Email')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Job Title')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Status')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Registered')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Name')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Email')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Job Title')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Status')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Registered')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="5" className="px-6 py-4 text-center">{__('Loading...')}</td>
+                                <td colSpan="5" className="px-6 py-2.5 text-center">{__('Loading...')}</td>
                             </tr>
                         ) : admins.data.length === 0 ? (
                             <tr>
-                                <td colSpan="5" className="px-6 py-4 text-center">{__('No admins found.')}</td>
+                                <td colSpan="5" className="px-6 py-2.5 text-center">{__('No admins found.')}</td>
                             </tr>
                         ) : (
                             admins.data.map((admin) => (
                                 <tr key={admin.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                                    <td className="px-6 py-2.5 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                                         <button
                                             onClick={() => setViewingAdmin(admin)}
                                             className="flex items-center space-x-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition text-left"
@@ -224,9 +224,9 @@ export default function AdminList() {
                                             </span>
                                         </button>
                                     </td>
-                                    <td className="px-6 py-4">{admin.email}</td>
-                                    <td className="px-6 py-4">{admin.job_title || '-'}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">{admin.email}</td>
+                                    <td className="px-6 py-2.5">{admin.job_title || '-'}</td>
+                                    <td className="px-6 py-2.5">
                                         <span className={`px-2 py-1 rounded text-xs ${
                                             admin.is_active 
                                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
@@ -235,7 +235,7 @@ export default function AdminList() {
                                             {admin.is_active ? __('Active') : __('Inactive')}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         {new Date(admin.created_at).toLocaleDateString()}
                                     </td>
                                 </tr>

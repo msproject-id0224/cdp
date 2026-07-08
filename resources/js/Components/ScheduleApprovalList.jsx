@@ -167,7 +167,7 @@ export default function ScheduleApprovalList() {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 <input
                                     type="checkbox"
                                     onChange={handleSelectAll}
@@ -196,10 +196,10 @@ export default function ScheduleApprovalList() {
                             >
                                 {__('Date & Time')} {renderSortIcon('scheduled_at')}
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {__('Participants')}
                             </th>
-                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {__('Actions')}
                             </th>
                         </tr>
@@ -207,20 +207,20 @@ export default function ScheduleApprovalList() {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {loading ? (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                                <td colSpan="6" className="px-6 py-2.5 text-center text-sm text-gray-500">
                                     {__('Loading...')}
                                 </td>
                             </tr>
                         ) : schedules.data.length === 0 ? (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                                <td colSpan="6" className="px-6 py-2.5 text-center text-sm text-gray-500">
                                     {__('No pending schedules found.')}
                                 </td>
                             </tr>
                         ) : (
                             schedules.data.map((schedule) => (
                                 <tr key={schedule.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-6 py-2.5 whitespace-nowrap">
                                         <input
                                             type="checkbox"
                                             checked={selectedSchedules.includes(schedule.id)}
@@ -228,7 +228,7 @@ export default function ScheduleApprovalList() {
                                             className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         />
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-6 py-2.5 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10">
                                                 {schedule.mentor.profile_photo_url ? (
@@ -245,7 +245,7 @@ export default function ScheduleApprovalList() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         <div className="text-sm text-gray-900">{schedule.agenda}</div>
                                         {schedule.notes && (
                                             <div className="text-xs text-gray-500 truncate max-w-xs" title={schedule.notes}>
@@ -253,7 +253,7 @@ export default function ScheduleApprovalList() {
                                             </div>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-6 py-2.5 whitespace-nowrap">
                                         <div className="text-sm text-gray-900">
                                             {new Date(schedule.scheduled_at).toLocaleDateString()}
                                         </div>
@@ -262,7 +262,7 @@ export default function ScheduleApprovalList() {
                                             {new Date(schedule.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         <div className="flex -space-x-2 overflow-hidden">
                                             {schedule.participants && schedule.participants.slice(0, 3).map((p) => (
                                                 <div key={p.id} className="inline-flex h-8 w-8 rounded-full ring-2 ring-white bg-gray-300 items-center justify-center text-xs font-bold text-white" title={p.name}>
@@ -279,7 +279,7 @@ export default function ScheduleApprovalList() {
                                             <span className="text-xs text-gray-400">{__('No participants')}</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             onClick={() => openModal('preview', schedule)}
                                             className="text-indigo-600 hover:text-indigo-900 mr-3"

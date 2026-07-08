@@ -103,25 +103,25 @@ export default function Index({ auth, screenings, filters }) {
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Peserta</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tanggal</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">BB / TB (BMI)</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status Gizi</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pemeriksa</th>
-                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Aksi</th>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Peserta</th>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tanggal</th>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">BB / TB (BMI)</th>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status Gizi</th>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pemeriksa</th>
+                                            <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                         {screenings.data.length === 0 ? (
                                             <tr>
-                                                <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                                <td colSpan="6" className="px-6 py-2.5 text-center text-gray-500 dark:text-gray-400">
                                                     Tidak ada data pemeriksaan ditemukan.
                                                 </td>
                                             </tr>
                                         ) : (
                                             screenings.data.map((item) => (
                                                 <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                             {item.user?.first_name} {item.user?.last_name}
                                                         </div>
@@ -129,14 +129,14 @@ export default function Index({ auth, screenings, filters }) {
                                                             {item.user?.id_number || '-'}
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {new Date(item.checked_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {item.weight ? `${item.weight} kg` : '-'} / {item.height ? `${item.height} cm` : '-'}
                                                         {item.bmi && <span className="ml-1 text-xs font-bold text-indigo-600">({item.bmi})</span>}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap">
                                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                                                             item.malnutrition_status === 'normal' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
                                                             item.malnutrition_status === 'mild' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
@@ -148,10 +148,10 @@ export default function Index({ auth, screenings, filters }) {
                                                              item.malnutrition_status === 'moderate' ? 'Sedang' : 'Sangat Buruk'}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {item.examiner_name || '-'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium space-x-3">
                                                         <Link
                                                             href={route('health-screenings.edit', item.id)}
                                                             className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"

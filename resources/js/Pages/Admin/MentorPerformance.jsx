@@ -129,23 +129,23 @@ export default function MentorPerformance({ performances }) {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 w-8">#</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">{__('Mentor Name')}</th>
-                                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">{__('Participants')}</th>
+                                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 w-8">#</th>
+                                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-300">{__('Mentor Name')}</th>
+                                    <th className="px-4 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">{__('Participants')}</th>
                                     {CRITERIA.map(c => (
-                                        <th key={c.key} className="px-3 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 min-w-[110px]">
+                                        <th key={c.key} className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 min-w-[110px]">
                                             <span title={__(c.label)}>{__(c.short)}</span>
                                             <div className="text-[10px] font-normal text-gray-400">{__('max. 10')}</div>
                                         </th>
                                     ))}
-                                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">{__('Total Points')}</th>
+                                    <th className="px-4 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">{__('Total Points')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                 {sorted.map((p, idx) => (
                                     <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
-                                        <td className="px-4 py-3 text-gray-400 text-xs">{idx + 1}</td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-2 text-gray-400 text-xs">{idx + 1}</td>
+                                        <td className="px-4 py-2">
                                             <div className="flex items-center gap-3">
                                                 <ProfilePhoto
                                                     src={p.photo}
@@ -160,14 +160,14 @@ export default function MentorPerformance({ performances }) {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{p.participants_count}</td>
+                                        <td className="px-4 py-2 text-center text-gray-600 dark:text-gray-400">{p.participants_count}</td>
                                         {CRITERIA.map(c => (
-                                            <td key={c.key} className="px-3 py-3 text-center">
+                                            <td key={c.key} className="px-3 py-2 text-center">
                                                 <ScoreBadge value={p.scores[c.key]} />
                                                 <ScoreBar value={p.scores[c.key]} />
                                             </td>
                                         ))}
-                                        <td className="px-4 py-3 text-center">
+                                        <td className="px-4 py-2 text-center">
                                             <TotalBadge value={p.total} />
                                         </td>
                                     </tr>

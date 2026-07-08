@@ -217,19 +217,19 @@ export default function MentorDocuments ({ readOnly = false, mentorId = null }) 
                 <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm'>
                     <thead className='bg-gray-50 dark:bg-gray-700'>
                         <tr>
-                            <th className='px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase w-10'>
+                            <th className='px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase w-10'>
                                 No
                             </th>
-                            <th className='px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
+                            <th className='px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
                                 {__('File Description')}
                             </th>
-                            <th className='px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
+                            <th className='px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
                                 {__('Date')}
                             </th>
-                            <th className='px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
+                            <th className='px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
                                 {__('Status')}
                             </th>
-                            <th className='px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
+                            <th className='px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase'>
                                 {__('Action')}
                             </th>
                         </tr>
@@ -280,12 +280,12 @@ export default function MentorDocuments ({ readOnly = false, mentorId = null }) 
                                         className='group hover:bg-indigo-600 dark:hover:bg-indigo-700 transition-colors cursor-default'
                                     >
                                         {/* No */}
-                                        <td className='px-4 py-3 text-gray-500 dark:text-gray-400 font-medium group-hover:text-indigo-100 transition-colors'>
+                                        <td className='px-4 py-2 text-gray-500 dark:text-gray-400 font-medium group-hover:text-indigo-100 transition-colors'>
                                             {row.no}
                                         </td>
 
                                         {/* Description */}
-                                        <td className='px-4 py-3'>
+                                        <td className='px-4 py-2'>
                                             <div className='font-medium text-gray-900 dark:text-gray-100 group-hover:text-white transition-colors'>
                                                 {meta.label}
                                             </div>
@@ -305,7 +305,7 @@ export default function MentorDocuments ({ readOnly = false, mentorId = null }) 
                                         </td>
 
                                         {/* Date */}
-                                        <td className='px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap group-hover:text-indigo-100 transition-colors'>
+                                        <td className='px-4 py-2 text-gray-600 dark:text-gray-300 whitespace-nowrap group-hover:text-indigo-100 transition-colors'>
                                             {doc ? (
                                                 <div>
                                                     <div>{doc.uploaded_at}</div>
@@ -332,12 +332,12 @@ export default function MentorDocuments ({ readOnly = false, mentorId = null }) 
                                         </td>
 
                                         {/* Status */}
-                                        <td className='px-4 py-3 group-hover:[&_span]:bg-white/20 group-hover:[&_span]:text-white transition-colors'>
+                                        <td className='px-4 py-2 group-hover:[&_span]:bg-white/20 group-hover:[&_span]:text-white transition-colors'>
                                             <StatusBadge doc={doc} />
                                         </td>
 
                                         {/* Action */}
-                                        <td className='px-4 py-3 text-right whitespace-nowrap'>
+                                        <td className='px-4 py-2 text-right whitespace-nowrap'>
                                             <div className='flex items-center justify-end gap-2'>
                                                 {/* Download */}
                                                 {doc && (

@@ -96,13 +96,13 @@ export default function Monitor({ auth, attendances = [], sessions = [] }) {
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                                 <thead className="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-300 tracking-wider">
                                     <tr>
-                                        <th className="px-5 py-3 text-left w-12">No</th>
-                                        <th className="px-5 py-3 text-left">Deskripsi Aktivitas</th>
-                                        <th className="px-5 py-3 text-left">Mentor</th>
-                                        <th className="px-5 py-3 text-left">Mulai (Scan)</th>
-                                        <th className="px-5 py-3 text-left">Selesai (Upload Dok.)</th>
-                                        <th className="px-5 py-3 text-left">Perangkat</th>
-                                        <th className="px-5 py-3 text-left">Status / Dokumentasi</th>
+                                        <th className="px-5 py-2 text-left w-12">No</th>
+                                        <th className="px-5 py-2 text-left">Deskripsi Aktivitas</th>
+                                        <th className="px-5 py-2 text-left">Mentor</th>
+                                        <th className="px-5 py-2 text-left">Mulai (Scan)</th>
+                                        <th className="px-5 py-2 text-left">Selesai (Upload Dok.)</th>
+                                        <th className="px-5 py-2 text-left">Perangkat</th>
+                                        <th className="px-5 py-2 text-left">Status / Dokumentasi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
@@ -117,32 +117,32 @@ export default function Monitor({ auth, attendances = [], sessions = [] }) {
                                             const dev = deviceLabel(att.device_type);
                                             return (
                                                 <tr key={att.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                                    <td className="px-5 py-4 text-gray-500 dark:text-gray-400 font-medium">
+                                                    <td className="px-5 py-2.5 text-gray-500 dark:text-gray-400 font-medium">
                                                         {att.no}
                                                     </td>
-                                                    <td className="px-5 py-4">
+                                                    <td className="px-5 py-2.5">
                                                         <p className="font-medium text-gray-900 dark:text-white">{att.agenda}</p>
                                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                                             {fmtDate(att.scheduled_at)}
                                                         </p>
                                                     </td>
-                                                    <td className="px-5 py-4 text-gray-700 dark:text-gray-300">
+                                                    <td className="px-5 py-2.5 text-gray-700 dark:text-gray-300">
                                                         {att.mentor_name}
                                                     </td>
-                                                    <td className="px-5 py-4 text-green-700 dark:text-green-400 font-medium">
+                                                    <td className="px-5 py-2.5 text-green-700 dark:text-green-400 font-medium">
                                                         {fmtTime(att.check_in_at)}
                                                     </td>
-                                                    <td className="px-5 py-4 text-blue-700 dark:text-blue-400 font-medium">
+                                                    <td className="px-5 py-2.5 text-blue-700 dark:text-blue-400 font-medium">
                                                         {att.check_out_at ? fmtTime(att.check_out_at) : (
                                                             <span className="text-gray-400 text-xs italic">Menunggu dokumentasi</span>
                                                         )}
                                                     </td>
-                                                    <td className="px-5 py-4">
+                                                    <td className="px-5 py-2.5">
                                                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${dev.cls}`}>
                                                             {dev.label}
                                                         </span>
                                                     </td>
-                                                    <td className="px-5 py-4">
+                                                    <td className="px-5 py-2.5">
                                                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                                                             att.status === 'Hadir'
                                                                 ? 'bg-green-100 text-green-700'

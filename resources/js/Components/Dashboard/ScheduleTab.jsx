@@ -518,32 +518,32 @@ export default function ScheduleTab() {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Activity')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Date & Time')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Priority')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Notify To')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('PIC')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Status')}</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Actions')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Activity')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Date & Time')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Priority')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Notify To')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('PIC')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Status')}</th>
+                                    <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-4 text-center text-gray-500">{__('Loading...')}</td>
+                                        <td colSpan="7" className="px-6 py-2.5 text-center text-gray-500">{__('Loading...')}</td>
                                     </tr>
                                 ) : schedules.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-4 text-center text-gray-500">{__('No schedules found.')}</td>
+                                        <td colSpan="7" className="px-6 py-2.5 text-center text-gray-500">{__('No schedules found.')}</td>
                                     </tr>
                                 ) : (
                                     schedules.map((schedule) => (
                                         <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">{schedule.name}</div>
                                                 {schedule.location && <div className="text-xs text-gray-500">{schedule.location}</div>}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
                                                     {new Date(schedule.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                                 </div>
@@ -551,12 +551,12 @@ export default function ScheduleTab() {
                                                     {schedule.start_time?.substring(0, 5) || '-'} – {schedule.end_time?.substring(0, 5) || '-'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(schedule.priority)}`}>
                                                     {__(schedule.priority)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
                                                     {schedule.notify_target === 'all_user'        ? __('All Users')
                                                     : schedule.notify_target === 'mentor_only'    ? __('Mentor Only')
@@ -565,13 +565,13 @@ export default function ScheduleTab() {
                                                     : __('All Users')}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.pic}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500">{schedule.pic}</td>
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 capitalize">
                                                     {__(schedule.status)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium">
                                                 <button
                                                     onClick={() => openModal('edit', schedule)}
                                                     className="text-indigo-600 hover:text-indigo-900"

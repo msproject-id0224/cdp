@@ -193,7 +193,7 @@ export default function MentorScheduleTable() {
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('name')}>
+                            <th scope="col" className="px-6 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('name')}>
                                 <div className="flex items-center">
                                     {__('Activity')}
                                     {filters.sort_by === 'name' && (
@@ -201,7 +201,7 @@ export default function MentorScheduleTable() {
                                     )}
                                 </div>
                             </th>
-                            <th scope="col" className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('date')}>
+                            <th scope="col" className="px-6 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('date')}>
                                 <div className="flex items-center">
                                     {__('Date & Time')}
                                     {filters.sort_by === 'date' && (
@@ -209,10 +209,10 @@ export default function MentorScheduleTable() {
                                     )}
                                 </div>
                             </th>
-                            <th scope="col" className="px-6 py-3">
+                            <th scope="col" className="px-6 py-2">
                                 {__('Location')}
                             </th>
-                            <th scope="col" className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('priority')}>
+                            <th scope="col" className="px-6 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('priority')}>
                                 <div className="flex items-center">
                                     {__('Priority')}
                                     {filters.sort_by === 'priority' && (
@@ -220,10 +220,10 @@ export default function MentorScheduleTable() {
                                     )}
                                 </div>
                             </th>
-                            <th scope="col" className="px-6 py-3">
+                            <th scope="col" className="px-6 py-2">
                                 {__('Status')}
                             </th>
-                            <th scope="col" className="px-6 py-3">
+                            <th scope="col" className="px-6 py-2">
                                 {__('Actions')}
                             </th>
                         </tr>
@@ -231,7 +231,7 @@ export default function MentorScheduleTable() {
                     <tbody>
                         {loading && schedules.length === 0 ? (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center">
+                                <td colSpan="6" className="px-6 py-2.5 text-center">
                                     <div className="flex justify-center items-center">
                                         <svg className="animate-spin h-5 w-5 mr-3 text-blue-500" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -244,29 +244,29 @@ export default function MentorScheduleTable() {
                         ) : schedules.length > 0 ? (
                             schedules.map((schedule) => (
                                 <tr key={schedule.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    <td className="px-6 py-2.5 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                         {schedule.name}
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         <div>{schedule.date}</div>
                                         <div className="text-xs text-gray-500">
                                             {schedule.start_time ? schedule.start_time.substring(0, 5) : ''} - {schedule.end_time ? schedule.end_time.substring(0, 5) : ''}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         {schedule.location || '-'}
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(schedule.priority)}`}>
                                             {schedule.priority ? String(schedule.priority).charAt(0).toUpperCase() + String(schedule.priority).slice(1) : '-'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(schedule.status)}`}>
                                             {schedule.status ? String(schedule.status).charAt(0).toUpperCase() + String(schedule.status).slice(1) : 'Scheduled'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         <button
                                             onClick={() => openMessageModal(schedule.id)}
                                             className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 text-sm font-medium"
@@ -278,7 +278,7 @@ export default function MentorScheduleTable() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                <td colSpan="6" className="px-6 py-2.5 text-center text-gray-500 dark:text-gray-400">
                                     {__('No schedules found.')}
                                 </td>
                             </tr>

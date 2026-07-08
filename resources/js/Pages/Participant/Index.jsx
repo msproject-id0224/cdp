@@ -458,7 +458,7 @@ export default function ParticipantIndex({ auth, participants, filters, mentors 
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={isAdmin ? 8 : 7} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                            <td colSpan={isAdmin ? 8 : 7} className="px-6 py-2.5 text-center text-sm text-gray-500 dark:text-gray-400">
                                                 {__('No participants found.')}
                                             </td>
                                         </tr>
