@@ -40,8 +40,6 @@ export default function AdminList() {
         email: '',
         job_title: '',
         phone_number: '',
-        password: '',
-        password_confirmation: '',
     });
 
     const openAddModal = () => {
@@ -419,32 +417,6 @@ export default function AdminList() {
                                 className="mt-1 block w-full"
                             />
                             <InputError message={addErrors.phone_number} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="add_password" value={__('Password')} />
-                            <TextInput
-                                id="add_password"
-                                type="password"
-                                value={addData.password}
-                                onChange={(e) => setAddData('password', e.target.value)}
-                                className="mt-1 block w-full"
-                                required
-                            />
-                            <InputError message={addErrors.password} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="add_password_confirmation" value={__('Confirm Password')} />
-                            <TextInput
-                                id="add_password_confirmation"
-                                type="password"
-                                value={addData.password_confirmation}
-                                onChange={(e) => setAddData('password_confirmation', e.target.value)}
-                                className="mt-1 block w-full"
-                                required
-                            />
-                            <InputError message={addErrors.password_confirmation} className="mt-2" />
                         </div>
                     </div>
 
