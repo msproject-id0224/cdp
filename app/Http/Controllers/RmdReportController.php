@@ -43,6 +43,17 @@ class RmdReportController extends Controller
                     'gaya_belajar_distribution'         => $chartService->getGayaBelajarDistribution(),
                     'kecerdasan_majemuk_scores'         => $chartService->getKecerdasanMajemukAverageScore(),
                     'prestasi_akademik_distribution'    => $chartService->getPrestasiAkademikDistribution(),
+                    // High priority
+                    'module_completion_funnel'          => $chartService->getModuleCompletionFunnel(),
+                    'career_consideration_factors'      => $chartService->getCareerConsiderationFactors(),
+                    'top_intelligence_distribution'     => $chartService->getTopIntelligenceDistribution(),
+                    'favorite_subject_distribution'     => $chartService->getFavoriteSubjectDistribution(),
+                    'least_favorite_subject_distribution' => $chartService->getLeastFavoriteSubjectDistribution(),
+                    // Medium priority
+                    'leadership_traits_distribution'    => $chartService->getLeadershipTraitsDistribution(),
+                    'reflection_checkpoints_distribution' => $chartService->getReflectionCheckpointsDistribution(),
+                    'submission_trend'                  => $chartService->getSubmissionTrend(),
+                    'mentor_progress_comparison'         => $chartService->getMentorProgressComparison(),
                 ];
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Error fetching RMD chart data: ' . $e->getMessage());

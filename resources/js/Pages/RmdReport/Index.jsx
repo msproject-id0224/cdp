@@ -269,6 +269,201 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
         return <Bar options={options} data={data} />;
     };
 
+    const renderModuleFunnelChart = () => {
+        const data = chartData.module_completion_funnel;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const totalEligible = chartData.module_completion_funnel?.total_eligible || 0;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Module Completion Funnel') },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const count = ctx.parsed.x;
+                            const pct = totalEligible > 0 ? ((count / totalEligible) * 100).toFixed(1) : 0;
+                            return ` ${count} ${__('participants')} (${pct}%)`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: { beginAtZero: true, title: { display: true, text: __('Number of Participants') } },
+                y: { title: { display: true, text: __('Module') } },
+            },
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderCareerConsiderationChart = () => {
+        const data = chartData.career_consideration_factors;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                legend: { display: false },
+                title: { display: true, text: __('Career Choice Consideration Factors') }
+            },
+            scales: {
+                y: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                x: { title: { display: true, text: __('Factor') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderTopIntelligenceChart = () => {
+        const data = chartData.top_intelligence_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' },
+                title: { display: true, text: __('Dominant Intelligence Distribution') }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 0
+                }
+            }
+        };
+
+        return <Doughnut options={options} data={data} />;
+    };
+
+    const renderFavoriteSubjectChart = () => {
+        const dist = chartData.favorite_subject_distribution;
+        if (!dist || !dist.labels || dist.labels.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Top Favorite Subjects') },
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Participants') } },
+                x: { ticks: { maxRotation: 45, minRotation: 30 } },
+            },
+        };
+
+        return <Bar options={options} data={dist} />;
+    };
+
+    const renderLeastFavoriteSubjectChart = () => {
+        const dist = chartData.least_favorite_subject_distribution;
+        if (!dist || !dist.labels || dist.labels.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Top Least Favorite Subjects') },
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Participants') } },
+                x: { ticks: { maxRotation: 45, minRotation: 30 } },
+            },
+        };
+
+        return <Bar options={options} data={dist} />;
+    };
+
+    const renderLeadershipChart = () => {
+        const data = chartData.leadership_traits_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                legend: { display: false },
+                title: { display: true, text: __('Leadership Traits Checked') }
+            },
+            scales: {
+                y: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                x: { title: { display: true, text: __('Leadership Point') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderReflectionCheckpointsChart = () => {
+        const data = chartData.reflection_checkpoints_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Chapter Reflection Checkpoints') }
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Participants') } },
+                y: { title: { display: true, text: __('Checkpoint') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderSubmissionTrendChart = () => {
+        const data = chartData.submission_trend;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Module Submission Trend (Last 6 Months)') }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Submissions') } },
+                x: { title: { display: true, text: __('Month') } }
+            }
+        };
+
+        return <Line options={options} data={data} />;
+    };
+
+    const renderMentorProgressChart = () => {
+        const data = chartData.mentor_progress_comparison;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Average Participant Progress by Mentor') }
+            },
+            scales: {
+                x: { beginAtZero: true, max: 100, title: { display: true, text: __('Average Progress (%)') } },
+                y: { title: { display: true, text: __('Mentor') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
     const renderProgressChart = () => {
         const data = chartData.progress_distribution;
         if (!data || !data.datasets || data.datasets.length === 0) return null;
@@ -424,6 +619,141 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                         </div>
                         <div className="h-96">
                             {renderIntelligenceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Module Completion Funnel */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Module Completion Funnel')}</h3>
+                            {chartData?.module_completion_funnel?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                    {__('Total')}: {chartData.module_completion_funnel.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderModuleFunnelChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Career Choice Consideration Factors */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Career Consideration Factors')}</h3>
+                            {chartData?.career_consideration_factors?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    {__('Total')}: {chartData.career_consideration_factors.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderCareerConsiderationChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Dominant Intelligence Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Dominant Intelligence')}</h3>
+                            {chartData?.top_intelligence_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                    {__('Total')}: {chartData.top_intelligence_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderTopIntelligenceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Favorite Subject Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Top Favorite Subjects')}</h3>
+                            {chartData?.favorite_subject_distribution?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
+                                    {chartData.favorite_subject_distribution.total} / {chartData.favorite_subject_distribution.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-72">
+                            {renderFavoriteSubjectChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Least Favorite Subject Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Top Least Favorite Subjects')}</h3>
+                            {chartData?.least_favorite_subject_distribution?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200">
+                                    {chartData.least_favorite_subject_distribution.total} / {chartData.least_favorite_subject_distribution.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-72">
+                            {renderLeastFavoriteSubjectChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Leadership Traits */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Leadership Traits')}</h3>
+                            {chartData?.leadership_traits_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    {__('Total')}: {chartData.leadership_traits_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderLeadershipChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Chapter Reflection Checkpoints */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Reflection Checkpoints')}</h3>
+                            {chartData?.reflection_checkpoints_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                    {__('Total')}: {chartData.reflection_checkpoints_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderReflectionCheckpointsChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Submission Trend */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Submission Trend')}</h3>
+                            {chartData?.submission_trend?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                    {__('Total')}: {chartData.submission_trend.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-72">
+                            {renderSubmissionTrendChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Mentor Progress Comparison */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Progress by Mentor')}</h3>
+                            {chartData?.mentor_progress_comparison?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                    {__('Total')}: {chartData.mentor_progress_comparison.total} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderMentorProgressChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                         </div>
                     </div>
                 </div>
