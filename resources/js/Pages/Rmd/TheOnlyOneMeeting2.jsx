@@ -829,7 +829,7 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                                      </td>
                                                      <td className="p-2">
                                                          <textarea
-                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
                                                              value={data.reflection_new_learning}
                                                              onChange={e => setData('reflection_new_learning', e.target.value)}
                                                              placeholder={__('RMD_PLACEHOLDER_WRITE_HERE')}
@@ -843,7 +843,7 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                                      </td>
                                                      <td className="p-2">
                                                          <textarea
-                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
                                                              value={data.reflection_plan}
                                                              onChange={e => setData('reflection_plan', e.target.value)}
                                                              placeholder={__('RMD_PLACEHOLDER_WRITE_HERE')}

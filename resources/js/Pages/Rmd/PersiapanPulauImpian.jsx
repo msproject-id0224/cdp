@@ -162,7 +162,7 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                                                 </td>
                                                 <td className="p-2 border-r-2 border-orange-400 dark:border-orange-700">
                                                     <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
                                                         value={row.question}
                                                         onChange={e => updateProfessionQuestion(index, 'question', e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_PROFESSION_Q_PLACEHOLDER')}
@@ -170,7 +170,7 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                                                 </td>
                                                 <td className="p-2">
                                                     <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
                                                         value={row.answer}
                                                         onChange={e => updateProfessionQuestion(index, 'answer', e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_PROFESSION_ANS_PLACEHOLDER')}
@@ -226,7 +226,7 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                                                 </td>
                                                 <td className="p-2">
                                                     <textarea
-                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
                                                         value={row.description}
                                                         onChange={e => updateSwot(index, e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_SWOT_PLACEHOLDER')}

@@ -201,7 +201,7 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
                                                 </td>
                                                 <td className="p-2">
                                                     <textarea
-                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200"
                                                         value={row.description}
                                                         onChange={e => updateSwot(index, e.target.value)}
                                                         placeholder={__('RMD_CH4_P2_SWOT_PLACEHOLDER')}

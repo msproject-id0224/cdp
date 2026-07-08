@@ -1848,7 +1848,7 @@ export default function MenentukanCitaCita ({ auth, careerExploration }) {
                                     {__('RMD_CH4_ADDITIONAL_CONSIDERATIONS')}
                                 </h5>
                                 <textarea
-                                    className='w-full bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-gray-200 dark:border-gray-700 focus:ring-orange-400 min-h-[128px] resize'
+                                    className='w-full bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-gray-200 dark:border-gray-700 focus:ring-orange-400 min-h-[128px] resize-y'
                                     value={data.additional_considerations}
                                     onChange={e =>
                                         setData(
@@ -1923,7 +1923,7 @@ export default function MenentukanCitaCita ({ auth, careerExploration }) {
                                                     </td>
                                                     <td className='p-4'>
                                                         <textarea
-                                                            className='w-full min-h-[160px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200'
+                                                            className='w-full min-h-[160px] border-none focus:ring-0 bg-transparent resize-y dark:text-gray-200'
                                                             value={row.factors}
                                                             onChange={e =>
                                                                 updateMatrix(
