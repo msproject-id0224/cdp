@@ -36,10 +36,13 @@ class RmdReportController extends Controller
         if (!$isMentor) {
             try {
                 $chartData = [
-                    'age_distribution'          => $chartService->getAgeDistributionAllParticipants(),
-                    'participation_rate'         => $chartService->getRmdParticipationRate(),
-                    'progress_distribution'      => $chartService->getRmdFillingProgressDistribution(),
-                    'career_choice_distribution' => $chartService->getFinalCareerChoiceDistribution(),
+                    'age_distribution'                => $chartService->getAgeDistributionAllParticipants(),
+                    'participation_rate'               => $chartService->getRmdParticipationRate(),
+                    'progress_distribution'            => $chartService->getRmdFillingProgressDistribution(),
+                    'career_choice_distribution'       => $chartService->getFinalCareerChoiceDistribution(),
+                    'gaya_belajar_distribution'         => $chartService->getGayaBelajarDistribution(),
+                    'kecerdasan_majemuk_scores'         => $chartService->getKecerdasanMajemukAverageScore(),
+                    'prestasi_akademik_distribution'    => $chartService->getPrestasiAkademikDistribution(),
                 ];
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Error fetching RMD chart data: ' . $e->getMessage());
@@ -259,9 +262,9 @@ class RmdReportController extends Controller
         if (!$rmdTheOnlyOne) return '-';
 
         $counts = [
-            'Visual'     => count(array_filter((array) ($rmdTheOnlyOne->visual_checklist ?? []))),
-            'Auditori'   => count(array_filter((array) ($rmdTheOnlyOne->auditory_checklist ?? []))),
-            'Kinestetik' => count(array_filter((array) ($rmdTheOnlyOne->kinesthetic_checklist ?? []))),
+            'Visual'     => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->visual_checklist ?? []))),
+            'Auditori'   => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->auditory_checklist ?? []))),
+            'Kinestetik' => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->kinesthetic_checklist ?? []))),
         ];
 
         $max = max($counts);

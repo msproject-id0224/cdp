@@ -198,6 +198,76 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
         return <Bar options={options} data={dist} />;
     };
 
+    const renderGayaBelajarChart = () => {
+        const data = chartData.gaya_belajar_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' },
+                title: { display: true, text: __('Learning Style Distribution') }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 0
+                }
+            }
+        };
+
+        return <Doughnut options={options} data={data} />;
+    };
+
+    const renderIntelligenceChart = () => {
+        const data = chartData.kecerdasan_majemuk_scores;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Average Multiple Intelligence Score') }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 50,
+                    title: { display: true, text: __('Average Score (0-50)') },
+                },
+                x: {
+                    title: { display: true, text: __('Intelligence Category') },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 30,
+                    },
+                },
+            },
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderAcademicChart = () => {
+        const data = chartData.prestasi_akademik_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                title: { display: true, text: __('Academic Achievement Distribution') }
+            },
+            scales: {
+                y: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                x: { title: { display: true, text: __('Highest Score Range') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
     const renderProgressChart = () => {
         const data = chartData.progress_distribution;
         if (!data || !data.datasets || data.datasets.length === 0) return null;
@@ -308,6 +378,51 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                         </div>
                         <div className="h-96">
                             {renderCareerChoiceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Gaya Belajar (Learning Style) Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Gaya Belajar')}</h3>
+                             {chartData?.gaya_belajar_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
+                                    {__('Total')}: {chartData.gaya_belajar_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderGayaBelajarChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Prestasi Akademik Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Prestasi Akademik')}</h3>
+                             {chartData?.prestasi_akademik_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                    {__('Total')}: {chartData.prestasi_akademik_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderAcademicChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Kecerdasan Majemuk (Multiple Intelligence) Average Score */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Skor Kecerdasan Majemuk')}</h3>
+                            {chartData?.kecerdasan_majemuk_scores?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
+                                    {__('Total')}: {chartData.kecerdasan_majemuk_scores.total} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderIntelligenceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                         </div>
                     </div>
                 </div>

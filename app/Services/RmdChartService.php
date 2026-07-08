@@ -237,6 +237,137 @@ class RmdChartService
     }
 
     /**
+     * Get distribution of dominant learning style (Visual/Auditori/Kinestetik) based on
+     * the true 1-5 weighted checklist score sums (not just non-empty entry counts).
+     * Participants tied for the highest score are counted in each tied category.
+     *
+     * @return array
+     */
+    public function getGayaBelajarDistribution()
+    {
+        $records = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas('rmdTheOnlyOne')
+            ->with('rmdTheOnlyOne:user_id,visual_checklist,auditory_checklist,kinesthetic_checklist')
+            ->get()
+            ->pluck('rmdTheOnlyOne');
+
+        $ranges = [
+            'Visual'     => 0,
+            'Auditori'   => 0,
+            'Kinestetik' => 0,
+        ];
+
+        foreach ($records as $record) {
+            $visual      = array_sum(array_map('intval', (array) ($record->visual_checklist ?? [])));
+            $auditory    = array_sum(array_map('intval', (array) ($record->auditory_checklist ?? [])));
+            $kinesthetic = array_sum(array_map('intval', (array) ($record->kinesthetic_checklist ?? [])));
+
+            $max = max($visual, $auditory, $kinesthetic);
+            if ($max === 0) continue;
+
+            if ($visual === $max) $ranges['Visual']++;
+            if ($auditory === $max) $ranges['Auditori']++;
+            if ($kinesthetic === $max) $ranges['Kinestetik']++;
+        }
+
+        return $this->formatChartData($ranges, 'Gaya Belajar');
+    }
+
+    /**
+     * Get the average multiple-intelligence score (max 50 per category) across all
+     * participants who have filled the Kecerdasan Majemuk module.
+     *
+     * @return array
+     */
+    public function getKecerdasanMajemukAverageScore()
+    {
+        $categories = [
+            'linguistic_checklist'           => 'Linguistik',
+            'logical_mathematical_checklist' => 'Logis-Matematis',
+            'visual_spatial_checklist'       => 'Visual-Spasial',
+            'kinesthetic_checklist'          => 'Kinestetik',
+            'musical_checklist'              => 'Musikal',
+            'interpersonal_checklist'        => 'Interpersonal',
+            'intrapersonal_checklist'        => 'Intrapersonal',
+            'naturalist_checklist'           => 'Naturalis',
+            'existential_checklist'          => 'Eksistensial',
+        ];
+
+        $records = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas('rmdMultipleIntelligence')
+            ->with(['rmdMultipleIntelligence:user_id,' . implode(',', array_keys($categories))])
+            ->get()
+            ->pluck('rmdMultipleIntelligence');
+
+        $labels = [];
+        $data   = [];
+
+        foreach ($categories as $field => $label) {
+            $sums = $records
+                ->map(fn ($record) => array_sum(array_map('intval', (array) ($record->$field ?? []))))
+                ->filter(fn ($sum) => $sum > 0);
+
+            $labels[] = $label;
+            $data[]   = $sums->count() > 0 ? round($sums->avg(), 1) : 0;
+        }
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Rata-rata Skor Kecerdasan Majemuk',
+                    'data'            => $data,
+                    'backgroundColor' => '#6366f1',
+                ]
+            ],
+            'total' => $records->count(),
+        ];
+    }
+
+    /**
+     * Get distribution of academic achievement (highest_score_value from The Only One)
+     * bucketed into grade bands.
+     *
+     * @return array
+     */
+    public function getPrestasiAkademikDistribution()
+    {
+        $values = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas('rmdTheOnlyOne', function ($q) {
+                $q->whereNotNull('highest_score_value')->where('highest_score_value', '!=', '');
+            })
+            ->with('rmdTheOnlyOne:user_id,highest_score_value')
+            ->get()
+            ->pluck('rmdTheOnlyOne.highest_score_value');
+
+        $ranges = [
+            '< 70'   => 0,
+            '70-79'  => 0,
+            '80-89'  => 0,
+            '90-100' => 0,
+        ];
+
+        foreach ($values as $value) {
+            $score = (float) $value;
+            if ($score < 70) $ranges['< 70']++;
+            elseif ($score < 80) $ranges['70-79']++;
+            elseif ($score < 90) $ranges['80-89']++;
+            else $ranges['90-100']++;
+        }
+
+        return $this->formatChartData($ranges, 'Prestasi Akademik (Nilai Tertinggi)');
+    }
+
+    /**
      * Format the data for Chart.js and include total count.
      *
      * @param array $ranges

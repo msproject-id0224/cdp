@@ -12,9 +12,9 @@ class RmdAnalyticsService
         if (!$rmdTheOnlyOne) return '-';
 
         $counts = [
-            'Visual'     => count(array_filter((array) ($rmdTheOnlyOne->visual_checklist ?? []))),
-            'Auditori'   => count(array_filter((array) ($rmdTheOnlyOne->auditory_checklist ?? []))),
-            'Kinestetik' => count(array_filter((array) ($rmdTheOnlyOne->kinesthetic_checklist ?? []))),
+            'Visual'     => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->visual_checklist ?? []))),
+            'Auditori'   => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->auditory_checklist ?? []))),
+            'Kinestetik' => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->kinesthetic_checklist ?? []))),
         ];
 
         $max = max($counts);
