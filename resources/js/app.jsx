@@ -14,11 +14,11 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Keep window.translations in sync on every Inertia navigation
+// Keep globalThis.translations in sync on every Inertia navigation
 router.on('navigate', (event) => {
     const translations = event.detail.page.props.translations;
     if (translations) {
-        window.translations = translations;
+        globalThis.translations = translations;
     }
 });
 
@@ -35,7 +35,7 @@ createInertiaApp({
         }),
     setup({ el, App, props }) {
         if (props.initialPage.props.translations) {
-            window.translations = props.initialPage.props.translations;
+            globalThis.translations = props.initialPage.props.translations;
         }
         const root = createRoot(el);
 

@@ -6,10 +6,10 @@ import axios from 'axios';
 
 // ── Detect Android / mobile device ──────────────────────────────────────────
 const isAndroid = () =>
-    /android/i.test(navigator.userAgent);
+    typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
 
 const isMobile = () =>
-    /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+    typeof navigator !== 'undefined' && /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
 
 // ── Tiny helper components ───────────────────────────────────────────────────
 const Badge = ({ status }) => {
