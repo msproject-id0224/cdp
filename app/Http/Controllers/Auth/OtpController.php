@@ -31,6 +31,7 @@ class OtpController extends Controller
         return Inertia::render('Auth/VerifyOtp', [
             'email' => session('email', 'user@example.com'),
             'channel' => session('otp_channel', 'mail'),
+            'displayTarget' => session('otp_display', session('email', 'user@example.com')),
         ]);
     }
 

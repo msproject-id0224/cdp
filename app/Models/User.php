@@ -155,6 +155,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Find a user whose phone_number normalizes to the given WhatsApp number.
+     * Matches regardless of how the number was originally formatted (08xx, 62xx, etc).
+     */
+    public static function findByWhatsappNumber(?string $phone): ?self
+    {
+        $normalized = self::normalizePhoneToWhatsapp($phone);
+        if (!$normalized) {
+            return null;
+        }
+
+        return self::whereNotNull('phone_number')
+            ->get()
+            ->first(fn (self $user) => $user->whatsapp_number === $normalized);
+    }
+
+    /**
      * Get the first name for display (handles titles and multi-word names).
      */
     public function getFirstNameDisplayAttribute(): string

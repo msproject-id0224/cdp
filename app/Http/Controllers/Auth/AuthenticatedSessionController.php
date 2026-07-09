@@ -39,13 +39,18 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $email = $request->email;
-        $channels = [$request->input('channel', 'mail')];
+        $channel = $request->input('channel', 'mail');
+        $user = $request->resolvedUser();
+        $email = $user->email;
 
         $request->session()->put('email', $email);
-        $request->session()->put('otp_channel', $channels[0]);
+        $request->session()->put('otp_channel', $channel);
+        $request->session()->put(
+            'otp_display',
+            $channel === 'whatsapp' ? $user->whatsapp_number : $email
+        );
 
-        $this->otpService->generateAndSend($email, $channels);
+        $this->otpService->generateAndSend($email, [$channel]);
 
         return response()->json([
             'success' => true,

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Notifications\OtpNotification;
 use App\Models\User;
+use App\Exceptions\QontakSendException;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -51,7 +52,7 @@ class OtpService
 
         if (in_array('whatsapp', $channels) && (!$user || !$user->whatsapp_number)) {
             throw ValidationException::withMessages([
-                'channel' => 'Nomor WhatsApp tidak ditemukan untuk akun ini. Silakan gunakan Email.',
+                'phone_number' => 'Nomor WhatsApp tidak ditemukan untuk akun ini. Silakan gunakan Email.',
             ]);
         }
 
@@ -104,9 +105,16 @@ class OtpService
             Log::error("Failed to queue OTP notification for {$email}: " . $e->getMessage(), [
                 'exception' => $e
             ]);
-            
+
+            $isWhatsapp = in_array('whatsapp', $channels);
+            $field = $isWhatsapp ? 'phone_number' : 'email';
+
+            $message = ($isWhatsapp && $e instanceof QontakSendException && $e->isNumberInvalid())
+                ? 'Nomor ini sepertinya tidak terdaftar di WhatsApp. Silakan gunakan Email.'
+                : 'Gagal mengirim kode verifikasi. Silakan coba lagi nanti.';
+
             throw ValidationException::withMessages([
-                'email' => 'Gagal mengirim kode verifikasi. Silakan coba lagi nanti.',
+                $field => $message,
             ]);
         }
 

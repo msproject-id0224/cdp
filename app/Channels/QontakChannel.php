@@ -2,6 +2,7 @@
 
 namespace App\Channels;
 
+use App\Exceptions\QontakSendException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
@@ -59,13 +60,20 @@ class QontakChannel
                 ]);
 
             if ($response->failed()) {
+                $body = $response->json() ?? [];
+                $errorMessage = $body['error']['message']
+                    ?? $body['message']
+                    ?? $body['error']
+                    ?? ('HTTP ' . $response->status());
+                $errorMessage = is_string($errorMessage) ? $errorMessage : json_encode($errorMessage);
+
                 Log::error('Qontak WhatsApp send failed', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                     'to' => $to,
                 ]);
 
-                throw new \RuntimeException('Qontak API error: HTTP ' . $response->status());
+                throw new QontakSendException($errorMessage, $response->status(), $body);
             }
 
             Log::info('Qontak WhatsApp OTP sent successfully', [
