@@ -308,15 +308,9 @@ export default function MentorScheduleTable() {
                                 }`}
                             >
                                 {isPrev ? (
-                                    <>
-                                        <span className="hidden sm:inline">{__('Previous')}</span>
-                                        <span className="sm:hidden">&lt;&lt;</span>
-                                    </>
+                                    __('Previous')
                                 ) : isNext ? (
-                                    <>
-                                        <span className="hidden sm:inline">{__('Next')}</span>
-                                        <span className="sm:hidden">&gt;&gt;</span>
-                                    </>
+                                    __('Next')
                                 ) : (
                                     <span dangerouslySetInnerHTML={{ __html: link.label }} />
                                 )}

@@ -16,19 +16,9 @@ export default function Pagination({ links }) {
 
                         let content;
                         if (isPrev) {
-                            content = (
-                                <>
-                                    <span className="hidden sm:inline">{__('Previous')}</span>
-                                    <span className="sm:hidden">&lt;&lt;</span>
-                                </>
-                            );
+                            content = __('Previous');
                         } else if (isNext) {
-                            content = (
-                                <>
-                                    <span className="hidden sm:inline">{__('Next')}</span>
-                                    <span className="sm:hidden">&gt;&gt;</span>
-                                </>
-                            );
+                            content = __('Next');
                         } else {
                             content = <span dangerouslySetInnerHTML={{ __html: rawLabel }} />;
                         }

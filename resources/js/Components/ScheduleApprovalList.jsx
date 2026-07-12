@@ -331,15 +331,9 @@ export default function ScheduleApprovalList() {
                                     className={`px-3 py-1 rounded border ${link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
                                 >
                                     {isPrev ? (
-                                        <>
-                                            <span className="hidden sm:inline">{__('Previous')}</span>
-                                            <span className="sm:hidden">&lt;&lt;</span>
-                                        </>
+                                        __('Previous')
                                     ) : isNext ? (
-                                        <>
-                                            <span className="hidden sm:inline">{__('Next')}</span>
-                                            <span className="sm:hidden">&gt;&gt;</span>
-                                        </>
+                                        __('Next')
                                     ) : (
                                         <span dangerouslySetInnerHTML={{ __html: link.label }} />
                                     )}
