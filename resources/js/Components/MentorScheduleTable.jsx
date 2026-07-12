@@ -290,21 +290,39 @@ export default function MentorScheduleTable() {
             {/* Pagination */}
             {pagination.last_page > 1 && (
                 <div className="flex justify-center mt-4 space-x-2">
-                    {pagination.links && pagination.links.map((link, index) => (
-                        <button
-                            key={index}
-                            onClick={() => link.url && handlePageChange(new URL(link.url).searchParams.get('page'))}
-                            disabled={!link.url}
-                            className={`px-3 py-1 rounded-md text-sm ${
-                                link.active
-                                    ? 'bg-blue-600 text-white'
-                                    : !link.url
-                                    ? 'text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
-                            }`}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                        />
-                    ))}
+                    {pagination.links && pagination.links.map((link, index) => {
+                        const isPrev = link.label.includes('&laquo;') || link.label === 'Previous';
+                        const isNext = link.label.includes('&raquo;') || link.label === 'Next';
+
+                        return (
+                            <button
+                                key={index}
+                                onClick={() => link.url && handlePageChange(new URL(link.url).searchParams.get('page'))}
+                                disabled={!link.url}
+                                className={`px-3 py-1 rounded-md text-sm ${
+                                    link.active
+                                        ? 'bg-blue-600 text-white'
+                                        : !link.url
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+                                }`}
+                            >
+                                {isPrev ? (
+                                    <>
+                                        <span className="hidden sm:inline">{__('Previous')}</span>
+                                        <span className="sm:hidden">&lt;&lt;</span>
+                                    </>
+                                ) : isNext ? (
+                                    <>
+                                        <span className="hidden sm:inline">{__('Next')}</span>
+                                        <span className="sm:hidden">&gt;&gt;</span>
+                                    </>
+                                ) : (
+                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
             

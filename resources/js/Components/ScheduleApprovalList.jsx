@@ -319,15 +319,33 @@ export default function ScheduleApprovalList() {
                         {__('Showing')} <span className="font-medium">{schedules.meta.from || 0}</span> {__('to')} <span className="font-medium">{schedules.meta.to || 0}</span> {__('of')} <span className="font-medium">{schedules.meta.total || 0}</span> {__('results')}
                     </div>
                     <div className="flex space-x-2">
-                        {schedules.meta.links.filter(link => link.url).map((link, key) => (
-                            <button
-                                key={key}
-                                onClick={() => fetchSchedules(link.url.split('page=')[1])}
-                                disabled={link.active}
-                                className={`px-3 py-1 rounded border ${link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ))}
+                        {schedules.meta.links.filter(link => link.url).map((link, key) => {
+                            const isPrev = link.label.includes('&laquo;') || link.label === 'Previous';
+                            const isNext = link.label.includes('&raquo;') || link.label === 'Next';
+
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => fetchSchedules(link.url.split('page=')[1])}
+                                    disabled={link.active}
+                                    className={`px-3 py-1 rounded border ${link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                                >
+                                    {isPrev ? (
+                                        <>
+                                            <span className="hidden sm:inline">{__('Previous')}</span>
+                                            <span className="sm:hidden">&lt;&lt;</span>
+                                        </>
+                                    ) : isNext ? (
+                                        <>
+                                            <span className="hidden sm:inline">{__('Next')}</span>
+                                            <span className="sm:hidden">&gt;&gt;</span>
+                                        </>
+                                    ) : (
+                                        <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}

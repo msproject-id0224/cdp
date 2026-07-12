@@ -247,19 +247,37 @@ export default function AdminList() {
 
             {admins.links && (
                 <div className="flex justify-center mt-4 space-x-1">
-                    {admins.links.map((link, i) => (
-                        <button
-                            key={i}
-                            onClick={() => link.url && fetchAdmins(link.url)}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                            className={`px-3 py-1 rounded ${
-                                link.active 
-                                    ? 'bg-indigo-600 text-white' 
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={!link.url}
-                        />
-                    ))}
+                    {admins.links.map((link, i) => {
+                        const isPrev = link.label.includes('&laquo;') || link.label === 'Previous';
+                        const isNext = link.label.includes('&raquo;') || link.label === 'Next';
+
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => link.url && fetchAdmins(link.url)}
+                                className={`px-3 py-1 rounded ${
+                                    link.active
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!link.url}
+                            >
+                                {isPrev ? (
+                                    <>
+                                        <span className="hidden sm:inline">{__('Previous')}</span>
+                                        <span className="sm:hidden">&lt;&lt;</span>
+                                    </>
+                                ) : isNext ? (
+                                    <>
+                                        <span className="hidden sm:inline">{__('Next')}</span>
+                                        <span className="sm:hidden">&gt;&gt;</span>
+                                    </>
+                                ) : (
+                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
 

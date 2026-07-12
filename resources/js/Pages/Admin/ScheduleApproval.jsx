@@ -529,7 +529,8 @@ export default function ScheduleApproval({ auth }) {
                                     disabled={!schedules.prev_page_url}
                                     className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                                 >
-                                    {__('Previous')}
+                                    <span className="hidden sm:inline">{__('Previous')}</span>
+                                    <span className="sm:hidden">&lt;&lt;</span>
                                 </button>
                                 <span className="text-sm text-gray-700">
                                     {__('Page')} {schedules.current_page} {__('of')} {schedules.last_page}
@@ -539,7 +540,8 @@ export default function ScheduleApproval({ auth }) {
                                     disabled={!schedules.next_page_url}
                                     className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                                 >
-                                    {__('Next')}
+                                    <span className="hidden sm:inline">{__('Next')}</span>
+                                    <span className="sm:hidden">&gt;&gt;</span>
                                 </button>
                             </div>
                         )}

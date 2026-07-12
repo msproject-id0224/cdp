@@ -10,27 +10,36 @@ export default function Pagination({ links }) {
             <div className="mb-4">
                 <div className="flex flex-wrap mt-8">
                     {links.map((link, key) => {
-                        let label = link.label;
-                        if (
-                            label.includes('&laquo;') || 
-                            label.includes('Previous') || 
-                            label === 'Previous'
-                        ) {
-                            label = __('Previous');
-                        } else if (
-                            label.includes('&raquo;') || 
-                            label.includes('Next') || 
-                            label === 'Next'
-                        ) {
-                            label = __('Next');
+                        const rawLabel = link.label;
+                        const isPrev = rawLabel.includes('&laquo;') || rawLabel === 'Previous';
+                        const isNext = rawLabel.includes('&raquo;') || rawLabel === 'Next';
+
+                        let content;
+                        if (isPrev) {
+                            content = (
+                                <>
+                                    <span className="hidden sm:inline">{__('Previous')}</span>
+                                    <span className="sm:hidden">&lt;&lt;</span>
+                                </>
+                            );
+                        } else if (isNext) {
+                            content = (
+                                <>
+                                    <span className="hidden sm:inline">{__('Next')}</span>
+                                    <span className="sm:hidden">&gt;&gt;</span>
+                                </>
+                            );
+                        } else {
+                            content = <span dangerouslySetInnerHTML={{ __html: rawLabel }} />;
                         }
 
                         return link.url === null ? (
                             <div
                                 key={key}
                                 className="mr-1 mb-1 px-4 py-3 text-sm leading-4 text-gray-400 border rounded"
-                                dangerouslySetInnerHTML={{ __html: label }}
-                            />
+                            >
+                                {content}
+                            </div>
                         ) : (
                             <Link
                                 key={key}
@@ -38,8 +47,9 @@ export default function Pagination({ links }) {
                                     link.active ? 'bg-blue-700 text-white' : 'bg-white text-gray-700'
                                 }`}
                                 href={link.url}
-                                dangerouslySetInnerHTML={{ __html: label }}
-                            />
+                            >
+                                {content}
+                            </Link>
                         );
                     })}
                 </div>

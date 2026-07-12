@@ -593,21 +593,39 @@ export default function ScheduleTab() {
                                     {__('Showing')} {pagination.from} {__('to')} {pagination.to} {__('of')} {pagination.total} {__('results')}
                                 </div>
                                 <div className="flex gap-1">
-                                    {pagination.links.map((link, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => handlePageChange(link.url)}
-                                            disabled={!link.url || link.active}
-                                            className={`px-3 py-1 rounded text-sm ${
-                                                link.active
-                                                    ? 'bg-indigo-600 text-white'
-                                                    : !link.url
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
+                                    {pagination.links.map((link, i) => {
+                                        const isPrev = link.label.includes('&laquo;') || link.label === 'Previous';
+                                        const isNext = link.label.includes('&raquo;') || link.label === 'Next';
+
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => handlePageChange(link.url)}
+                                                disabled={!link.url || link.active}
+                                                className={`px-3 py-1 rounded text-sm ${
+                                                    link.active
+                                                        ? 'bg-indigo-600 text-white'
+                                                        : !link.url
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                                }`}
+                                            >
+                                                {isPrev ? (
+                                                    <>
+                                                        <span className="hidden sm:inline">{__('Previous')}</span>
+                                                        <span className="sm:hidden">&lt;&lt;</span>
+                                                    </>
+                                                ) : isNext ? (
+                                                    <>
+                                                        <span className="hidden sm:inline">{__('Next')}</span>
+                                                        <span className="sm:hidden">&gt;&gt;</span>
+                                                    </>
+                                                ) : (
+                                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
