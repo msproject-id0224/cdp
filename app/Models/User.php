@@ -127,10 +127,9 @@ class User extends Authenticatable
     }
 
     /**
-     * Route notifications for the Twilio channel to the user's WhatsApp/SMS number,
-     * formatted as E.164 (Twilio requires a leading '+').
+     * Get the user's WhatsApp number formatted as E.164 for Twilio Verify (leading '+').
      */
-    public function routeNotificationForTwilio(): ?string
+    public function getWhatsappNumberE164Attribute(): ?string
     {
         return $this->whatsapp_number ? '+' . $this->whatsapp_number : null;
     }

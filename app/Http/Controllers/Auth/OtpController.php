@@ -15,15 +15,18 @@ use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use App\Services\OtpService;
+use App\Services\TwilioVerifyService;
 use Illuminate\Http\JsonResponse;
 
 class OtpController extends Controller
 {
     protected $otpService;
+    protected $twilioVerify;
 
-    public function __construct(OtpService $otpService)
+    public function __construct(OtpService $otpService, TwilioVerifyService $twilioVerify)
     {
         $this->otpService = $otpService;
+        $this->twilioVerify = $twilioVerify;
     }
 
     public function show(Request $request)
@@ -108,14 +111,24 @@ class OtpController extends Controller
 
         // 3. Verify OTP
         try {
-            $otpRecord = Otp::where('email', $email)->where('status', 'pending')->first();
-            $isValid = $otpRecord && Hash::check($otpCode, $otpRecord->code);
+            $channel = session('otp_channel', 'mail');
+            $user = \App\Models\User::where('email', $email)->first();
+            $otpRecord = null;
+
+            if ($channel === 'whatsapp') {
+                // Twilio Verify owns the code/expiry — nothing local to look up.
+                $isValid = $user && $user->whatsapp_number
+                    && $this->twilioVerify->check($user->whatsapp_number_e164, $otpCode);
+            } else {
+                $otpRecord = Otp::where('email', $email)->where('status', 'pending')->first();
+                $isValid = $otpRecord && Hash::check($otpCode, $otpRecord->code);
+            }
 
             if (!$isValid) {
-                Log::warning("Invalid OTP attempt", ['email' => $email, 'ip' => $request->ip()]);
-                
+                Log::warning("Invalid OTP attempt", ['email' => $email, 'channel' => $channel, 'ip' => $request->ip()]);
+
                 $attemptCount = RateLimiter::attempts($ipKey);
-                
+
                 if ($isApi) {
                     return response()->json([
                         'message' => 'Kode OTP salah.',
@@ -127,10 +140,10 @@ class OtpController extends Controller
                 return back()->withErrors(['otp' => 'Kode OTP salah.']);
             }
 
-            // Check Expiry
-            if ($otpRecord->expires_at->isPast()) {
+            // Check Expiry — only applies to the local (mail) record; Twilio Verify enforces its own.
+            if ($otpRecord && $otpRecord->expires_at->isPast()) {
                 Log::info("Expired OTP attempt", ['email' => $email]);
-                
+
                 if ($isApi) {
                     return response()->json([
                         'message' => 'Kode OTP telah kadaluarsa.',
@@ -144,8 +157,6 @@ class OtpController extends Controller
             RateLimiter::clear($ipKey);
 
             // 4. Login User
-            $user = \App\Models\User::where('email', $email)->first();
-                
             if ($user) {
                 if (!$user->is_active) {
                     if ($isApi) return response()->json(['message' => 'Account inactive'], 403);
@@ -188,9 +199,9 @@ class OtpController extends Controller
                     'user_agent' => $request->userAgent(),
                 ]);
 
-                // Clear OTP after successful use
-                // $otpRecord->delete(); // Old behavior
-                $otpRecord->update(['status' => 'used']); // New behavior: Mark as used
+                // Clear OTP after successful use (only applies to the local/mail record —
+                // Twilio Verify invalidates WhatsApp codes on its own after a successful check)
+                $otpRecord?->update(['status' => 'used']);
 
                 if ($isApi) {
                     return response()->json([

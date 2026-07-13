@@ -4,23 +4,21 @@ namespace App\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use App\Channels\TwilioChannel;
 use Illuminate\Support\Facades\Lang;
 
-// OTP must be sent synchronously — time-sensitive, cannot depend on queue worker
+// OTP must be sent synchronously — time-sensitive, cannot depend on queue worker.
+// Mail is the only channel routed through here; WhatsApp/SMS OTPs are generated
+// and delivered entirely by Twilio Verify (see TwilioVerifyService).
 class OtpNotification extends Notification
 {
-
     public $otp;
-    public $channels;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($otp, $channels = ['mail'])
+    public function __construct($otp)
     {
         $this->otp = $otp;
-        $this->channels = $channels;
     }
 
     /**
@@ -30,15 +28,7 @@ class OtpNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        $via = [];
-        if (in_array('mail', $this->channels)) {
-            $via[] = 'mail';
-        }
-        // WhatsApp and SMS both deliver via Twilio
-        if (in_array('whatsapp', $this->channels) || in_array('twilio', $this->channels) || in_array('sms', $this->channels)) {
-            $via[] = TwilioChannel::class;
-        }
-        return $via;
+        return ['mail'];
     }
 
     /**
@@ -52,19 +42,6 @@ class OtpNotification extends Notification
     }
 
     /**
-     * Get the Twilio (WhatsApp/SMS) representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toTwilio(object $notifiable): array
-    {
-        return [
-            'content' => "Kode verifikasi Anda: {$this->otp}. Jangan bagikan kode ini kepada siapapun.",
-            'whatsapp' => in_array('whatsapp', $this->channels),
-        ];
-    }
-
-    /**
      * Get the array representation of the notification.
      *
      * @return array<string, mixed>
@@ -73,7 +50,6 @@ class OtpNotification extends Notification
     {
         return [
             'otp' => $this->otp,
-            'channels' => $this->channels,
         ];
     }
 }
