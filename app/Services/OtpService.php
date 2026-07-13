@@ -84,7 +84,9 @@ class OtpService
         $to = $user->whatsapp_number_e164;
 
         try {
-            $this->twilioVerify->send($to, 'whatsapp');
+            // TEMPORARY: forced to 'sms' because our WhatsApp Business Profile is still
+            // pending Twilio review (3-5 business days) — revert to 'whatsapp' once approved.
+            $this->twilioVerify->send($to, 'sms');
 
             $this->sendAuditNotification('whatsapp', $to, $user->id);
 
