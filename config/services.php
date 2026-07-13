@@ -41,14 +41,4 @@ return [
         'from' => env('TWILIO_FROM'),
     ],
 
-    'qontak' => [
-        // Confirm this base URL against your Qontak dashboard/token before relying on the default:
-        // legacy = https://service-chat.qontak.com/api/open/v1, post-migration = https://api.mekari.com/qontak/chat/v1
-        'base_url' => env('QONTAK_BASE_URL', 'https://service-chat.qontak.com/api/open/v1'),
-        'token' => env('QONTAK_TOKEN'),
-        'channel_integration_id' => env('QONTAK_CHANNEL_INTEGRATION_ID'),
-        'message_template_id' => env('QONTAK_MESSAGE_TEMPLATE_ID'),
-        'language' => env('QONTAK_LANGUAGE', 'id'),
-    ],
-
 ];

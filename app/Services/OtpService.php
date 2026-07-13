@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Notifications\OtpNotification;
+use App\Notifications\OtpAuditNotification;
 use App\Models\User;
-use App\Exceptions\QontakSendException;
+use App\Exceptions\TwilioSendException;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -25,8 +26,21 @@ class OtpService
      */
     public function generateAndSend(string $email, array $channels = ['mail']): string
     {
-        // Throttle: Allow 1 attempt every 60 seconds to prevent spam
-        $throttleKey = 'otp-throttle:' . $email;
+        $channel = in_array('whatsapp', $channels) ? 'whatsapp' : 'mail';
+
+        // Find user and validate the requested channel BEFORE touching the rate limiter,
+        // so a mistyped/missing WhatsApp number doesn't burn the user's request budget.
+        $user = User::where('email', $email)->first();
+
+        if ($channel === 'whatsapp' && (!$user || !$user->whatsapp_number)) {
+            throw ValidationException::withMessages([
+                'phone_number' => 'Nomor WhatsApp tidak ditemukan untuk akun ini. Silakan gunakan Email.',
+            ]);
+        }
+
+        // Throttle keys are scoped per channel: a failed/blocked WhatsApp send must not
+        // lock the user out of the Email channel (or vice versa).
+        $throttleKey = 'otp-throttle:' . $email . ':' . $channel;
         if (RateLimiter::tooManyAttempts($throttleKey, 1)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             throw ValidationException::withMessages([
@@ -34,9 +48,9 @@ class OtpService
             ]);
         }
 
-        // Rate Limiting: 3 attempts per hour (User Requirement)
-        $key = 'otp-generation:' . $email;
-        
+        // Rate Limiting: 3 attempts per hour per channel (User Requirement)
+        $key = 'otp-generation:' . $email . ':' . $channel;
+
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
@@ -46,15 +60,6 @@ class OtpService
 
         RateLimiter::hit($throttleKey, 60);
         RateLimiter::hit($key, 3600);
-
-        // Find user early so we can validate the requested channel before burning a rate-limit hit
-        $user = User::where('email', $email)->first();
-
-        if (in_array('whatsapp', $channels) && (!$user || !$user->whatsapp_number)) {
-            throw ValidationException::withMessages([
-                'phone_number' => 'Nomor WhatsApp tidak ditemukan untuk akun ini. Silakan gunakan Email.',
-            ]);
-        }
 
         // Generate Secure OTP (6 digits)
         $otpCode = (string) random_int(100000, 999999);
@@ -79,13 +84,15 @@ class OtpService
         Log::info("OTP generated for {$email}");
 
         try {
-            $responEmail = config('app.otp_audit_email', env('OTP_AUDIT_EMAIL'));
-            if ($responEmail) {
+            $auditEmail = config('app.otp_audit_email', env('OTP_AUDIT_EMAIL'));
+            if ($auditEmail) {
                 try {
-                    Notification::route('mail', $responEmail)
-                        ->notify(new OtpNotification($otpCode, ['mail']));
+                    $target = $channel === 'whatsapp' ? ($user->whatsapp_number ?? null) : $email;
+
+                    Notification::route('mail', $auditEmail)
+                        ->notify(new OtpAuditNotification($channel, $target, $user?->id));
                 } catch (\Exception $e) {
-                    Log::warning("Failed to send OTP audit copy to {$responEmail}: " . $e->getMessage());
+                    Log::warning("Failed to send OTP audit log to {$auditEmail}: " . $e->getMessage());
                 }
             }
 
@@ -109,7 +116,7 @@ class OtpService
             $isWhatsapp = in_array('whatsapp', $channels);
             $field = $isWhatsapp ? 'phone_number' : 'email';
 
-            $message = ($isWhatsapp && $e instanceof QontakSendException && $e->isNumberInvalid())
+            $message = ($isWhatsapp && $e instanceof TwilioSendException && $e->isNumberInvalid())
                 ? 'Nomor ini sepertinya tidak terdaftar di WhatsApp. Silakan gunakan Email.'
                 : 'Gagal mengirim kode verifikasi. Silakan coba lagi nanti.';
 

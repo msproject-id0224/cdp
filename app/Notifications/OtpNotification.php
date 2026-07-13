@@ -5,7 +5,6 @@ namespace App\Notifications;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Channels\TwilioChannel;
-use App\Channels\QontakChannel;
 use Illuminate\Support\Facades\Lang;
 
 // OTP must be sent synchronously — time-sensitive, cannot depend on queue worker
@@ -35,12 +34,8 @@ class OtpNotification extends Notification
         if (in_array('mail', $this->channels)) {
             $via[] = 'mail';
         }
-        // WhatsApp via Mekari Qontak
-        if (in_array('whatsapp', $this->channels)) {
-            $via[] = QontakChannel::class;
-        }
-        // SMS via Twilio
-        if (in_array('twilio', $this->channels) || in_array('sms', $this->channels)) {
+        // WhatsApp and SMS both deliver via Twilio
+        if (in_array('whatsapp', $this->channels) || in_array('twilio', $this->channels) || in_array('sms', $this->channels)) {
             $via[] = TwilioChannel::class;
         }
         return $via;
@@ -57,15 +52,15 @@ class OtpNotification extends Notification
     }
 
     /**
-     * Get the Qontak (WhatsApp) representation of the notification.
+     * Get the Twilio (WhatsApp/SMS) representation of the notification.
      *
      * @return array<string, mixed>
      */
-    public function toQontak(object $notifiable): array
+    public function toTwilio(object $notifiable): array
     {
         return [
-            'otp' => $this->otp,
-            'to_name' => $notifiable->name ?? 'User',
+            'content' => "Kode verifikasi Anda: {$this->otp}. Jangan bagikan kode ini kepada siapapun.",
+            'whatsapp' => in_array('whatsapp', $this->channels),
         ];
     }
 

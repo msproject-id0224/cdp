@@ -4,7 +4,9 @@ namespace App\Channels;
 
 use Illuminate\Notifications\Notification;
 use Twilio\Rest\Client;
+use Twilio\Exceptions\RestException;
 use Illuminate\Support\Facades\Log;
+use App\Exceptions\TwilioSendException;
 
 class TwilioChannel
 {
@@ -59,13 +61,22 @@ class TwilioChannel
                 'channel' => $useWhatsApp ? 'whatsapp' : 'sms'
             ]);
 
+        } catch (RestException $e) {
+            Log::error("Twilio message failed", [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'to' => $to,
+                'channel' => $useWhatsApp ? 'whatsapp' : 'sms'
+            ]);
+
+            throw new TwilioSendException($e->getMessage(), $e->getStatusCode(), $e->getCode());
         } catch (\Exception $e) {
             Log::error("Twilio message failed", [
                 'error' => $e->getMessage(),
                 'to' => $to,
                 'channel' => $useWhatsApp ? 'whatsapp' : 'sms'
             ]);
-            
+
             // Re-throw if it's not a common user error to allow queue retries
             throw $e;
         }
