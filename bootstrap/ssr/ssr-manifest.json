@@ -1,16 +1,19 @@
 {
   "node_modules/laravel-vite-plugin/inertia-helpers/index.js": [],
+  "resources/js/Components/AboutSection.jsx": [
+    "/build/assets/GetStarted-BeG7QFjI.js"
+  ],
   "resources/js/Components/ApplicationLogo.jsx": [
-    "/build/assets/AuthenticatedLayout-BG6RGD2S.js"
+    "/build/assets/AuthenticatedLayout-CKYSMoJT.js"
   ],
   "resources/js/Components/BibleVerseModal.jsx": [
     "/build/assets/BibleVerseModal-CAPxa-GS.js"
   ],
   "resources/js/Components/ChatWidget.jsx": [
-    "/build/assets/AuthenticatedLayout-BG6RGD2S.js"
+    "/build/assets/AuthenticatedLayout-CKYSMoJT.js"
   ],
   "resources/js/Components/Checkbox.jsx": [
-    "/build/assets/Schedule-CC_qg9eK.js"
+    "/build/assets/Schedule-BHpHFFai.js"
   ],
   "resources/js/Components/ConfirmModal.jsx": [
     "/build/assets/ConfirmModal-Bqr5rb3_.js"
@@ -19,34 +22,34 @@
     "/build/assets/DangerButton-B7to2Tbx.js"
   ],
   "resources/js/Components/Dashboard/GiftHistory.jsx": [
-    "/build/assets/Dashboard-DyOMZaSF.js"
+    "/build/assets/Dashboard-BAk83AFH.js"
   ],
   "resources/js/Components/Dashboard/LetterHistory.jsx": [
-    "/build/assets/Dashboard-DyOMZaSF.js"
+    "/build/assets/Dashboard-BAk83AFH.js"
   ],
   "resources/js/Components/Dashboard/MentorScheduleTab.jsx": [
-    "/build/assets/Schedule-CC_qg9eK.js"
+    "/build/assets/Schedule-BHpHFFai.js"
   ],
   "resources/js/Components/Dashboard/PhotoRequestsTab.jsx": [
-    "/build/assets/Dashboard-DyOMZaSF.js"
+    "/build/assets/Dashboard-BAk83AFH.js"
   ],
   "resources/js/Components/Dashboard/ScheduleTab.jsx": [
-    "/build/assets/Dashboard-DyOMZaSF.js"
+    "/build/assets/Dashboard-BAk83AFH.js"
   ],
   "resources/js/Components/Dropdown.jsx": [
     "/build/assets/Dropdown-BgvF6zKd.js"
   ],
   "resources/js/Components/Footer.jsx": [
-    "/build/assets/Footer-B7ihPSZ8.js"
+    "/build/assets/Footer-CDwTxrct.js"
   ],
   "resources/js/Components/Gifts/GiftDetailModal.jsx": [
-    "/build/assets/Index-BtvzWPPZ.js"
+    "/build/assets/Index-BlRqmP5c.js"
   ],
   "resources/js/Components/Gifts/GiftReceptionForm.jsx": [
-    "/build/assets/Index-BtvzWPPZ.js"
+    "/build/assets/Index-BlRqmP5c.js"
   ],
   "resources/js/Components/Gifts/GiftVerificationModal.jsx": [
-    "/build/assets/Index-BtvzWPPZ.js"
+    "/build/assets/Index-BlRqmP5c.js"
   ],
   "resources/js/Components/InputError.jsx": [
     "/build/assets/InputError-CBvD_6aD.js"
@@ -61,16 +64,16 @@
     "/build/assets/Modal-CKHW52Ki.js"
   ],
   "resources/js/Components/NavLink.jsx": [
-    "/build/assets/AuthenticatedLayout-BG6RGD2S.js"
+    "/build/assets/AuthenticatedLayout-CKYSMoJT.js"
   ],
   "resources/js/Components/NotificationBell.jsx": [
-    "/build/assets/AuthenticatedLayout-BG6RGD2S.js"
+    "/build/assets/AuthenticatedLayout-CKYSMoJT.js"
   ],
   "resources/js/Components/Pagination.jsx": [
     "/build/assets/Pagination-CRnq7q04.js"
   ],
   "resources/js/Components/PhotoApprovalModal.jsx": [
-    "/build/assets/ProfilePhotoRequests-DSORiq3y.js"
+    "/build/assets/ProfilePhotoRequests-Dww38M2i.js"
   ],
   "resources/js/Components/PrimaryButton.jsx": [
     "/build/assets/PrimaryButton-BNNL2gCI.js"
@@ -79,13 +82,13 @@
     "/build/assets/ProfilePhoto-CJ2Z04pO.js"
   ],
   "resources/js/Components/ProfilePhotoUpdateModal.jsx": [
-    "/build/assets/AuthenticatedLayout-BG6RGD2S.js"
+    "/build/assets/AuthenticatedLayout-CKYSMoJT.js"
   ],
   "resources/js/Components/ResponsiveNavLink.jsx": [
-    "/build/assets/AuthenticatedLayout-BG6RGD2S.js"
+    "/build/assets/AuthenticatedLayout-CKYSMoJT.js"
   ],
   "resources/js/Components/ScheduleApprovalList.jsx": [
-    "/build/assets/Index-v-2oYH5z.js"
+    "/build/assets/Index-DYIlxoAp.js"
   ],
   "resources/js/Components/SecondaryButton.jsx": [
     "/build/assets/SecondaryButton-TjIrbn1G.js"
@@ -106,115 +109,115 @@
     "/build/assets/useTheme-CngFDcs1.js"
   ],
   "resources/js/Layouts/AuthenticatedLayout.jsx": [
-    "/build/assets/AuthenticatedLayout-BG6RGD2S.js"
+    "/build/assets/AuthenticatedLayout-CKYSMoJT.js"
   ],
   "resources/js/Layouts/GuestLayout.jsx": [
-    "/build/assets/GuestLayout-B6KH_Jlu.js"
+    "/build/assets/GuestLayout-DqRRGjIq.js"
   ],
   "resources/js/Pages/Admin/Attendance/Monitor.jsx": [
-    "/build/assets/Monitor-lkXQlvP2.js"
+    "/build/assets/Monitor-CUF_o5pL.js"
   ],
   "resources/js/Pages/Admin/Attendance/QRCode.jsx": [
-    "/build/assets/QRCode-DB5jnqTd.js"
+    "/build/assets/QRCode-BBQzQ7Y5.js"
   ],
   "resources/js/Pages/Admin/Attendance/Scanner.jsx": [
-    "/build/assets/Scanner-D6IRv8yO.js"
+    "/build/assets/Scanner-WAif_wwe.js"
   ],
   "resources/js/Pages/Admin/Attendance/Sessions.jsx": [
-    "/build/assets/Sessions-B_u9VR-H.js"
+    "/build/assets/Sessions-h--UctXM.js"
   ],
   "resources/js/Pages/Admin/MentorPerformance.jsx": [
-    "/build/assets/MentorPerformance-CMgPRvKk.js"
+    "/build/assets/MentorPerformance-DeZUJvys.js"
   ],
   "resources/js/Pages/Admin/Partials/AdminList.jsx": [
     "/build/assets/AdminList-DdLf5JQS.js"
   ],
   "resources/js/Pages/Admin/ProfilePhotoRequests.jsx": [
-    "/build/assets/ProfilePhotoRequests-DSORiq3y.js"
+    "/build/assets/ProfilePhotoRequests-Dww38M2i.js"
   ],
   "resources/js/Pages/Admin/ScheduleApproval.jsx": [
-    "/build/assets/ScheduleApproval-CQFVJYl5.js"
+    "/build/assets/ScheduleApproval-B-rIl_xp.js"
   ],
   "resources/js/Pages/Attendance/Index.jsx": [
-    "/build/assets/Index-CVKTsB9h.js"
+    "/build/assets/Index-YEg388ly.js"
   ],
   "resources/js/Pages/Auth/Login.jsx": [
-    "/build/assets/Login-Dja0-sF_.js"
+    "/build/assets/Login-B0n3z5th.js"
   ],
   "resources/js/Pages/Auth/Register.jsx": [
-    "/build/assets/Register-Decudn1w.js"
+    "/build/assets/Register-Cii8nA8Z.js"
   ],
   "resources/js/Pages/Auth/VerifyEmail.jsx": [
-    "/build/assets/VerifyEmail-_9268tNY.js"
+    "/build/assets/VerifyEmail-B-Tvjead.js"
   ],
   "resources/js/Pages/Auth/VerifyOtp.jsx": [
-    "/build/assets/VerifyOtp-4qyJZ2fR.js"
+    "/build/assets/VerifyOtp-BnviN6_z.js"
   ],
   "resources/js/Pages/Communication/Index.jsx": [
-    "/build/assets/Index-YF0p05c3.js"
+    "/build/assets/Index-Brz0NLAp.js"
   ],
   "resources/js/Pages/Dashboard.jsx": [
-    "/build/assets/Dashboard-DyOMZaSF.js"
+    "/build/assets/Dashboard-BAk83AFH.js"
   ],
   "resources/js/Pages/GetStarted.jsx": [
-    "/build/assets/GetStarted-BUomtNjD.js"
+    "/build/assets/GetStarted-BeG7QFjI.js"
   ],
   "resources/js/Pages/Gifts/Create.jsx": [
-    "/build/assets/Create-CZ4VNMhP.js"
+    "/build/assets/Create-CJEDVm-U.js"
   ],
   "resources/js/Pages/Gifts/Edit.jsx": [
-    "/build/assets/Edit-f74Kg9Oa.js"
+    "/build/assets/Edit-C7BRAqJk.js"
   ],
   "resources/js/Pages/Gifts/Index.jsx": [
-    "/build/assets/Index-BtvzWPPZ.js"
+    "/build/assets/Index-BlRqmP5c.js"
   ],
   "resources/js/Pages/HealthScreening/Form.jsx": [
-    "/build/assets/Form-NoizQGu2.js"
+    "/build/assets/Form-B0YPpWGG.js"
   ],
   "resources/js/Pages/HealthScreening/Index.jsx": [
-    "/build/assets/Index-D9xdSI1X.js"
+    "/build/assets/Index-Dfi3BTO3.js"
   ],
   "resources/js/Pages/Mentor/Create.jsx": [
-    "/build/assets/Create-DItQEzcz.js"
+    "/build/assets/Create-C-e4-8eb.js"
   ],
   "resources/js/Pages/Mentor/Edit.jsx": [
-    "/build/assets/Edit-C2aHxJ35.js"
+    "/build/assets/Edit-C8AtGMuY.js"
   ],
   "resources/js/Pages/Mentor/Index.jsx": [
-    "/build/assets/Index-BOm90aJY.js"
+    "/build/assets/Index-C3faZOmy.js"
   ],
   "resources/js/Pages/Mentor/Schedule.jsx": [
-    "/build/assets/Schedule-CC_qg9eK.js"
+    "/build/assets/Schedule-BHpHFFai.js"
   ],
   "resources/js/Pages/Participant/Communication/Index.jsx": [
-    "/build/assets/Index-DdS0qIjX.js"
+    "/build/assets/Index-D8ptuTlR.js"
   ],
   "resources/js/Pages/Participant/Create.jsx": [
-    "/build/assets/Create-DDR2jkoN.js"
+    "/build/assets/Create-Cr9dz-gx.js"
   ],
   "resources/js/Pages/Participant/Edit.jsx": [
-    "/build/assets/Edit-DJ5rrBYe.js"
+    "/build/assets/Edit-D38IJhtH.js"
   ],
   "resources/js/Pages/Participant/Index.jsx": [
-    "/build/assets/Index-Cg0SHeV5.js"
+    "/build/assets/Index-vUfTvjCF.js"
   ],
   "resources/js/Pages/Participant/Notes.jsx": [
-    "/build/assets/Notes-CHdTTbCM.js"
+    "/build/assets/Notes-BDr2zsc3.js"
   ],
   "resources/js/Pages/Participant/RmdDetailSummary.jsx": [
     "/build/assets/RmdDetailSummary-l8LO3MEm.js"
   ],
   "resources/js/Pages/Participant/Schedule.jsx": [
-    "/build/assets/Schedule-OO7oKfNq.js"
+    "/build/assets/Schedule-CtneIEgt.js"
   ],
   "resources/js/Pages/Participant/Show.jsx": [
-    "/build/assets/Show-BWZ-54yv.js"
+    "/build/assets/Show-CEFYteB7.js"
   ],
   "resources/js/Pages/Participant/UpdateLog.jsx": [
-    "/build/assets/UpdateLog-qIv5X22u.js"
+    "/build/assets/UpdateLog-DhLJmUFh.js"
   ],
   "resources/js/Pages/Profile/Edit.jsx": [
-    "/build/assets/Edit-CWk6uS-B.js"
+    "/build/assets/Edit-CDZ4NhDw.js"
   ],
   "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx": [
     "/build/assets/DeleteUserForm-0J2_j0B6.js"
@@ -223,70 +226,70 @@
     "/build/assets/UpdateProfileInformationForm-BwDzSX4r.js"
   ],
   "resources/js/Pages/Profile/__tests__/Edit.test.jsx": [
-    "/build/assets/Edit.test-WHcf-izA.js"
+    "/build/assets/Edit.test-DKvbyBK-.js"
   ],
   "resources/js/Pages/Rewards/Index.jsx": [
-    "/build/assets/Index-1Rld4eAh.js"
+    "/build/assets/Index-SXQu99s5.js"
   ],
   "resources/js/Pages/Rmd/Chapters.jsx": [
-    "/build/assets/Chapters-vf14Qdp3.js"
+    "/build/assets/Chapters-DglZ0Grj.js"
   ],
   "resources/js/Pages/Rmd/Dashboard.jsx": [
-    "/build/assets/Dashboard-DUv-IwbW.js"
+    "/build/assets/Dashboard-CBToSGiM.js"
   ],
   "resources/js/Pages/Rmd/GodsPurpose.jsx": [
-    "/build/assets/GodsPurpose-CJVaSrLE.js"
+    "/build/assets/GodsPurpose-AWZ4ld1B.js"
   ],
   "resources/js/Pages/Rmd/Index.jsx": [
-    "/build/assets/Index-D0aZHS95.js"
+    "/build/assets/Index-BqIL6gcB.js"
   ],
   "resources/js/Pages/Rmd/Intro.jsx": [
-    "/build/assets/Intro-DxaAlp9M.js"
+    "/build/assets/Intro-Qwu0x3Bu.js"
   ],
   "resources/js/Pages/Rmd/MenentukanCitaCita.jsx": [
-    "/build/assets/MenentukanCitaCita-DrGRQkb_.js"
+    "/build/assets/MenentukanCitaCita-DDiU_s7M.js"
   ],
   "resources/js/Pages/Rmd/MenentukanCitaCitaP2.jsx": [
-    "/build/assets/MenentukanCitaCitaP2-BLn25fPk.js"
+    "/build/assets/MenentukanCitaCitaP2-BKuBYNTF.js"
   ],
   "resources/js/Pages/Rmd/PersiapanPulauImpian.jsx": [
-    "/build/assets/PersiapanPulauImpian-DWZpxhy7.js"
+    "/build/assets/PersiapanPulauImpian-BM-_ZsUv.js"
   ],
   "resources/js/Pages/Rmd/Profile.jsx": [
-    "/build/assets/Profile-BQJnNGC1.js"
+    "/build/assets/Profile-DqnGY7l3.js"
   ],
   "resources/js/Pages/Rmd/TheOnlyOne.jsx": [
-    "/build/assets/TheOnlyOne-DrVKi36z.js"
+    "/build/assets/TheOnlyOne-CgbR9XBk.js"
   ],
   "resources/js/Pages/Rmd/TheOnlyOneMeeting2.jsx": [
-    "/build/assets/TheOnlyOneMeeting2-sDUIRpvL.js"
+    "/build/assets/TheOnlyOneMeeting2-BkWheXyc.js"
   ],
   "resources/js/Pages/Rmd/TheOnlyOneMeeting3.jsx": [
-    "/build/assets/TheOnlyOneMeeting3-DctyVFjZ.js"
+    "/build/assets/TheOnlyOneMeeting3-oSKmAMBe.js"
   ],
   "resources/js/Pages/Rmd/TrueSuccess.jsx": [
-    "/build/assets/TrueSuccess-DOoq1sEm.js"
+    "/build/assets/TrueSuccess-BD5xx-kU.js"
   ],
   "resources/js/Pages/Rmd/WhatTheBibleSays.jsx": [
-    "/build/assets/WhatTheBibleSays-MeU4s5UI.js"
+    "/build/assets/WhatTheBibleSays-yw_EysfC.js"
   ],
   "resources/js/Pages/RmdReport/Index.jsx": [
-    "/build/assets/Index-DeXaBIo3.js"
+    "/build/assets/Index-K0KHwWBt.js"
   ],
   "resources/js/Pages/RmdReport/RmdDetailModal.jsx": [
     "/build/assets/RmdDetailModal-DYt9fpPv.js"
   ],
   "resources/js/Pages/Schedule/Index.jsx": [
-    "/build/assets/Index-v-2oYH5z.js"
+    "/build/assets/Index-DYIlxoAp.js"
   ],
   "resources/js/Pages/Welcome.jsx": [
     "/build/assets/Welcome-CnwNIGpd.js"
   ],
   "resources/js/Pages/__tests__/Dashboard.test.jsx": [
-    "/build/assets/Dashboard.test-Dt2pIQcI.js"
+    "/build/assets/Dashboard.test-CDh6wpC5.js"
   ],
   "resources/js/Utils/GrowthStandards.js": [
-    "/build/assets/Form-NoizQGu2.js"
+    "/build/assets/Form-B0YPpWGG.js"
   ],
   "resources/js/Utils/autoGrow.js": [
     "/build/assets/autoGrow-BUc_DkMi.js"
