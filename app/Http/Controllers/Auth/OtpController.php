@@ -7,26 +7,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
-use App\Models\Otp;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use App\Services\OtpService;
-use App\Services\TwilioVerifyService;
-use Illuminate\Http\JsonResponse;
+use App\Exceptions\OtpVerificationException;
 
 class OtpController extends Controller
 {
     protected $otpService;
-    protected $twilioVerify;
 
-    public function __construct(OtpService $otpService, TwilioVerifyService $twilioVerify)
+    public function __construct(OtpService $otpService)
     {
         $this->otpService = $otpService;
-        $this->twilioVerify = $twilioVerify;
     }
 
     public function show(Request $request)
@@ -65,9 +58,7 @@ class OtpController extends Controller
         $otpCode = $request->otp;
         // Prioritize explicit email in request (for API), fallback to session
         $email = $request->input('email') ?? session('email');
-        
-        // DEBUG
-        // Log::info("OTP Verification Debug: Email from session/req: " . $email);
+        $channel = session('otp_channel', 'mail');
 
         if (!$email) {
             if ($isApi) {
@@ -82,14 +73,14 @@ class OtpController extends Controller
         // 2. Rate Limiting (IP based, 5 attempts per 15 mins)
         // We use IP to prevent brute force from same source
         $ipKey = 'otp-verify-ip:' . $request->ip();
-        
+
         if (RateLimiter::tooManyAttempts($ipKey, 5)) {
             $seconds = RateLimiter::availableIn($ipKey);
-            
+
             Log::warning("OTP Rate limit exceeded for IP: {$request->ip()}", ['email' => $email]);
 
             $message = 'Terlalu banyak percobaan. Silakan coba lagi dalam ' . ceil($seconds / 60) . ' menit.';
-            
+
             if ($isApi) {
                 return response()->json([
                     'message' => $message,
@@ -109,24 +100,28 @@ class OtpController extends Controller
             'timestamp' => now()->toIso8601String()
         ]);
 
-        // 3. Verify OTP
+        // 3-4. Verify OTP & resolve user (logic bersama: OtpService::verifyOtp(),
+        // dipakai ulang persis oleh Api\V1\AuthController::verifyOtp() untuk mobile).
         try {
-            $channel = session('otp_channel', 'mail');
-            $user = \App\Models\User::where('email', $email)->first();
-            $otpRecord = null;
+            $user = $this->otpService->verifyOtp($email, $otpCode, $channel, $request->ip(), $request->userAgent());
 
-            if ($channel === 'whatsapp') {
-                // Twilio Verify owns the code/expiry — nothing local to look up.
-                $isValid = $user && $user->whatsapp_number
-                    && $this->twilioVerify->check($user->whatsapp_number_e164, $otpCode);
-            } else {
-                $otpRecord = Otp::where('email', $email)->where('status', 'pending')->first();
-                $isValid = $otpRecord && Hash::check($otpCode, $otpRecord->code);
+            // Success - Clear Rate Limit
+            RateLimiter::clear($ipKey);
+
+            Auth::login($user);
+
+            if ($isApi) {
+                return response()->json([
+                    'message' => 'Verification successful',
+                    'timestamp' => now()->toIso8601String(),
+                    'user' => $user,
+                    'redirect_url' => route('dashboard'),
+                ], 200);
             }
 
-            if (!$isValid) {
-                Log::warning("Invalid OTP attempt", ['email' => $email, 'channel' => $channel, 'ip' => $request->ip()]);
-
+            return redirect()->intended(route('dashboard'));
+        } catch (OtpVerificationException $e) {
+            if ($e->reasonCode === OtpVerificationException::INVALID_OTP) {
                 $attemptCount = RateLimiter::attempts($ipKey);
 
                 if ($isApi) {
@@ -140,10 +135,7 @@ class OtpController extends Controller
                 return back()->withErrors(['otp' => 'Kode OTP salah.']);
             }
 
-            // Check Expiry — only applies to the local (mail) record; Twilio Verify enforces its own.
-            if ($otpRecord && $otpRecord->expires_at->isPast()) {
-                Log::info("Expired OTP attempt", ['email' => $email]);
-
+            if ($e->reasonCode === OtpVerificationException::OTP_EXPIRED) {
                 if ($isApi) {
                     return response()->json([
                         'message' => 'Kode OTP telah kadaluarsa.',
@@ -153,81 +145,37 @@ class OtpController extends Controller
                 return back()->withErrors(['otp' => 'Kode OTP telah kadaluarsa. Silakan minta OTP baru.']);
             }
 
-            // Success - Clear Rate Limit
-            RateLimiter::clear($ipKey);
+            if ($e->reasonCode === OtpVerificationException::INACTIVE_ACCOUNT) {
+                if ($isApi) return response()->json(['message' => 'Account inactive'], 403);
+                return back()->withErrors(['email' => 'Akun Anda tidak aktif. Silakan hubungi admin.']);
+            }
 
-            // 4. Login User
-            if ($user) {
-                if (!$user->is_active) {
-                    if ($isApi) return response()->json(['message' => 'Account inactive'], 403);
-                    return back()->withErrors(['email' => 'Akun Anda tidak aktif. Silakan hubungi admin.']);
-                }
+            if ($e->reasonCode === OtpVerificationException::UNDERAGE) {
+                $msg = "Access denied. Participants must be at least " . ($e->context['min_required'] ?? 13) . " years old.";
+                if ($isApi) return response()->json(['message' => $msg], 403);
+                return back()->withErrors(['otp' => $msg]);
+            }
 
-                // Age restriction check
-                if (method_exists($user, 'meetsAgeRequirement') && !$user->meetsAgeRequirement()) {
-                    Log::warning("Login blocked: Underage user", ['email' => $email, 'age' => $user->age]);
-                    AuditLog::create([
-                        'user_id' => $user->id,
-                        'action' => 'LOGIN_BLOCKED_UNDERAGE',
-                        'details' => [
-                            'age' => $user->age,
-                            'min_required' => \App\Models\User::MINIMUM_PARTICIPANT_AGE ?? 13,
-                            'dob' => $user->date_of_birth?->format('Y-m-d'),
-                        ],
-                        'ip_address' => $request->ip(),
-                        'user_agent' => $request->userAgent(),
-                    ]);
-
-                    $msg = "Access denied. Participants must be at least " . (\App\Models\User::MINIMUM_PARTICIPANT_AGE ?? 13) . " years old.";
-                    if ($isApi) return response()->json(['message' => $msg], 403);
-                    return back()->withErrors(['otp' => $msg]);
-                }
-
-                // OTP verification proves email ownership — mark as verified if not already
-                if (!$user->email_verified_at) {
-                    $user->email_verified_at = now();
-                    $user->save();
-                }
-
-                Auth::login($user);
-
-                AuditLog::create([
-                    'user_id' => $user->id,
-                    'action' => 'LOGIN_SUCCESS',
-                    'details' => ['method' => 'OTP'],
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                ]);
-
-                // Clear OTP after successful use (only applies to the local/mail record —
-                // Twilio Verify invalidates WhatsApp codes on its own after a successful check)
-                $otpRecord?->update(['status' => 'used']);
-
+            if ($e->reasonCode === OtpVerificationException::USER_NOT_FOUND) {
                 if ($isApi) {
                     return response()->json([
-                        'message' => 'Verification successful',
+                        'message' => 'User not found.',
                         'timestamp' => now()->toIso8601String(),
-                        'user' => $user,
-                        'redirect_url' => route('dashboard'),
-                    ], 200);
+                    ], 404);
                 }
-
-                return redirect()->intended(route('dashboard'));
+                // Should not happen in normal flow if user exists
+                return redirect()->route('login')->withErrors(['email' => 'User not found.']);
             }
 
+            // Tidak ada reasonCode lain yang didefinisikan OtpService::verifyOtp() saat ini.
+            Log::error("Unhandled OtpVerificationException reasonCode: {$e->reasonCode}", ['email' => $email]);
             if ($isApi) {
-                return response()->json([
-                    'message' => 'User not found.',
-                    'timestamp' => now()->toIso8601String(),
-                ], 404);
+                return response()->json(['message' => 'System error occurred. Please try again later.', 'timestamp' => now()->toIso8601String()], 500);
             }
-
-            // Should not happen in normal flow if user exists
-            return redirect()->route('login')->withErrors(['email' => 'User not found.']);
-            
+            return back()->withErrors(['otp' => 'Terjadi kesalahan sistem. Silakan coba lagi nanti.']);
         } catch (\Exception $e) {
             Log::error("OTP Verification System Error for {$email}: " . $e->getMessage());
-            
+
             if ($isApi) {
                 return response()->json([
                     'message' => 'System error occurred. Please try again later.',

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use App\Models\Otp;
+use App\Models\AuditLog;
+use App\Exceptions\OtpVerificationException;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -173,5 +175,98 @@ class OtpService
         } catch (\Exception $e) {
             Log::warning("Failed to send OTP audit log to {$auditEmail}: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Verifikasi kode OTP dan kembalikan User yang berhasil login.
+     *
+     * Diekstrak dari OtpController::verify() supaya web dan API mobile
+     * memakai satu sumber kebenaran yang persis sama untuk: cek OTP
+     * (hash+expiry lokal untuk mail, Twilio Verify untuk whatsapp), status
+     * akun aktif, age-gate (User::meetsAgeRequirement()), tanda
+     * email_verified_at, dan pencatatan AuditLog LOGIN_SUCCESS /
+     * LOGIN_BLOCKED_UNDERAGE.
+     *
+     * TIDAK melakukan Auth::login() atau penerbitan token Sanctum -- itu
+     * satu-satunya bagian yang sengaja dibiarkan beda di masing-masing
+     * controller (session vs Bearer token), dan TIDAK melakukan rate
+     * limiting per-IP (itu tetap tanggung jawab controller pemanggil,
+     * lihat OtpController::verify() untuk pola `otp-verify-ip:*`).
+     *
+     * @throws OtpVerificationException Dengan salah satu reasonCode:
+     *   invalid_otp | otp_expired | user_not_found | inactive_account | underage
+     */
+    public function verifyOtp(string $email, string $otpCode, string $channel = 'mail', ?string $ip = null, ?string $userAgent = null): User
+    {
+        $user = User::where('email', $email)->first();
+        $otpRecord = null;
+
+        if ($channel === 'whatsapp') {
+            // Twilio Verify owns the code/expiry — nothing local to look up.
+            $isValid = $user && $user->whatsapp_number
+                && $this->twilioVerify->check($user->whatsapp_number_e164, $otpCode);
+        } else {
+            $otpRecord = Otp::where('email', $email)->where('status', 'pending')->first();
+            $isValid = $otpRecord && Hash::check($otpCode, $otpRecord->code);
+        }
+
+        if (!$isValid) {
+            Log::warning('Invalid OTP attempt', ['email' => $email, 'channel' => $channel, 'ip' => $ip]);
+            throw new OtpVerificationException(OtpVerificationException::INVALID_OTP);
+        }
+
+        // Expiry only applies to the local (mail) record; Twilio Verify enforces its own.
+        if ($otpRecord && $otpRecord->expires_at->isPast()) {
+            Log::info('Expired OTP attempt', ['email' => $email]);
+            throw new OtpVerificationException(OtpVerificationException::OTP_EXPIRED);
+        }
+
+        if (!$user) {
+            throw new OtpVerificationException(OtpVerificationException::USER_NOT_FOUND);
+        }
+
+        if (!$user->is_active) {
+            throw new OtpVerificationException(OtpVerificationException::INACTIVE_ACCOUNT);
+        }
+
+        if (method_exists($user, 'meetsAgeRequirement') && !$user->meetsAgeRequirement()) {
+            Log::warning('Login blocked: Underage user', ['email' => $email, 'age' => $user->age]);
+
+            $context = [
+                'age' => $user->age,
+                'min_required' => User::MINIMUM_PARTICIPANT_AGE ?? 13,
+                'dob' => $user->date_of_birth?->format('Y-m-d'),
+            ];
+
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'LOGIN_BLOCKED_UNDERAGE',
+                'details' => $context,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+            ]);
+
+            throw new OtpVerificationException(OtpVerificationException::UNDERAGE, $context);
+        }
+
+        // OTP verification proves email ownership — mark as verified if not already
+        if (!$user->email_verified_at) {
+            $user->email_verified_at = now();
+            $user->save();
+        }
+
+        AuditLog::create([
+            'user_id' => $user->id,
+            'action' => 'LOGIN_SUCCESS',
+            'details' => ['method' => 'OTP'],
+            'ip_address' => $ip,
+            'user_agent' => $userAgent,
+        ]);
+
+        // Clear OTP after successful use (only applies to the local/mail record —
+        // Twilio Verify invalidates WhatsApp codes on its own after a successful check)
+        $otpRecord?->update(['status' => 'used']);
+
+        return $user;
     }
 }
