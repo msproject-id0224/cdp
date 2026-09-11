@@ -10,6 +10,33 @@
         --text-muted: #4b5563; /* gray-600 */
     }
 
+    /* Scales every rem-based font size (all Tailwind text-* utilities) up site-wide,
+       with a bigger bump on larger/desktop screens. Note: this also scales every
+       rem-based spacing utility (p-*, gap-*, space-y-*, etc.), since Tailwind's
+       spacing scale is rem-based too — keep the multipliers modest to avoid
+       ballooning whitespace on larger screens. */
+    html {
+        font-size: 100%; /* ~16px base on mobile */
+    }
+
+    @media (min-width: 768px) {
+        html {
+            font-size: 103%; /* ~16.5px on tablets */
+        }
+    }
+
+    @media (min-width: 1024px) {
+        html {
+            font-size: 109%; /* ~17.5px on PC/desktop */
+        }
+    }
+
+    @media (min-width: 1536px) {
+        html {
+            font-size: 112.5%; /* ~18px on large desktop displays */
+        }
+    }
+
     .dark {
         --bg-main: #111827; /* gray-900 */
         --bg-card: #1f2937; /* gray-800 */

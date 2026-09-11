@@ -36,10 +36,24 @@ class RmdReportController extends Controller
         if (!$isMentor) {
             try {
                 $chartData = [
-                    'age_distribution'          => $chartService->getAgeDistributionAllParticipants(),
-                    'participation_rate'         => $chartService->getRmdParticipationRate(),
-                    'progress_distribution'      => $chartService->getRmdFillingProgressDistribution(),
-                    'career_choice_distribution' => $chartService->getFinalCareerChoiceDistribution(),
+                    'age_distribution'                => $chartService->getAgeDistributionAllParticipants(),
+                    'participation_rate'               => $chartService->getRmdParticipationRate(),
+                    'progress_distribution'            => $chartService->getRmdFillingProgressDistribution(),
+                    'career_choice_distribution'       => $chartService->getFinalCareerChoiceDistribution(),
+                    'gaya_belajar_distribution'         => $chartService->getGayaBelajarDistribution(),
+                    'kecerdasan_majemuk_scores'         => $chartService->getKecerdasanMajemukAverageScore(),
+                    'prestasi_akademik_distribution'    => $chartService->getPrestasiAkademikDistribution(),
+                    // High priority
+                    'module_completion_funnel'          => $chartService->getModuleCompletionFunnel(),
+                    'career_consideration_factors'      => $chartService->getCareerConsiderationFactors(),
+                    'top_intelligence_distribution'     => $chartService->getTopIntelligenceDistribution(),
+                    'favorite_subject_distribution'     => $chartService->getFavoriteSubjectDistribution(),
+                    'least_favorite_subject_distribution' => $chartService->getLeastFavoriteSubjectDistribution(),
+                    // Medium priority
+                    'leadership_traits_distribution'    => $chartService->getLeadershipTraitsDistribution(),
+                    'reflection_checkpoints_distribution' => $chartService->getReflectionCheckpointsDistribution(),
+                    'submission_trend'                  => $chartService->getSubmissionTrend(),
+                    'mentor_progress_comparison'         => $chartService->getMentorProgressComparison(),
                 ];
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Error fetching RMD chart data: ' . $e->getMessage());
@@ -63,7 +77,7 @@ class RmdReportController extends Controller
         return Inertia::render('RmdReport/Index', [
             'reports' => $paginatedItems,
             'chartData' => $chartData,
-            'filters' => $request->only(['search', 'status', 'date_start', 'date_end', 'sort', 'direction']),
+            'filters' => $request->only(['search', 'status', 'date_start', 'date_end', 'sort', 'direction', 'per_page']),
             'totalParticipants' => $totalParticipants,
             'userRole' => $currentUser->role,
         ]);
@@ -105,7 +119,11 @@ class RmdReportController extends Controller
         $statusFilter = $request->input('status'); // Belum Mulai, Sedang Mengisi, Selesai
         $sortColumn = $request->input('sort', 'user_name');
         $sortDirection = $request->input('direction', 'asc');
-        $perPage = 20;
+        $allowedPerPage = [10, 50, 100];
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 10;
+        }
 
         // Base Query: Participants > 12 years old
         // Note: Using 'age' column if available or calculating from DOB
@@ -183,24 +201,25 @@ class RmdReportController extends Controller
             $query->withCount($relation);
         }
 
-        // Get data
-        // If filtering by status, we might need to fetch all matching search/age first, then filter in PHP.
-        // Assuming participant count isn't massive (< 10,000).
-        
+        // Eager load cita-cita dan gaya belajar
+        $query->with([
+            'rmdCareerExplorationP2:user_id,final_career_choice',
+            'rmdTheOnlyOne:user_id,visual_checklist,auditory_checklist,kinesthetic_checklist',
+        ]);
+
         $users = $query->get();
-        
+
         $processedData = $users->map(function ($user) use ($relations, $totalModules) {
             $filledCount = 0;
             foreach ($relations as $relation) {
-                // Laravel withCount creates {relation_snake_case}_count
                 $countAttribute = Str::snake($relation) . '_count';
                 $count = $user->$countAttribute;
                 if ($count > 0) $filledCount++;
             }
-            
+
             $status = 'Belum Mulai';
             $percentage = 0;
-            
+
             if ($filledCount > 0) {
                 if ($filledCount == $totalModules) {
                     $status = 'Selesai';
@@ -210,18 +229,20 @@ class RmdReportController extends Controller
                     $percentage = round(($filledCount / $totalModules) * 100);
                 }
             }
-            
+
             return (object) [
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'user_id_number' => $user->id_number,
-                'status' => $status,
-                'percentage' => $percentage,
+                'user_id'            => $user->id,
+                'user_name'          => $user->name,
+                'user_id_number'     => $user->id_number,
+                'status'             => $status,
+                'percentage'         => $percentage,
                 'filled_modules_count' => $filledCount,
-                'total_modules' => $totalModules,
-                'last_updated' => $user->updated_at->format('Y-m-d H:i:s'), // Approximation
-                'module_name' => 'Summary', // For export compatibility
-                'filled_at' => null
+                'total_modules'      => $totalModules,
+                'last_updated'       => $user->updated_at->format('Y-m-d H:i:s'),
+                'cita_cita'          => $user->rmdCareerExplorationP2?->final_career_choice ?? '-',
+                'gaya_belajar'       => $this->resolveGayaBelajar($user->rmdTheOnlyOne),
+                'module_name'        => 'Summary',
+                'filled_at'          => null,
             ];
         });
 
@@ -249,6 +270,22 @@ class RmdReportController extends Controller
         }
 
         return $processedData->values();
+    }
+
+    private function resolveGayaBelajar($rmdTheOnlyOne): string
+    {
+        if (!$rmdTheOnlyOne) return '-';
+
+        $counts = [
+            'Visual'     => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->visual_checklist ?? []))),
+            'Auditori'   => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->auditory_checklist ?? []))),
+            'Kinestetik' => array_sum(array_map('intval', (array) ($rmdTheOnlyOne->kinesthetic_checklist ?? []))),
+        ];
+
+        $max = max($counts);
+        if ($max === 0) return '-';
+
+        return implode(' & ', array_keys(array_filter($counts, fn($v) => $v === $max)));
     }
 
     /**
@@ -293,13 +330,17 @@ class RmdReportController extends Controller
              }
         }
 
+        $mentor = $user->mentor_id ? \App\Models\User::find($user->mentor_id) : null;
+
         return response()->json([
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'id_number' => $user->id_number,
-                'age' => $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : '-',
-                'email' => $user->email,
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'id_number'         => $user->id_number,
+                'age'               => $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : '-',
+                'email'             => $user->email,
+                'profile_photo_url' => $user->profile_photo_url ?? null,
+                'mentor_name'       => $mentor?->name ?? null,
             ],
             'summary' => [
                 'status' => $status,

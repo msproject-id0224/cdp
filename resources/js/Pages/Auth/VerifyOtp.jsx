@@ -6,7 +6,7 @@ import InputError from '@/Components/InputError';
 import { __ } from '@/Utils/lang';
 
 export default function VerifyOtp() {
-    const { email, flash } = usePage().props;
+    const { channel, displayTarget, flash } = usePage().props;
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         otp: '',
     });
@@ -105,9 +105,11 @@ export default function VerifyOtp() {
             <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{__('Confirm OTP')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    {__('Please enter the 6-digit OTP code sent to your email')}
+                    {channel === 'whatsapp'
+                        ? __('Please enter the 6-digit OTP code sent to your WhatsApp number')
+                        : __('Please enter the 6-digit OTP code sent to your email')}
                 </p>
-                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">{email}</p>
+                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">{displayTarget}</p>
             </div>
 
             <form onSubmit={submit} className="space-y-6">

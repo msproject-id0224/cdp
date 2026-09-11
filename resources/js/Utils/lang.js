@@ -6,7 +6,7 @@ import { usePage } from '@inertiajs/react';
  * Falls back to the key itself if no translation is found.
  */
 export function __(key, replace = {}) {
-    const translations = window.translations || {};
+    const translations = (typeof globalThis !== 'undefined' ? globalThis.translations : null) || {};
 
     let translation = translations[key] !== undefined
         ? translations[key]

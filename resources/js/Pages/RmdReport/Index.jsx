@@ -39,6 +39,26 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
 
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
+    const [perPage, setPerPage] = useState(filters.per_page || '10');
+    const [activeTab, setActiveTab] = useState(() => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('active_tab');
+            if (tabParam === 'charts' || tabParam === 'participants') return tabParam;
+
+            const stored = localStorage.getItem('rmd_report_tab');
+            return stored === 'charts' || stored === 'participants' ? stored : 'participants';
+        } catch {
+            return 'participants';
+        }
+    });
+
+    const changeTab = (tab) => {
+        setActiveTab(tab);
+        try {
+            localStorage.setItem('rmd_report_tab', tab);
+        } catch {}
+    };
     const [isLoading, setIsLoading] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -198,6 +218,271 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
         return <Bar options={options} data={dist} />;
     };
 
+    const renderGayaBelajarChart = () => {
+        const data = chartData.gaya_belajar_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' },
+                title: { display: true, text: __('Learning Style Distribution') }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 0
+                }
+            }
+        };
+
+        return <Doughnut options={options} data={data} />;
+    };
+
+    const renderIntelligenceChart = () => {
+        const data = chartData.kecerdasan_majemuk_scores;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Average Multiple Intelligence Score') }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 50,
+                    title: { display: true, text: __('Average Score (0-50)') },
+                },
+                x: {
+                    title: { display: true, text: __('Intelligence Category') },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 30,
+                    },
+                },
+            },
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderAcademicChart = () => {
+        const data = chartData.prestasi_akademik_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                title: { display: true, text: __('Academic Achievement Distribution') }
+            },
+            scales: {
+                y: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                x: { title: { display: true, text: __('Highest Score Range') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderModuleFunnelChart = () => {
+        const data = chartData.module_completion_funnel;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const totalEligible = chartData.module_completion_funnel?.total_eligible || 0;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Module Completion Funnel') },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const count = ctx.parsed.x;
+                            const pct = totalEligible > 0 ? ((count / totalEligible) * 100).toFixed(1) : 0;
+                            return ` ${count} ${__('participants')} (${pct}%)`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: { beginAtZero: true, title: { display: true, text: __('Number of Participants') } },
+                y: { title: { display: true, text: __('Module') } },
+            },
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderCareerConsiderationChart = () => {
+        const data = chartData.career_consideration_factors;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                legend: { display: false },
+                title: { display: true, text: __('Career Choice Consideration Factors') }
+            },
+            scales: {
+                y: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                x: { title: { display: true, text: __('Factor') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderTopIntelligenceChart = () => {
+        const data = chartData.top_intelligence_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' },
+                title: { display: true, text: __('Dominant Intelligence Distribution') }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 0
+                }
+            }
+        };
+
+        return <Doughnut options={options} data={data} />;
+    };
+
+    const renderFavoriteSubjectChart = () => {
+        const dist = chartData.favorite_subject_distribution;
+        if (!dist || !dist.labels || dist.labels.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Top Favorite Subjects') },
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Participants') } },
+                x: { ticks: { maxRotation: 45, minRotation: 30 } },
+            },
+        };
+
+        return <Bar options={options} data={dist} />;
+    };
+
+    const renderLeastFavoriteSubjectChart = () => {
+        const dist = chartData.least_favorite_subject_distribution;
+        if (!dist || !dist.labels || dist.labels.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Top Least Favorite Subjects') },
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Participants') } },
+                x: { ticks: { maxRotation: 45, minRotation: 30 } },
+            },
+        };
+
+        return <Bar options={options} data={dist} />;
+    };
+
+    const renderLeadershipChart = () => {
+        const data = chartData.leadership_traits_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                legend: { display: false },
+                title: { display: true, text: __('Leadership Traits Checked') }
+            },
+            scales: {
+                y: { ...chartOptions.scales.y, title: { display: true, text: __('Number of Participants') } },
+                x: { title: { display: true, text: __('Leadership Point') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderReflectionCheckpointsChart = () => {
+        const data = chartData.reflection_checkpoints_distribution;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Chapter Reflection Checkpoints') }
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Participants') } },
+                y: { title: { display: true, text: __('Checkpoint') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
+    const renderSubmissionTrendChart = () => {
+        const data = chartData.submission_trend;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Module Submission Trend (Last 6 Months)') }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: __('Number of Submissions') } },
+                x: { title: { display: true, text: __('Month') } }
+            }
+        };
+
+        return <Line options={options} data={data} />;
+    };
+
+    const renderMentorProgressChart = () => {
+        const data = chartData.mentor_progress_comparison;
+        if (!data || !data.datasets || data.datasets.length === 0) return null;
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: __('Average Participant Progress by Mentor') }
+            },
+            scales: {
+                x: { beginAtZero: true, max: 100, title: { display: true, text: __('Average Progress (%)') } },
+                y: { title: { display: true, text: __('Mentor') } }
+            }
+        };
+
+        return <Bar options={options} data={data} />;
+    };
+
     const renderProgressChart = () => {
         const data = chartData.progress_distribution;
         if (!data || !data.datasets || data.datasets.length === 0) return null;
@@ -310,6 +595,186 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                             {renderCareerChoiceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
                         </div>
                     </div>
+
+                    {/* Gaya Belajar (Learning Style) Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Gaya Belajar')}</h3>
+                             {chartData?.gaya_belajar_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
+                                    {__('Total')}: {chartData.gaya_belajar_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderGayaBelajarChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Prestasi Akademik Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Prestasi Akademik')}</h3>
+                             {chartData?.prestasi_akademik_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                    {__('Total')}: {chartData.prestasi_akademik_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderAcademicChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Kecerdasan Majemuk (Multiple Intelligence) Average Score */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Skor Kecerdasan Majemuk')}</h3>
+                            {chartData?.kecerdasan_majemuk_scores?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
+                                    {__('Total')}: {chartData.kecerdasan_majemuk_scores.total} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderIntelligenceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Module Completion Funnel */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Module Completion Funnel')}</h3>
+                            {chartData?.module_completion_funnel?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                    {__('Total')}: {chartData.module_completion_funnel.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderModuleFunnelChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Career Choice Consideration Factors */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Career Consideration Factors')}</h3>
+                            {chartData?.career_consideration_factors?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    {__('Total')}: {chartData.career_consideration_factors.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderCareerConsiderationChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Dominant Intelligence Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Dominant Intelligence')}</h3>
+                            {chartData?.top_intelligence_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                    {__('Total')}: {chartData.top_intelligence_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderTopIntelligenceChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Favorite Subject Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Top Favorite Subjects')}</h3>
+                            {chartData?.favorite_subject_distribution?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
+                                    {chartData.favorite_subject_distribution.total} / {chartData.favorite_subject_distribution.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-72">
+                            {renderFavoriteSubjectChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Least Favorite Subject Distribution */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Top Least Favorite Subjects')}</h3>
+                            {chartData?.least_favorite_subject_distribution?.total_eligible !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200">
+                                    {chartData.least_favorite_subject_distribution.total} / {chartData.least_favorite_subject_distribution.total_eligible} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-72">
+                            {renderLeastFavoriteSubjectChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Leadership Traits */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Leadership Traits')}</h3>
+                            {chartData?.leadership_traits_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    {__('Total')}: {chartData.leadership_traits_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderLeadershipChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Chapter Reflection Checkpoints */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Reflection Checkpoints')}</h3>
+                            {chartData?.reflection_checkpoints_distribution?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                    {__('Total')}: {chartData.reflection_checkpoints_distribution.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-64">
+                            {renderReflectionCheckpointsChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Submission Trend */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Submission Trend')}</h3>
+                            {chartData?.submission_trend?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                    {__('Total')}: {chartData.submission_trend.total}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-72">
+                            {renderSubmissionTrendChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
+
+                    {/* Mentor Progress Comparison */}
+                    <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{__('Progress by Mentor')}</h3>
+                            {chartData?.mentor_progress_comparison?.total !== undefined && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                    {__('Total')}: {chartData.mentor_progress_comparison.total} {__('participants')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-96">
+                            {renderMentorProgressChart() || <div className="flex items-center justify-center h-full text-gray-500">{__('No data available')}</div>}
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -345,9 +810,39 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                         </div>
                     )}
 
-                    {userRole !== 'mentor' && renderCharts()}
+                    {userRole !== 'mentor' && (
+                        <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 px-4 sm:px-6">
+                            <nav className="-mb-px flex space-x-8">
+                                <button
+                                    type="button"
+                                    onClick={() => changeTab('participants')}
+                                    className={`${
+                                        activeTab === 'participants'
+                                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                                >
+                                    {__('Participant List (> 12 Years)')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => changeTab('charts')}
+                                    className={`${
+                                        activeTab === 'charts'
+                                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                                >
+                                    {__('Charts')}
+                                </button>
+                            </nav>
+                        </div>
+                    )}
+
+                    {userRole !== 'mentor' && activeTab === 'charts' && renderCharts()}
 
                     {/* Table Section */}
+                    {(userRole === 'mentor' || activeTab === 'participants') && (
                     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-between items-center mb-4">
@@ -382,6 +877,20 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             <option value="Belum Mulai">{__('Not Started')}</option>
                                             <option value="Sedang Mengisi">{__('In Progress')}</option>
                                             <option value="Selesai">{__('Completed')}</option>
+                                        </SelectInput>
+                                    </div>
+                                    <div className="w-full md:w-40">
+                                        <SelectInput
+                                            value={perPage}
+                                            onChange={(e) => {
+                                                setPerPage(e.target.value);
+                                                handleFilterChange('per_page', e.target.value);
+                                            }}
+                                            className="w-full"
+                                        >
+                                            <option value="10">10 {__('per page')}</option>
+                                            <option value="50">50 {__('per page')}</option>
+                                            <option value="100">100 {__('per page')}</option>
                                         </SelectInput>
                                     </div>
                                 </div>
@@ -421,7 +930,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
-                                            <th scope="col" className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('user_name')}>
+                                            <th scope="col" className="px-6 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => handleSort('user_name')}>
                                                 <div className="flex items-center">
                                                     {__('Participant Name')}
                                                     {filters.sort === 'user_name' && (
@@ -429,17 +938,20 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                                     )}
                                                 </div>
                                             </th>
-                                            <th scope="col" className="px-6 py-3">
+                                            <th scope="col" className="px-6 py-2">
                                                 {__('ID Number')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-center">
+                                            <th scope="col" className="px-6 py-2 text-center">
                                                 {__('Module Progress')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-center">
+                                            <th scope="col" className="px-6 py-2 text-center">
                                                 {__('Status')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3">
+                                            <th scope="col" className="px-6 py-2">
                                                 {__('Last Updated')}
+                                            </th>
+                                            <th scope="col" className="px-6 py-2 text-center">
+                                                {__('Action')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -448,44 +960,58 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                                             reports.data.map((item) => (
                                                 <tr
                                                     key={item.user_id}
-                                                    onClick={() => handleUserClick(item.user_id)}
-                                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
+                                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40"
                                                 >
-                                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                        <span className="text-indigo-600 dark:text-indigo-400">
-                                                            {item.user_name}
-                                                        </span>
+                                                    <td className="px-6 py-2.5 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                        {item.user_name}
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-2.5">
                                                         {item.user_id_number || '-'}
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-2.5">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 flex-grow">
-                                                                <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${item.percentage}%` }}></div>
+                                                            <div className="flex-grow bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                                                <div
+                                                                    className={`h-2 rounded-full transition-all ${
+                                                                        item.status === 'Selesai'
+                                                                            ? 'bg-green-500'
+                                                                            : item.percentage > 0
+                                                                            ? 'bg-indigo-500'
+                                                                            : 'bg-gray-300 dark:bg-gray-600'
+                                                                    }`}
+                                                                    style={{ width: `${item.percentage}%` }}
+                                                                />
                                                             </div>
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-right">
-                                                                {item.filled_modules_count} / {item.total_modules}
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">
+                                                                {item.filled_modules_count}/{item.total_modules}
                                                             </span>
-                                                            <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title={__('Click for details')}>
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
+                                                    <td className="px-6 py-2.5 text-center whitespace-nowrap">
+                                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusColor(item.status)}`}>
                                                             {STATUS_DISPLAY[item.status] ?? item.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-2.5 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                         {item.last_updated}
+                                                    </td>
+                                                    <td className="px-6 py-2.5 text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleUserClick(item.user_id)}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                            </svg>
+                                                            {__('Module Progress')}
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                                <td colSpan="6" className="px-6 py-2.5 text-center text-gray-500 dark:text-gray-400">
                                                     {__('No data found.')}
                                                 </td>
                                             </tr>
@@ -499,6 +1025,7 @@ export default function RmdReportIndex({ auth, reports, filters, chartData, tota
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
         </AuthenticatedLayout>

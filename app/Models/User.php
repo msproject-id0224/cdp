@@ -119,6 +119,66 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's phone number normalized to WhatsApp/E.164-ish Indonesian format (62xxx).
+     */
+    public function getWhatsappNumberAttribute(): ?string
+    {
+        return self::normalizePhoneToWhatsapp($this->phone_number);
+    }
+
+    /**
+     * Get the user's WhatsApp number formatted as E.164 for Twilio Verify (leading '+').
+     */
+    public function getWhatsappNumberE164Attribute(): ?string
+    {
+        return $this->whatsapp_number ? '+' . $this->whatsapp_number : null;
+    }
+
+    /**
+     * Normalize a local Indonesian phone number (e.g. 08xx) to WhatsApp international format (62xxx).
+     * Returns null if the input doesn't resemble a plausible Indonesian mobile number.
+     */
+    public static function normalizePhoneToWhatsapp(?string $phone): ?string
+    {
+        if (!$phone) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $phone);
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            $digits = '62' . substr($digits, 1);
+        } elseif (str_starts_with($digits, '8')) {
+            $digits = '62' . $digits;
+        }
+
+        if (!preg_match('/^628[0-9]{7,12}$/', $digits)) {
+            return null;
+        }
+
+        return $digits;
+    }
+
+    /**
+     * Find a user whose phone_number normalizes to the given WhatsApp number.
+     * Matches regardless of how the number was originally formatted (08xx, 62xx, etc).
+     */
+    public static function findByWhatsappNumber(?string $phone): ?self
+    {
+        $normalized = self::normalizePhoneToWhatsapp($phone);
+        if (!$normalized) {
+            return null;
+        }
+
+        return self::whereNotNull('phone_number')
+            ->get()
+            ->first(fn (self $user) => $user->whatsapp_number === $normalized);
+    }
+
+    /**
      * Get the first name for display (handles titles and multi-word names).
      */
     public function getFirstNameDisplayAttribute(): string

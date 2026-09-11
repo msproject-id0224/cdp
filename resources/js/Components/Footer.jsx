@@ -11,7 +11,9 @@ export default function Footer ({ transparent = true }) {
         >
             <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-6 py-5 sm:py-5'>
                 <div
-                    className={`flex flex-col items-center justify-center text-xs text-center text-gray-200 dark:text-gray-300`}
+                    className={`flex flex-col items-center justify-center text-xs text-center ${
+                        transparent ? 'text-gray-200 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
+                    }`}
                 >
                     &copy; {new Date().getFullYear()}
                     {' MSProject & '}

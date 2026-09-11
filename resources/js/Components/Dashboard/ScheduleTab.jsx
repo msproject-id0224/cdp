@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
+import ConfirmModal from '@/Components/ConfirmModal';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -52,6 +53,9 @@ export default function ScheduleTab() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode]     = useState('add');
     const [selectedSchedule, setSelectedSchedule] = useState(null);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const { data, setData, post, patch, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         name: '', date: '', start_time: '', end_time: '', all_day: false,
@@ -283,11 +287,11 @@ export default function ScheduleTab() {
     };
 
     const handleDelete = () => {
-        if (confirm(__('Are you sure you want to delete this activity?'))) {
-            destroy(route('schedule.destroy', selectedSchedule.id), {
-                onSuccess: () => { closeModal(); fetchSchedules(); },
-            });
-        }
+        askConfirm(
+            __('Hapus Jadwal'),
+            __('Are you sure you want to delete this activity?'),
+            () => destroy(route('schedule.destroy', selectedSchedule.id), { onSuccess: () => { closeModal(); fetchSchedules(); } })
+        );
     };
 
     const getPriorityColor = (priority) => {
@@ -514,32 +518,32 @@ export default function ScheduleTab() {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Activity')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Date & Time')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Priority')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Notify To')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('PIC')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Status')}</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Actions')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Activity')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Date & Time')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Priority')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Notify To')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('PIC')}</th>
+                                    <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Status')}</th>
+                                    <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-4 text-center text-gray-500">{__('Loading...')}</td>
+                                        <td colSpan="7" className="px-6 py-2.5 text-center text-gray-500">{__('Loading...')}</td>
                                     </tr>
                                 ) : schedules.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-4 text-center text-gray-500">{__('No schedules found.')}</td>
+                                        <td colSpan="7" className="px-6 py-2.5 text-center text-gray-500">{__('No schedules found.')}</td>
                                     </tr>
                                 ) : (
                                     schedules.map((schedule) => (
                                         <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">{schedule.name}</div>
                                                 {schedule.location && <div className="text-xs text-gray-500">{schedule.location}</div>}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
                                                     {new Date(schedule.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                                 </div>
@@ -547,12 +551,12 @@ export default function ScheduleTab() {
                                                     {schedule.start_time?.substring(0, 5) || '-'} – {schedule.end_time?.substring(0, 5) || '-'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(schedule.priority)}`}>
                                                     {__(schedule.priority)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
                                                     {schedule.notify_target === 'all_user'        ? __('All Users')
                                                     : schedule.notify_target === 'mentor_only'    ? __('Mentor Only')
@@ -561,13 +565,13 @@ export default function ScheduleTab() {
                                                     : __('All Users')}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{schedule.pic}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500">{schedule.pic}</td>
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 capitalize">
                                                     {__(schedule.status)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium">
                                                 <button
                                                     onClick={() => openModal('edit', schedule)}
                                                     className="text-indigo-600 hover:text-indigo-900"
@@ -589,21 +593,33 @@ export default function ScheduleTab() {
                                     {__('Showing')} {pagination.from} {__('to')} {pagination.to} {__('of')} {pagination.total} {__('results')}
                                 </div>
                                 <div className="flex gap-1">
-                                    {pagination.links.map((link, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => handlePageChange(link.url)}
-                                            disabled={!link.url || link.active}
-                                            className={`px-3 py-1 rounded text-sm ${
-                                                link.active
-                                                    ? 'bg-indigo-600 text-white'
-                                                    : !link.url
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
+                                    {pagination.links.map((link, i) => {
+                                        const isPrev = link.label.includes('&laquo;') || link.label === 'Previous';
+                                        const isNext = link.label.includes('&raquo;') || link.label === 'Next';
+
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => handlePageChange(link.url)}
+                                                disabled={!link.url || link.active}
+                                                className={`px-3 py-1 rounded text-sm ${
+                                                    link.active
+                                                        ? 'bg-indigo-600 text-white'
+                                                        : !link.url
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                                }`}
+                                            >
+                                                {isPrev ? (
+                                                    __('Previous')
+                                                ) : isNext ? (
+                                                    __('Next')
+                                                ) : (
+                                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -1041,6 +1057,14 @@ export default function ScheduleTab() {
                     </div>
                 </form>
             </Modal>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Ya, Hapus')}
+            />
         </div>
     );
 }
