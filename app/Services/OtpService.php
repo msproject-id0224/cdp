@@ -42,6 +42,8 @@ class OtpService
         // so a mistyped/missing WhatsApp number doesn't burn the user's request budget.
         $user = User::where('email', $email)->first();
 
+        $field = $channel === 'whatsapp' ? 'phone_number' : 'email';
+
         if ($channel === 'whatsapp' && (!$user || !$user->whatsapp_number)) {
             throw ValidationException::withMessages([
                 'phone_number' => 'Nomor WhatsApp tidak ditemukan untuk akun ini. Silakan gunakan Email.',
@@ -54,7 +56,7 @@ class OtpService
         if (RateLimiter::tooManyAttempts($throttleKey, 1)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             throw ValidationException::withMessages([
-                'email' => 'Mohon tunggu ' . $seconds . ' detik sebelum meminta OTP baru.',
+                $field => 'Mohon tunggu ' . $seconds . ' detik sebelum meminta OTP baru.',
             ]);
         }
 
@@ -64,7 +66,7 @@ class OtpService
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
-                'email' => 'Terlalu banyak permintaan OTP. Anda hanya dapat meminta OTP 3 kali dalam 1 jam. Silakan coba lagi dalam ' . ceil($seconds / 60) . ' menit.',
+                $field => 'Terlalu banyak permintaan OTP. Anda hanya dapat meminta OTP 3 kali dalam 1 jam. Silakan coba lagi dalam ' . ceil($seconds / 60) . ' menit.',
             ]);
         }
 
