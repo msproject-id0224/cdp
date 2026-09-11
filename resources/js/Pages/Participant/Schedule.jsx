@@ -119,7 +119,7 @@ export default function Schedule({ auth, meetings = [], adminSchedules = [] }) {
             <Head title={__('My Schedule')} />
 
             <div className="py-8">
-                <div className="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
 
                     {/* ── Legend ── */}
                     <div className="flex flex-wrap gap-3 text-xs">

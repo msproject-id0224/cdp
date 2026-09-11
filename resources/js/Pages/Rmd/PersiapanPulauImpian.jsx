@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function PersiapanPulauImpian({ auth, preparationDreamIsland, files }) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const defaultProfessionQuestions = [
         { question: '', answer: '' },
@@ -78,9 +83,11 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
     };
 
     const deleteFile = (fileId) => {
-        if (confirm(__('RMD_DELETE_CONFIRMATION'))) {
-            router.delete(route('rmd.files.delete', fileId));
-        }
+        askConfirm(
+            __('RMD_DELETE'),
+            __('RMD_DELETE_CONFIRMATION'),
+            () => router.delete(route('rmd.files.delete', fileId))
+        );
     };
 
     const swotLabels = [
@@ -117,7 +124,7 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                         opacity: 0.08,
                     }}
                 />
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8 relative z-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
 
                     {/* Header Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -155,16 +162,16 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                                                     {index + 1}
                                                 </td>
                                                 <td className="p-2 border-r-2 border-orange-400 dark:border-orange-700">
-                                                    <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                        className="w-full max-w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.question}
                                                         onChange={e => updateProfessionQuestion(index, 'question', e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_PROFESSION_Q_PLACEHOLDER')}
                                                     />
                                                 </td>
                                                 <td className="p-2">
-                                                    <textarea
-                                                        className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                        className="w-full max-w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.answer}
                                                         onChange={e => updateProfessionQuestion(index, 'answer', e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_PROFESSION_ANS_PLACEHOLDER')}
@@ -219,8 +226,8 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                                                     </span>
                                                 </td>
                                                 <td className="p-2">
-                                                    <textarea
-                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                        className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.description}
                                                         onChange={e => updateSwot(index, e.target.value)}
                                                         placeholder={__('RMD_DREAM_ISLAND_SWOT_PLACEHOLDER')}
@@ -246,8 +253,8 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                                 {__('RMD_DREAM_ISLAND_IMPROVEMENT_DESC')}
                             </p>
-                            <textarea
-                                className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[150px]"
+                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                className="w-full max-w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[150px]"
                                 value={data.improvement_plan}
                                 onChange={e => setData('improvement_plan', e.target.value)}
                                 placeholder={__('RMD_DREAM_ISLAND_IMPROVEMENT_PLACEHOLDER')}
@@ -370,6 +377,15 @@ export default function PersiapanPulauImpian({ auth, preparationDreamIsland, fil
 
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('RMD_DELETE')}
+                danger={true}
+            />
         </AuthenticatedLayout>
     );
 }

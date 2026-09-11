@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const { data, setData, post, processing, recentlySuccessful, errors } = useForm({
         learning_style_practice: socioEmotional?.learning_style_practice || '',
@@ -82,9 +87,11 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
     };
 
     const deleteFile = (fileId) => {
-        if (confirm(__('RMD_DELETE_CONFIRMATION'))) {
-            router.delete(route('rmd.files.delete', fileId));
-        }
+        askConfirm(
+            __('RMD_DELETE'),
+            __('RMD_DELETE_CONFIRMATION'),
+            () => router.delete(route('rmd.files.delete', fileId))
+        );
     };
 
     return (
@@ -107,7 +114,7 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                         opacity: 0.08,
                     }}
                 />
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8 relative z-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
                     {/* Header Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                         <div className="bg-cyan-400 p-8 text-center text-white">
@@ -126,14 +133,14 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                     <div className="bg-orange-50 dark:bg-orange-900/20 p-6 rounded-2xl border-l-4 border-orange-400 italic">
                                         "{__('RMD_MEETING_3_REFLECTION_QUESTION_1')}"
                                     </div>
-                                    <textarea
-                                        className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px] resize"
+                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                        className="w-full max-w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px] resize"
                                         placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
                                         value={data.learning_style_practice}
                                         onChange={e => setData('learning_style_practice', e.target.value)}
                                     />
-                                    <textarea
-                                        className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px] resize"
+                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                        className="w-full max-w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-500 focus:ring-cyan-500 shadow-sm min-h-[100px] resize"
                                         placeholder={__('RMD_MEETING_3_PLACEHOLDER_IMPACT')}
                                         value={data.learning_style_impact}
                                         onChange={e => setData('learning_style_impact', e.target.value)}
@@ -190,8 +197,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {item.q}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[96px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data[item.key]}
                                                                 onChange={e => setData(item.key, e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -224,8 +231,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_PHYSICAL_REFLECT_Q1')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.physical_likes}
                                                                 onChange={e => setData('physical_likes', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -238,8 +245,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_PHYSICAL_REFLECT_Q2')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.physical_development_goal}
                                                                 onChange={e => setData('physical_development_goal', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -298,8 +305,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                                 {item.q}
                                                             </td>
                                                             <td className="p-2">
-                                                                <textarea
-                                                                    className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                                <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                    className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                     value={data[item.key]}
                                                                     onChange={e => setData(item.key, e.target.value)}
                                                                     placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -339,8 +346,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_TABLE_LEARNED_THINGS')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.reflection_learned}
                                                                 onChange={e => setData('reflection_learned', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -353,8 +360,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             <span dangerouslySetInnerHTML={{ __html: __('RMD_REFLECTION_IMPROVEMENT') }}></span>
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.reflection_improvement}
                                                                 onChange={e => setData('reflection_improvement', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -401,8 +408,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_SPIRITUAL_Q1')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_knowledge_jesus}
                                                                 onChange={e => setData('spiritual_knowledge_jesus', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -415,8 +422,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_SPIRITUAL_Q2')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_relationship_growth}
                                                                 onChange={e => setData('spiritual_relationship_growth', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -429,8 +436,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_SPIRITUAL_Q3')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_love_obedience}
                                                                 onChange={e => setData('spiritual_love_obedience', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -443,8 +450,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_SPIRITUAL_Q4')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_community}
                                                                 onChange={e => setData('spiritual_community', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -457,8 +464,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_SPIRITUAL_Q5')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_bible_study}
                                                                 onChange={e => setData('spiritual_bible_study', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -471,8 +478,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                             {__('RMD_SPIRITUAL_Q6')}
                                                         </td>
                                                         <td className="p-2">
-                                                            <textarea
-                                                                className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                 value={data.spiritual_mentor}
                                                                 onChange={e => setData('spiritual_mentor', e.target.value)}
                                                                 placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -512,8 +519,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                                 {__('RMD_REFLECTION_LEARNED')}
                                                             </td>
                                                             <td className="p-2">
-                                                                <textarea
-                                                                    className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                                <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                    className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                     value={data.spiritual_reflection_learned}
                                                                     onChange={e => setData('spiritual_reflection_learned', e.target.value)}
                                                                     placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -526,8 +533,8 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                                                                 <span dangerouslySetInnerHTML={{ __html: __('RMD_REFLECTION_IMPROVEMENT') }} />
                                                             </td>
                                                             <td className="p-2">
-                                                                <textarea
-                                                                    className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                                <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                                    className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                                     value={data.spiritual_reflection_improvement}
                                                                     onChange={e => setData('spiritual_reflection_improvement', e.target.value)}
                                                                     placeholder={__('RMD_TABLE_ANSWER_PLACEHOLDER')}
@@ -719,6 +726,15 @@ export default function TheOnlyOneMeeting3({ auth, socioEmotional, files }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('RMD_DELETE')}
+                danger={true}
+            />
         </AuthenticatedLayout>
     );
 }

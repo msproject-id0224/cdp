@@ -17,7 +17,13 @@ export default function NotificationBell() {
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const response = await fetch(route('api.notifications.unread'));
+                const response = await fetch(route('api.notifications.unread'), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                if (!response.ok) return;
                 const data = await response.json();
                 setNotifications(data.unread_notifications);
                 setUnreadCount(data.unread_count);
@@ -166,6 +172,7 @@ export default function NotificationBell() {
                                                 nType.includes('GiftVerified')         ? __('Gift Status Updated') :
                                                 nType.includes('GiftAssigned')         ? __('Gift Assigned') :
                                                 data.type === 'gift_assigned'          ? __('Gift Assigned') :
+                                                data.type === 'schedule_deletion_request' ? __('Schedule Deletion Request') :
                                                 nType.includes('ScheduleApprovalRequest') || data.type === 'schedule_approval_request' ? __('New Schedule Request') :
                                                 nType.includes('ScheduleDecision')     ? __('Schedule Decision') :
                                                 nType.includes('ScheduleActivity')     || data.type === 'schedule_activity' ? __('New Activity Schedule') :

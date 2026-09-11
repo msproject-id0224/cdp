@@ -40,19 +40,19 @@ export default function MentorIndex({ auth, mentors }) {
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
+                                            <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Name')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
+                                            <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Email')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
+                                            <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Gender')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
+                                            <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Age Group')}
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
+                                            <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                 {__('Action')}
                                             </th>
                                         </tr>
@@ -61,7 +61,7 @@ export default function MentorIndex({ auth, mentors }) {
                                         {mentors.length > 0 ? (
                                             mentors.map((mentor) => (
                                                 <tr key={mentor.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                                         <div className="flex items-center space-x-3">
                                                             <ProfilePhoto
                                                                 src={mentor.profile_photo_url}
@@ -75,16 +75,16 @@ export default function MentorIndex({ auth, mentors }) {
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {mentor.email}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {mentor.gender ? __(mentor.gender) : '-'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {mentor.age_group ? __(mentor.age_group) : '-'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm font-medium">
                                                         <div className="flex space-x-3">
                                                             <button
                                                                 onClick={() => startChat(mentor)}
@@ -117,7 +117,7 @@ export default function MentorIndex({ auth, mentors }) {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                                <td colSpan="5" className="px-6 py-2.5 text-center text-sm text-gray-500 dark:text-gray-400">
                                                     {__('No mentors found.')}
                                                 </td>
                                             </tr>

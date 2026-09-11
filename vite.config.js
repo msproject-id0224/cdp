@@ -2,10 +2,11 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
     plugins: [
         laravel({
             input: 'resources/js/app.jsx',
+            ssr: 'resources/js/ssr.jsx',
             refresh: true,
         }),
         react(),
@@ -13,7 +14,11 @@ export default defineConfig({
     build: {
         rollupOptions: {
             output: {
-                manualChunks: {
+                // manualChunks is a browser-bundle concept -- the SSR build externalizes
+                // node_modules (they're require()'d directly in Node), so applying this
+                // to isSsrBuild fails with "react cannot be included in manualChunks
+                // because it is resolved as an external module".
+                manualChunks: isSsrBuild ? undefined : {
                     'vendor-react':       ['react', 'react-dom', '@inertiajs/react'],
                     'vendor-ui':          ['@headlessui/react', '@heroicons/react', 'react-easy-crop'],
                     'vendor-fullcalendar': [
@@ -32,4 +37,4 @@ export default defineConfig({
             },
         },
     },
-});
+}));

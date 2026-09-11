@@ -7,10 +7,9 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Schedule;
 use App\Models\ProfilePhotoRequest;
-use App\Models\Letter;
-use App\Models\ParticipantGift;
 use App\Models\User;
 use App\Http\Controllers\Admin\MentorPerformanceController;
+use App\Services\ParticipantEngagementService;
 
 class DashboardController extends Controller
 {
@@ -39,28 +38,13 @@ class DashboardController extends Controller
         $gifts = [];
 
         if ($user->isParticipant()) {
-            // Letter History
-            $lettersQuery = Letter::where('recipient_id', $user->id)
-                ->orWhere('sender_id', $user->id);
-            
-            if ($request->filled('letter_search')) {
-                $search = $request->letter_search;
-                $lettersQuery->where(function($q) use ($search) {
-                    $q->where('letter_number', 'like', "%{$search}%")
-                      ->orWhere('subject', 'like', "%{$search}%");
-                });
-            }
-            
-            $letters = $lettersQuery->latest('sent_at')->paginate(5, ['*'], 'letter_page')->withQueryString();
+            // Letter & gift history -- query di ParticipantEngagementService,
+            // dipakai juga oleh Api\V1\LetterController & Api\V1\GiftController.
+            $letters = ParticipantEngagementService::lettersFor($user, $request->input('letter_search'))
+                ->paginate(5, ['*'], 'letter_page')->withQueryString();
 
-            // Gift History
-            $giftsQuery = ParticipantGift::where('user_id', $user->id);
-
-            if ($request->filled('gift_date_start') && $request->filled('gift_date_end')) {
-                $giftsQuery->whereBetween('created_at', [$request->gift_date_start, $request->gift_date_end]);
-            }
-
-            $gifts = $giftsQuery->latest()->paginate(5, ['*'], 'gift_page')->withQueryString();
+            $gifts = ParticipantEngagementService::giftsFor($user, $request->input('gift_date_start'), $request->input('gift_date_end'))
+                ->paginate(5, ['*'], 'gift_page')->withQueryString();
         }
 
         // Performance scores for mentor self-view

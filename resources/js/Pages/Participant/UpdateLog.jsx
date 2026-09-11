@@ -122,7 +122,7 @@ export default function UpdateLog({ participants, filters }) {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                            <td colSpan="5" className="px-6 py-2.5 text-center text-sm text-gray-500 dark:text-gray-400">
                                                 {__('No participants found.')}
                                             </td>
                                         </tr>

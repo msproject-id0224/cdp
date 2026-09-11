@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -56,8 +56,9 @@ class AdminController extends Controller
             'email'        => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'job_title'    => ['nullable', 'string', 'max:255'],
-            'password'     => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+
+        $generatedPassword = Str::password(12);
 
         User::create([
             'first_name'   => $validated['first_name'],
@@ -65,12 +66,12 @@ class AdminController extends Controller
             'email'        => $validated['email'],
             'phone_number' => $validated['phone_number'] ?? null,
             'job_title'    => $validated['job_title'] ?? null,
-            'password'     => Hash::make($validated['password']),
+            'password'     => Hash::make($generatedPassword),
             'role'         => 'admin',
             'is_active'    => true,
         ]);
 
-        return back()->with('success', 'Admin created successfully.');
+        return back()->with('success', "Admin created successfully. Password: {$generatedPassword}");
     }
 
     public function update(Request $request, User $user)

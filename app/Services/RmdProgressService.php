@@ -31,6 +31,27 @@ class RmdProgressService
     }
 
     /**
+     * Peta nama modul (key getModules()) -> nama route web-nya. Dipakai
+     * RmdController::index() untuk smart-redirect dan
+     * Api\V1\RmdProgressController untuk field `next_step` -- SATU sumber
+     * kebenaran, jangan didefinisikan ulang di controller manapun.
+     */
+    public static function getModuleRoutes(): array
+    {
+        return [
+            'Profil RMD'             => 'rmd.profile',
+            'Refleksi Alkitab'       => 'rmd.what-the-bible-says',
+            'Sukses Sejati'          => 'rmd.true-success',
+            'The Only One'           => 'rmd.the-only-one',
+            'Kecerdasan Majemuk'     => 'rmd.the-only-one-meeting-2',
+            'Sosial Emosional'       => 'rmd.the-only-one-meeting-3',
+            'Eksplorasi Karir'       => 'rmd.career-exploration',
+            'Eksplorasi Karir P2'    => 'rmd.career-exploration-p2',
+            'Persiapan Pulau Impian' => 'rmd.preparation-dream-island',
+        ];
+    }
+
+    /**
      * Per-module section definitions for granular progress tracking.
      * Each section lists the DB field names that belong to it.
      */
@@ -169,6 +190,50 @@ class RmdProgressService
             'last_updated' => $record->updated_at,
             'filled_at'    => $record->created_at,
             'sections'     => $sections,
+        ];
+    }
+
+    /**
+     * Bentuk payload lengkap yang dipakai `GET /api/v1/rmd/progress`
+     * (RmdProgressController) DAN respons POST tiap modul RMD
+     * (Api\V1\RmdModuleController) supaya Flutter bisa langsung update UI
+     * progres tanpa round-trip kedua -- satu tempat, jangan disalin ulang.
+     */
+    public static function buildProgressPayload($user): array
+    {
+        $moduleRoutes = self::getModuleRoutes();
+
+        $hasStarted = false;
+        $nextStep = null;
+        $modules = [];
+
+        foreach (self::getModules() as $moduleName => $modelClass) {
+            $progress = self::calculateProgress($user, $moduleName, $modelClass);
+
+            if ($progress['percentage'] > 0) {
+                $hasStarted = true;
+            }
+
+            if ($nextStep === null && $progress['percentage'] < 100) {
+                $nextStep = $moduleRoutes[$moduleName] ?? null;
+            }
+
+            $modules[] = array_merge(
+                [
+                    'key' => $moduleRoutes[$moduleName] ?? null,
+                    'name' => $moduleName,
+                ],
+                $progress,
+            );
+        }
+
+        $allCompleted = $nextStep === null;
+
+        return [
+            'has_started' => $hasStarted,
+            'all_completed' => $allCompleted,
+            'next_step' => $allCompleted ? 'rmd.chapters' : $nextStep,
+            'modules' => $modules,
         ];
     }
 }

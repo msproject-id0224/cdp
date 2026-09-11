@@ -188,31 +188,505 @@ class RmdChartService
      */
     public function getFinalCareerChoiceDistribution()
     {
-        // Total eligible participants (>= 12 years old) — used as the denominator for percentages
+        return $this->getTopValueDistribution('rmd_career_exploration_p2_s', 'final_career_choice', 'Final Career Choice');
+    }
+
+    /**
+     * Get the top-10 most common "favorite subject" answers from The Only One.
+     *
+     * @return array
+     */
+    public function getFavoriteSubjectDistribution()
+    {
+        return $this->getTopValueDistribution('rmd_the_only_ones', 'favorite_subject', 'Mapel Favorit');
+    }
+
+    /**
+     * Get the top-10 most common "least favorite subject" answers from The Only One.
+     *
+     * @return array
+     */
+    public function getLeastFavoriteSubjectDistribution()
+    {
+        return $this->getTopValueDistribution('rmd_the_only_ones', 'least_favorite_subject', 'Mapel Tidak Favorit');
+    }
+
+    /**
+     * Get the number of participants (12+, eligible) who have a filled row in each of the
+     * 9 RMD modules — a funnel showing exactly where in the 9-step flow participants drop off,
+     * as opposed to getRmdFillingProgressDistribution() which buckets by total modules filled.
+     *
+     * @return array
+     */
+    public function getModuleCompletionFunnel()
+    {
+        $modules = RmdProgressService::getModules();
+
+        $labels = [];
+        $data   = [];
+
+        foreach ($modules as $moduleName => $modelClass) {
+            $model     = new $modelClass;
+            $tableName = $model->getTable();
+
+            $count = 0;
+            if (Schema::hasColumn($tableName, 'user_id')) {
+                $count = DB::table($tableName)
+                    ->join('users', 'users.id', '=', "{$tableName}.user_id")
+                    ->where('users.role', 'participant')
+                    ->whereNotNull('users.date_of_birth')
+                    ->where('users.date_of_birth', '<=', now()->subYears(12)->toDateString())
+                    ->count();
+            }
+
+            $labels[] = $moduleName;
+            $data[]   = $count;
+        }
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Peserta Menyelesaikan Modul',
+                    'data'            => $data,
+                    'backgroundColor' => '#6366f1',
+                ]
+            ],
+            'total_eligible' => User::where('role', 'participant')
+                ->whereNotNull('date_of_birth')
+                ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+                ->count(),
+        ];
+    }
+
+    /**
+     * Get how many participants considered each factor (gaya belajar, kecerdasan, prestasi
+     * akademik, dukungan orang tua, kehendak Allah) when choosing a career (RmdCareerExploration).
+     *
+     * @return array
+     */
+    public function getCareerConsiderationFactors()
+    {
+        [$labels, $data, $total] = $this->getBooleanFieldCounts('rmdCareerExploration', [
+            'consider_learning_style'       => 'Gaya Belajar',
+            'consider_intelligence'         => 'Kecerdasan Majemuk',
+            'consider_academic_achievement' => 'Prestasi Akademik',
+            'consider_parental_support'     => 'Dukungan Orang Tua',
+            'consider_gods_will'            => 'Kehendak Allah',
+        ]);
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Peserta yang Mempertimbangkan',
+                    'data'            => $data,
+                    'backgroundColor' => '#10b981',
+                ]
+            ],
+            'total' => $total,
+        ];
+    }
+
+    /**
+     * Get distribution of each participant's single dominant (#1) intelligence category,
+     * based on true 1-5 weighted score sums. Complements getKecerdasanMajemukAverageScore(),
+     * which shows the cohort average per category rather than who "wins" per participant.
+     *
+     * @return array
+     */
+    public function getTopIntelligenceDistribution()
+    {
+        $categories = [
+            'linguistic_checklist'           => 'Linguistik',
+            'logical_mathematical_checklist' => 'Logis-Matematis',
+            'visual_spatial_checklist'       => 'Visual-Spasial',
+            'kinesthetic_checklist'          => 'Kinestetik',
+            'musical_checklist'              => 'Musikal',
+            'interpersonal_checklist'        => 'Interpersonal',
+            'intrapersonal_checklist'        => 'Intrapersonal',
+            'naturalist_checklist'           => 'Naturalis',
+            'existential_checklist'          => 'Eksistensial',
+        ];
+
+        $records = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas('rmdMultipleIntelligence')
+            ->with(['rmdMultipleIntelligence:user_id,' . implode(',', array_keys($categories))])
+            ->get()
+            ->pluck('rmdMultipleIntelligence');
+
+        $ranges = array_fill_keys(array_values($categories), 0);
+
+        foreach ($records as $record) {
+            $scores = [];
+            foreach ($categories as $field => $label) {
+                $scores[$label] = array_sum(array_map('intval', (array) ($record->$field ?? [])));
+            }
+
+            $max = max($scores);
+            if ($max === 0) continue;
+
+            foreach ($scores as $label => $score) {
+                if ($score === $max) $ranges[$label]++;
+            }
+        }
+
+        return $this->formatChartData($ranges, 'Kecerdasan Dominan');
+    }
+
+    /**
+     * Get how many participants checked each leadership trait in Refleksi Alkitab.
+     *
+     * @return array
+     */
+    public function getLeadershipTraitsDistribution()
+    {
+        [$labels, $data, $total] = $this->getBooleanFieldCounts('rmdBibleReflection', [
+            'leadership_c1' => 'Poin 1',
+            'leadership_c2' => 'Poin 2',
+            'leadership_c3' => 'Poin 3',
+            'leadership_c4' => 'Poin 4',
+            'leadership_c5' => 'Poin 5',
+        ]);
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Peserta yang Mencentang',
+                    'data'            => $data,
+                    'backgroundColor' => '#3b82f6',
+                ]
+            ],
+            'total' => $total,
+        ];
+    }
+
+    /**
+     * Get how many participants checked each self-reflection checkpoint in Sosial Emosional
+     * (chapter3_check1-4) and Eksplorasi Karir P2 (chapter4_check1-3), combined into one chart.
+     *
+     * @return array
+     */
+    public function getReflectionCheckpointsDistribution()
+    {
+        [$labelsA, $dataA, $totalA] = $this->getBooleanFieldCounts('rmdSocioEmotional', [
+            'chapter3_check1' => 'Sosial Emosional – Cek 1',
+            'chapter3_check2' => 'Sosial Emosional – Cek 2',
+            'chapter3_check3' => 'Sosial Emosional – Cek 3',
+            'chapter3_check4' => 'Sosial Emosional – Cek 4',
+        ]);
+
+        [$labelsB, $dataB, $totalB] = $this->getBooleanFieldCounts('rmdCareerExplorationP2', [
+            'chapter4_check1' => 'Eksplorasi Karir P2 – Cek 1',
+            'chapter4_check2' => 'Eksplorasi Karir P2 – Cek 2',
+            'chapter4_check3' => 'Eksplorasi Karir P2 – Cek 3',
+        ]);
+
+        return [
+            'labels'   => array_merge($labelsA, $labelsB),
+            'datasets' => [
+                [
+                    'label'           => 'Peserta yang Mencentang',
+                    'data'            => array_merge($dataA, $dataB),
+                    'backgroundColor' => '#f59e0b',
+                ]
+            ],
+            'total' => max($totalA, $totalB),
+        ];
+    }
+
+    /**
+     * Get the number of RMD module submissions (across all 9 tables) per month, for the
+     * last 6 months — the only time-series view in the report, useful for spotting
+     * engagement trends (e.g. spikes after mentoring sessions).
+     *
+     * @return array
+     */
+    public function getSubmissionTrend()
+    {
+        $modules   = RmdProgressService::getModules();
+        $monthKeys = collect(range(5, 0))->map(fn ($i) => now()->subMonths($i)->format('Y-m'))->values();
+        $counts    = array_fill_keys($monthKeys->toArray(), 0);
+        $startDate = now()->subMonths(5)->startOfMonth();
+
+        foreach ($modules as $moduleName => $modelClass) {
+            $model     = new $modelClass;
+            $tableName = $model->getTable();
+
+            $rows = DB::table($tableName)
+                ->join('users', 'users.id', '=', "{$tableName}.user_id")
+                ->where('users.role', 'participant')
+                ->where("{$tableName}.created_at", '>=', $startDate)
+                ->selectRaw("DATE_FORMAT({$tableName}.created_at, '%Y-%m') as ym, COUNT(*) as total")
+                ->groupBy('ym')
+                ->pluck('total', 'ym');
+
+            foreach ($rows as $ym => $total) {
+                if (isset($counts[$ym])) $counts[$ym] += $total;
+            }
+        }
+
+        $labels = array_map(
+            fn ($ym) => \Carbon\Carbon::createFromFormat('Y-m', $ym)->translatedFormat('M Y'),
+            array_keys($counts)
+        );
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Jumlah Pengisian Modul',
+                    'data'            => array_values($counts),
+                    'borderColor'     => '#6366f1',
+                    'backgroundColor' => 'rgba(99, 102, 241, 0.2)',
+                    'fill'            => true,
+                    'tension'         => 0.3,
+                ]
+            ],
+            'total' => array_sum($counts),
+        ];
+    }
+
+    /**
+     * Get the average RMD completion percentage of each mentor's assigned participants,
+     * sorted descending — lets admins compare mentoring effectiveness across mentors.
+     *
+     * @return array
+     */
+    public function getMentorProgressComparison()
+    {
+        $modules      = RmdProgressService::getModules();
+        $totalModules = count($modules);
+
+        $moduleQueries = [];
+        foreach ($modules as $moduleName => $modelClass) {
+            $model     = new $modelClass;
+            $tableName = $model->getTable();
+            if (Schema::hasColumn($tableName, 'user_id')) {
+                $moduleQueries[] = "SELECT user_id FROM {$tableName}";
+            }
+        }
+
+        $filledCounts = collect();
+        if (!empty($moduleQueries)) {
+            $unionSql     = implode(' UNION ALL ', $moduleQueries);
+            $filledCounts = DB::table(DB::raw("({$unionSql}) as all_fills"))
+                ->select('user_id', DB::raw('count(*) as total_filled'))
+                ->groupBy('user_id')
+                ->pluck('total_filled', 'user_id');
+        }
+
+        $participants = User::where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereNotNull('mentor_id')
+            ->get(['id', 'mentor_id']);
+
+        // 'name' is a computed accessor (first_name + last_name), not a DB column — must load models.
+        $mentorNames = User::where('role', 'mentor')->get(['id', 'first_name', 'last_name'])->pluck('name', 'id');
+
+        $percentagesByMentor = [];
+        foreach ($participants as $participant) {
+            $pct = round(($filledCounts->get($participant->id, 0) / $totalModules) * 100);
+            $percentagesByMentor[$participant->mentor_id][] = $pct;
+        }
+
+        $labels = [];
+        $data   = [];
+        foreach ($percentagesByMentor as $mentorId => $percentages) {
+            $labels[] = $mentorNames->get($mentorId, "Mentor #{$mentorId}");
+            $data[]   = round(array_sum($percentages) / count($percentages), 1);
+        }
+
+        array_multisort($data, SORT_DESC, $labels);
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Rata-rata Progres Peserta (%)',
+                    'data'            => $data,
+                    'backgroundColor' => '#8b5cf6',
+                ]
+            ],
+            'total' => $participants->count(),
+        ];
+    }
+
+    /**
+     * Get distribution of dominant learning style (Visual/Auditori/Kinestetik) based on
+     * the true 1-5 weighted checklist score sums (not just non-empty entry counts).
+     * Participants tied for the highest score are counted in each tied category.
+     *
+     * @return array
+     */
+    public function getGayaBelajarDistribution()
+    {
+        $records = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas('rmdTheOnlyOne')
+            ->with('rmdTheOnlyOne:user_id,visual_checklist,auditory_checklist,kinesthetic_checklist')
+            ->get()
+            ->pluck('rmdTheOnlyOne');
+
+        $ranges = [
+            'Visual'     => 0,
+            'Auditori'   => 0,
+            'Kinestetik' => 0,
+        ];
+
+        foreach ($records as $record) {
+            $visual      = array_sum(array_map('intval', (array) ($record->visual_checklist ?? [])));
+            $auditory    = array_sum(array_map('intval', (array) ($record->auditory_checklist ?? [])));
+            $kinesthetic = array_sum(array_map('intval', (array) ($record->kinesthetic_checklist ?? [])));
+
+            $max = max($visual, $auditory, $kinesthetic);
+            if ($max === 0) continue;
+
+            if ($visual === $max) $ranges['Visual']++;
+            if ($auditory === $max) $ranges['Auditori']++;
+            if ($kinesthetic === $max) $ranges['Kinestetik']++;
+        }
+
+        return $this->formatChartData($ranges, 'Gaya Belajar');
+    }
+
+    /**
+     * Get the average multiple-intelligence score (max 50 per category) across all
+     * participants who have filled the Kecerdasan Majemuk module.
+     *
+     * @return array
+     */
+    public function getKecerdasanMajemukAverageScore()
+    {
+        $categories = [
+            'linguistic_checklist'           => 'Linguistik',
+            'logical_mathematical_checklist' => 'Logis-Matematis',
+            'visual_spatial_checklist'       => 'Visual-Spasial',
+            'kinesthetic_checklist'          => 'Kinestetik',
+            'musical_checklist'              => 'Musikal',
+            'interpersonal_checklist'        => 'Interpersonal',
+            'intrapersonal_checklist'        => 'Intrapersonal',
+            'naturalist_checklist'           => 'Naturalis',
+            'existential_checklist'          => 'Eksistensial',
+        ];
+
+        $records = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas('rmdMultipleIntelligence')
+            ->with(['rmdMultipleIntelligence:user_id,' . implode(',', array_keys($categories))])
+            ->get()
+            ->pluck('rmdMultipleIntelligence');
+
+        $labels = [];
+        $data   = [];
+
+        foreach ($categories as $field => $label) {
+            $sums = $records
+                ->map(fn ($record) => array_sum(array_map('intval', (array) ($record->$field ?? []))))
+                ->filter(fn ($sum) => $sum > 0);
+
+            $labels[] = $label;
+            $data[]   = $sums->count() > 0 ? round($sums->avg(), 1) : 0;
+        }
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'           => 'Rata-rata Skor Kecerdasan Majemuk',
+                    'data'            => $data,
+                    'backgroundColor' => '#6366f1',
+                ]
+            ],
+            'total' => $records->count(),
+        ];
+    }
+
+    /**
+     * Get distribution of academic achievement (highest_score_value from The Only One)
+     * bucketed into grade bands.
+     *
+     * @return array
+     */
+    public function getPrestasiAkademikDistribution()
+    {
+        $values = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas('rmdTheOnlyOne', function ($q) {
+                $q->whereNotNull('highest_score_value')->where('highest_score_value', '!=', '');
+            })
+            ->with('rmdTheOnlyOne:user_id,highest_score_value')
+            ->get()
+            ->pluck('rmdTheOnlyOne.highest_score_value');
+
+        $ranges = [
+            '< 70'   => 0,
+            '70-79'  => 0,
+            '80-89'  => 0,
+            '90-100' => 0,
+        ];
+
+        foreach ($values as $value) {
+            $score = (float) $value;
+            if ($score < 70) $ranges['< 70']++;
+            elseif ($score < 80) $ranges['70-79']++;
+            elseif ($score < 90) $ranges['80-89']++;
+            else $ranges['90-100']++;
+        }
+
+        return $this->formatChartData($ranges, 'Prestasi Akademik (Nilai Tertinggi)');
+    }
+
+    /**
+     * Get the top-N most common values of a free-text column on an RMD table, restricted to
+     * eligible participants (role=participant, 12+ years old). Shared by
+     * getFinalCareerChoiceDistribution(), getFavoriteSubjectDistribution() and
+     * getLeastFavoriteSubjectDistribution() — $table/$column are always hardcoded call-site
+     * literals, never user input.
+     *
+     * @param string $table
+     * @param string $column
+     * @param string $label
+     * @param int $limit
+     * @return array
+     */
+    private function getTopValueDistribution(string $table, string $column, string $label, int $limit = 10)
+    {
         $totalEligible = User::where('role', 'participant')
             ->whereNotNull('date_of_birth')
             ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
             ->count();
 
-        $results = DB::table('rmd_career_exploration_p2_s')
-            ->join('users', 'users.id', '=', 'rmd_career_exploration_p2_s.user_id')
-            ->select(DB::raw('TRIM(rmd_career_exploration_p2_s.final_career_choice) as career, COUNT(*) as total'))
-            ->whereNotNull('rmd_career_exploration_p2_s.final_career_choice')
-            ->where('rmd_career_exploration_p2_s.final_career_choice', '!=', '')
+        $results = DB::table($table)
+            ->join('users', 'users.id', '=', "{$table}.user_id")
+            ->select(DB::raw("TRIM({$table}.{$column}) as val"), DB::raw('COUNT(*) as total'))
+            ->whereNotNull("{$table}.{$column}")
+            ->where("{$table}.{$column}", '!=', '')
             ->where('users.role', 'participant')
             ->whereNotNull('users.date_of_birth')
             ->where('users.date_of_birth', '<=', now()->subYears(12)->toDateString())
-            ->groupBy(DB::raw('TRIM(rmd_career_exploration_p2_s.final_career_choice)'))
+            ->groupBy(DB::raw("TRIM({$table}.{$column})"))
             ->orderByDesc('total')
-            ->limit(10)
+            ->limit($limit)
             ->get();
 
-        $labels     = [];
-        $data       = [];
+        $labels      = [];
+        $data        = [];
         $totalFilled = 0;
 
         foreach ($results as $row) {
-            $labels[]     = $row->career;
+            $labels[]     = $row->val;
             $data[]       = (int) $row->total;
             $totalFilled += (int) $row->total;
         }
@@ -226,7 +700,7 @@ class RmdChartService
             'labels'   => $labels,
             'datasets' => [
                 [
-                    'label'           => 'Final Career Choice',
+                    'label'           => $label,
                     'data'            => $data,
                     'backgroundColor' => array_slice($colors, 0, count($labels)),
                 ]
@@ -234,6 +708,38 @@ class RmdChartService
             'total'          => $totalFilled,
             'total_eligible' => $totalEligible,
         ];
+    }
+
+    /**
+     * Count how many eligible participants (12+, role=participant) have each boolean field
+     * (keyed by field name) set to true, for a given User hasOne relation. Shared by
+     * getCareerConsiderationFactors(), getLeadershipTraitsDistribution() and
+     * getReflectionCheckpointsDistribution().
+     *
+     * @param string $relation
+     * @param array<string,string> $fieldsWithLabels
+     * @return array{0: array<int,string>, 1: array<int,int>, 2: int}
+     */
+    private function getBooleanFieldCounts(string $relation, array $fieldsWithLabels): array
+    {
+        $records = User::query()
+            ->where('role', 'participant')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', '<=', now()->subYears(12)->toDateString())
+            ->whereHas($relation)
+            ->with(["{$relation}:user_id," . implode(',', array_keys($fieldsWithLabels))])
+            ->get()
+            ->pluck($relation);
+
+        $labels = [];
+        $data   = [];
+
+        foreach ($fieldsWithLabels as $field => $label) {
+            $labels[] = $label;
+            $data[]   = $records->filter(fn ($record) => (bool) ($record->$field ?? false))->count();
+        }
+
+        return [$labels, $data, $records->count()];
     }
 
     /**

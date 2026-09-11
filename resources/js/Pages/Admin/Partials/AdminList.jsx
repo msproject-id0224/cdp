@@ -10,6 +10,7 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import { useForm } from '@inertiajs/react';
 import ProfilePhoto from '@/Components/ProfilePhoto';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function AdminList() {
     const [admins, setAdmins] = useState({ data: [] });
@@ -19,6 +20,9 @@ export default function AdminList() {
     const [viewingAdmin, setViewingAdmin] = useState(null);
     const [addingAdmin, setAddingAdmin] = useState(false);
     const { auth } = usePage().props;
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     // Form for editing admin
     const { data, setData, patch, processing, errors, reset, clearErrors } = useForm({
@@ -36,8 +40,6 @@ export default function AdminList() {
         email: '',
         job_title: '',
         phone_number: '',
-        password: '',
-        password_confirmation: '',
     });
 
     const openAddModal = () => {
@@ -139,17 +141,21 @@ export default function AdminList() {
         }
     };
 
-    const deleteUser = async (user) => {
-        if (!confirm(__('Are you sure you want to delete this admin?'))) return;
-        
-        try {
-            await router.delete(route('api.admins.destroy', user.id), {
-                preserveScroll: true,
-                onSuccess: () => fetchAdmins()
-            });
-        } catch (error) {
-            console.error('Failed to delete user', error);
-        }
+    const deleteUser = (user) => {
+        askConfirm(
+            __('Hapus Admin'),
+            __('Are you sure you want to delete this admin?'),
+            async () => {
+                try {
+                    await router.delete(route('api.admins.destroy', user.id), {
+                        preserveScroll: true,
+                        onSuccess: () => fetchAdmins()
+                    });
+                } catch (error) {
+                    console.error('Failed to delete user', error);
+                }
+            }
+        );
     };
 
     return (
@@ -181,26 +187,26 @@ export default function AdminList() {
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" className="px-6 py-3">{__('Name')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Email')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Job Title')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Status')}</th>
-                            <th scope="col" className="px-6 py-3">{__('Registered')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Name')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Email')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Job Title')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Status')}</th>
+                            <th scope="col" className="px-6 py-2">{__('Registered')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="5" className="px-6 py-4 text-center">{__('Loading...')}</td>
+                                <td colSpan="5" className="px-6 py-2.5 text-center">{__('Loading...')}</td>
                             </tr>
                         ) : admins.data.length === 0 ? (
                             <tr>
-                                <td colSpan="5" className="px-6 py-4 text-center">{__('No admins found.')}</td>
+                                <td colSpan="5" className="px-6 py-2.5 text-center">{__('No admins found.')}</td>
                             </tr>
                         ) : (
                             admins.data.map((admin) => (
                                 <tr key={admin.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                                    <td className="px-6 py-2.5 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                                         <button
                                             onClick={() => setViewingAdmin(admin)}
                                             className="flex items-center space-x-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition text-left"
@@ -218,9 +224,9 @@ export default function AdminList() {
                                             </span>
                                         </button>
                                     </td>
-                                    <td className="px-6 py-4">{admin.email}</td>
-                                    <td className="px-6 py-4">{admin.job_title || '-'}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">{admin.email}</td>
+                                    <td className="px-6 py-2.5">{admin.job_title || '-'}</td>
+                                    <td className="px-6 py-2.5">
                                         <span className={`px-2 py-1 rounded text-xs ${
                                             admin.is_active 
                                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
@@ -229,7 +235,7 @@ export default function AdminList() {
                                             {admin.is_active ? __('Active') : __('Inactive')}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-2.5">
                                         {new Date(admin.created_at).toLocaleDateString()}
                                     </td>
                                 </tr>
@@ -241,19 +247,31 @@ export default function AdminList() {
 
             {admins.links && (
                 <div className="flex justify-center mt-4 space-x-1">
-                    {admins.links.map((link, i) => (
-                        <button
-                            key={i}
-                            onClick={() => link.url && fetchAdmins(link.url)}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                            className={`px-3 py-1 rounded ${
-                                link.active 
-                                    ? 'bg-indigo-600 text-white' 
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={!link.url}
-                        />
-                    ))}
+                    {admins.links.map((link, i) => {
+                        const isPrev = link.label.includes('&laquo;') || link.label === 'Previous';
+                        const isNext = link.label.includes('&raquo;') || link.label === 'Next';
+
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => link.url && fetchAdmins(link.url)}
+                                className={`px-3 py-1 rounded ${
+                                    link.active
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!link.url}
+                            >
+                                {isPrev ? (
+                                    __('Previous')
+                                ) : isNext ? (
+                                    __('Next')
+                                ) : (
+                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
 
@@ -412,32 +430,6 @@ export default function AdminList() {
                             />
                             <InputError message={addErrors.phone_number} className="mt-2" />
                         </div>
-
-                        <div>
-                            <InputLabel htmlFor="add_password" value={__('Password')} />
-                            <TextInput
-                                id="add_password"
-                                type="password"
-                                value={addData.password}
-                                onChange={(e) => setAddData('password', e.target.value)}
-                                className="mt-1 block w-full"
-                                required
-                            />
-                            <InputError message={addErrors.password} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="add_password_confirmation" value={__('Confirm Password')} />
-                            <TextInput
-                                id="add_password_confirmation"
-                                type="password"
-                                value={addData.password_confirmation}
-                                onChange={(e) => setAddData('password_confirmation', e.target.value)}
-                                className="mt-1 block w-full"
-                                required
-                            />
-                            <InputError message={addErrors.password_confirmation} className="mt-2" />
-                        </div>
                     </div>
 
                     <div className="mt-6 flex justify-end gap-3">
@@ -536,6 +528,14 @@ export default function AdminList() {
                     </div>
                 </form>
             </Modal>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('Ya, Hapus')}
+            />
         </section>
     );
 }

@@ -38,14 +38,35 @@ return [
             'report' => false,
         ],
 
-        'public' => [
-            'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
-            'visibility' => 'public',
-            'throw' => false,
-            'report' => false,
-        ],
+        // Disk 'public' -- dipakai di seluruh app (foto profil, gambar
+        // refleksi RMD, file pertemuan, lampiran chat) lewat nama disk yang
+        // SAMA baik untuk local maupun R2, supaya tidak perlu sentuh
+        // controller/service manapun saat pindah backend (Fase 4). Kalau
+        // CLOUDFLARE_R2_BUCKET diisi di .env, disk ini otomatis pakai R2
+        // (S3-compatible) -- kalau kosong, tetap local disk seperti semula
+        // (dev/test tidak terpengaruh).
+        'public' => env('CLOUDFLARE_R2_BUCKET')
+            ? [
+                'driver' => 's3',
+                'key' => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
+                'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
+                'region' => 'auto',
+                'bucket' => env('CLOUDFLARE_R2_BUCKET'),
+                'url' => env('CLOUDFLARE_R2_PUBLIC_URL'),
+                'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
+                'use_path_style_endpoint' => true,
+                'visibility' => 'public',
+                'throw' => false,
+                'report' => false,
+            ]
+            : [
+                'driver' => 'local',
+                'root' => storage_path('app/public'),
+                'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+                'visibility' => 'public',
+                'throw' => false,
+                'report' => false,
+            ],
 
         's3' => [
             'driver' => 's3',

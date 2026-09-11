@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 // ─── Intelligence profiles ────────────────────────────────────────────────
 const INTELLIGENCE_DATA = {
@@ -163,6 +165,9 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
     const [navError, setNavError] = useState(null);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     // Helper to safely parse initial data.
     // PHP may encode sequential checklist as a JSON array [1,2,3,...] instead of
@@ -375,9 +380,11 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
     };
 
     const handleDeleteFile = (fileId) => {
-        if (confirm(__('RMD_CONFIRM_DELETE_FILE'))) {
-            router.delete(route('rmd.files.delete', fileId));
-        }
+        askConfirm(
+            __('RMD_DELETE'),
+            __('RMD_CONFIRM_DELETE_FILE'),
+            () => router.delete(route('rmd.files.delete', fileId))
+        );
     };
 
     const navigateToMeeting3 = () => {
@@ -440,7 +447,7 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                         opacity: 0.08,
                     }}
                 />
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 relative z-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             
@@ -822,8 +829,8 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                                          {__('RMD_REFLECTION_LEARNING_LABEL')}
                                                      </td>
                                                      <td className="p-2">
-                                                         <textarea
-                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                         <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                             className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                              value={data.reflection_new_learning}
                                                              onChange={e => setData('reflection_new_learning', e.target.value)}
                                                              placeholder={__('RMD_PLACEHOLDER_WRITE_HERE')}
@@ -836,8 +843,8 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                                                          {__('RMD_REFLECTION_DEVELOPMENT_LABEL')}
                                                      </td>
                                                      <td className="p-2">
-                                                         <textarea
-                                                             className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                         <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                             className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                              value={data.reflection_plan}
                                                              onChange={e => setData('reflection_plan', e.target.value)}
                                                              placeholder={__('RMD_PLACEHOLDER_WRITE_HERE')}
@@ -1063,6 +1070,15 @@ export default function TheOnlyOneMeeting2({ auth, multipleIntelligence, files }
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('RMD_DELETE')}
+                danger={true}
+            />
         </AuthenticatedLayout>
     );
 }

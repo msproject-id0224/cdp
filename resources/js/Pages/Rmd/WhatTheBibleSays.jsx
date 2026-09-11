@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
@@ -48,12 +49,12 @@ const VerseHeading = ({ label, verseKey, onOpen }) => (
 );
 
 const TextArea = ({ id, value, onChange, placeholder }) => (
-    <textarea
+    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
         id={id}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 mt-1 block resize"
+        className="w-full max-w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 mt-1 block resize"
         rows="3"
     />
 );
@@ -114,7 +115,7 @@ export default function WhatTheBibleSays({ auth, reflection }) {
                         opacity: 0.08,
                     }}
                 />
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 relative z-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
                     <form onSubmit={submit} className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100 space-y-8">
                             

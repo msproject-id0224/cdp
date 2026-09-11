@@ -328,11 +328,11 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('ID Number')}</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Full Name')}</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Age')}</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Age Group')}</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Action')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('ID Number')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Full Name')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Age')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Age Group')}</th>
+                                        <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Action')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -354,16 +354,16 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
 
                                             return (
                                                 <tr key={participant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm font-medium text-indigo-600 dark:text-indigo-400">
                                                         {participant.id_number || '-'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                         {participant.first_name} {participant.last_name}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {age} {__('year(s)')}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                                             ageGroup === '12-14' ? 'bg-green-100 text-green-800' :
                                                             ageGroup === '15-18' ? 'bg-blue-100 text-blue-800' :
@@ -373,7 +373,7 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                                                             {ageGroupLabel}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium">
                                                         <Link
                                                             href={route('participants.show', participant.id)}
                                                             className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -386,7 +386,7 @@ export default function RmdDashboard({ auth, stats, participants, filters, ppaIn
                                         })
                                     ) : (
                                         <tr>
-                                            <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                            <td colSpan="5" className="px-6 py-2.5 text-center text-sm text-gray-500 dark:text-gray-400">
                                                 {__('No participants over 12 years old.')}
                                             </td>
                                         </tr>

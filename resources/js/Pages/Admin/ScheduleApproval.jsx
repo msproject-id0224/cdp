@@ -395,7 +395,7 @@ export default function ScheduleApproval({ auth }) {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-amber-50">
                                     <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             <input
                                                 type="checkbox"
                                                 onChange={handleSelectAll}
@@ -424,10 +424,10 @@ export default function ScheduleApproval({ auth }) {
                                         >
                                             {__('Date & Time')} {renderSortIcon('scheduled_at')}
                                         </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             {__('Participants')}
                                         </th>
-                                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             {__('Actions')}
                                         </th>
                                     </tr>
@@ -435,7 +435,7 @@ export default function ScheduleApproval({ auth }) {
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                                            <td colSpan="6" className="px-6 py-2.5 text-center text-gray-500">
                                                 {__('Loading schedules...')}
                                             </td>
                                         </tr>
@@ -451,7 +451,7 @@ export default function ScheduleApproval({ auth }) {
                                     ) : (
                                         schedules.data.map((schedule) => (
                                             <tr key={schedule.id} className="hover:bg-amber-50 transition">
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-2.5 whitespace-nowrap">
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedSchedules.includes(schedule.id)}
@@ -459,7 +459,7 @@ export default function ScheduleApproval({ auth }) {
                                                         className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                     />
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-2.5 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">
                                                         {schedule.mentor ? schedule.mentor.name : __('Unknown')}
                                                     </div>
@@ -467,7 +467,7 @@ export default function ScheduleApproval({ auth }) {
                                                         {schedule.mentor ? schedule.mentor.email : ''}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-2.5">
                                                     {schedule.agenda_type && (
                                                         <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-700 mb-1">
                                                             {AGENDA_LABELS[schedule.agenda_type] ?? schedule.agenda_type}
@@ -482,7 +482,7 @@ export default function ScheduleApproval({ auth }) {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-2.5 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">
                                                         {new Date(schedule.scheduled_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                                     </div>
@@ -491,7 +491,7 @@ export default function ScheduleApproval({ auth }) {
                                                         {new Date(schedule.end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-2.5">
                                                     <div className="flex -space-x-2 overflow-hidden">
                                                         {schedule.participants && schedule.participants.slice(0, 3).map((p) => (
                                                             <div key={p.id} className="inline-flex h-8 w-8 rounded-full ring-2 ring-white bg-indigo-200 items-center justify-center text-xs font-bold text-indigo-700" title={p.name}>
@@ -508,7 +508,7 @@ export default function ScheduleApproval({ auth }) {
                                                         <span className="text-xs text-gray-400">{__('No participants')}</span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                                <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                                     <button onClick={() => openModal('preview', schedule)} className="text-indigo-600 hover:text-indigo-900">{__('Preview')}</button>
                                                     <button onClick={() => openModal('approve', schedule)} className="text-green-600 hover:text-green-900">{__('Approve')}</button>
                                                     <button onClick={() => openModal('request_modification', schedule)} className="text-yellow-600 hover:text-yellow-900">{__('Modify')}</button>
@@ -563,17 +563,17 @@ export default function ScheduleApproval({ auth }) {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-red-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Mentor')}</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Agenda')}</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Date & Time')}</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Participants')}</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Actions')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Mentor')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Agenda')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Date & Time')}</th>
+                                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Participants')}</th>
+                                        <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{__('Actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {deletionLoading ? (
                                         <tr>
-                                            <td colSpan="5" className="px-6 py-4 text-center text-gray-500">{__('Loading...')}</td>
+                                            <td colSpan="5" className="px-6 py-2.5 text-center text-gray-500">{__('Loading...')}</td>
                                         </tr>
                                     ) : (deletionRequests.data ?? []).length === 0 ? (
                                         <tr>
@@ -587,7 +587,7 @@ export default function ScheduleApproval({ auth }) {
                                     ) : (
                                         (deletionRequests.data ?? []).map((schedule) => (
                                             <tr key={schedule.id} className="hover:bg-red-50 transition">
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-2.5 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">
                                                         {schedule.mentor
                                                             ? (`${schedule.mentor.first_name ?? ''} ${schedule.mentor.last_name ?? ''}`.trim() || __('Unknown'))
@@ -595,7 +595,7 @@ export default function ScheduleApproval({ auth }) {
                                                     </div>
                                                     <div className="text-sm text-gray-500">{schedule.mentor?.email}</div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-2.5">
                                                     {schedule.agenda_type && (
                                                         <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-700 mb-1">
                                                             {AGENDA_LABELS[schedule.agenda_type] ?? schedule.agenda_type}
@@ -603,7 +603,7 @@ export default function ScheduleApproval({ auth }) {
                                                     )}
                                                     <div className="text-sm text-gray-900">{schedule.agenda}</div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-2.5 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">
                                                         {new Date(schedule.scheduled_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                                     </div>
@@ -612,7 +612,7 @@ export default function ScheduleApproval({ auth }) {
                                                         {new Date(schedule.end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-2.5">
                                                     <div className="flex -space-x-2 overflow-hidden">
                                                         {(schedule.participants ?? []).slice(0, 3).map((p) => (
                                                             <div key={p.id} className="inline-flex h-8 w-8 rounded-full ring-2 ring-white bg-indigo-200 items-center justify-center text-xs font-bold text-indigo-700" title={p.name}>
@@ -629,7 +629,7 @@ export default function ScheduleApproval({ auth }) {
                                                         <span className="text-xs text-gray-400">{__('No participants')}</span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                                <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                                     <button
                                                         onClick={() => openModal('approve_deletion', schedule)}
                                                         className="text-red-600 hover:text-red-900 font-semibold"

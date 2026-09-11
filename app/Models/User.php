@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     public const ROLE_ADMIN = 'admin';
     public const ROLE_MENTOR = 'mentor';
@@ -116,6 +117,66 @@ class User extends Authenticatable
     public function getNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    /**
+     * Get the user's phone number normalized to WhatsApp/E.164-ish Indonesian format (62xxx).
+     */
+    public function getWhatsappNumberAttribute(): ?string
+    {
+        return self::normalizePhoneToWhatsapp($this->phone_number);
+    }
+
+    /**
+     * Get the user's WhatsApp number formatted as E.164 for Twilio Verify (leading '+').
+     */
+    public function getWhatsappNumberE164Attribute(): ?string
+    {
+        return $this->whatsapp_number ? '+' . $this->whatsapp_number : null;
+    }
+
+    /**
+     * Normalize a local Indonesian phone number (e.g. 08xx) to WhatsApp international format (62xxx).
+     * Returns null if the input doesn't resemble a plausible Indonesian mobile number.
+     */
+    public static function normalizePhoneToWhatsapp(?string $phone): ?string
+    {
+        if (!$phone) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $phone);
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            $digits = '62' . substr($digits, 1);
+        } elseif (str_starts_with($digits, '8')) {
+            $digits = '62' . $digits;
+        }
+
+        if (!preg_match('/^628[0-9]{7,12}$/', $digits)) {
+            return null;
+        }
+
+        return $digits;
+    }
+
+    /**
+     * Find a user whose phone_number normalizes to the given WhatsApp number.
+     * Matches regardless of how the number was originally formatted (08xx, 62xx, etc).
+     */
+    public static function findByWhatsappNumber(?string $phone): ?self
+    {
+        $normalized = self::normalizePhoneToWhatsapp($phone);
+        if (!$normalized) {
+            return null;
+        }
+
+        return self::whereNotNull('phone_number')
+            ->get()
+            ->first(fn (self $user) => $user->whatsapp_number === $normalized);
     }
 
     /**

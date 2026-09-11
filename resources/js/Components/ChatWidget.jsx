@@ -35,7 +35,7 @@ export default function ChatWidget({ user }) {
         const saved = localStorage.getItem(`offline_queue_${user.id}`);
         return saved ? JSON.parse(saved) : [];
     });
-    const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
     const [lastNotificationCount, setLastNotificationCount] = useState(-1);
 
     // Online/Offline Detection

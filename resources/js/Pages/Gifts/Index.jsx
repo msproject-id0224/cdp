@@ -192,7 +192,7 @@ export default function GiftIndex({ auth, gifts, filters = {} }) {
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 {__('No.')}
                                             </th>
                                             <th 
@@ -219,23 +219,23 @@ export default function GiftIndex({ auth, gifts, filters = {} }) {
                                             >
                                                 {__('Status')} <SortIcon column="status" />
                                             </th>
-                                            {isAdmin && <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Aksi')}</th>}
+                                            {isAdmin && <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{__('Aksi')}</th>}
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                         {gifts.data.length > 0 ? (
                                             gifts.data.map((gift, index) => (
                                                 <tr key={gift.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {(gifts.current_page - 1) * gifts.per_page + index + 1}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                             {gift.user.first_name} {gift.user.last_name}
                                                         </div>
                                                         <div className="text-xs text-gray-500">{gift.user.id_number}</div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 dark:text-indigo-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-indigo-600 dark:text-indigo-400">
                                                         {isMentor && gift.status !== 'received' ? (
                                                             <button 
                                                                 onClick={() => handleOpenReceptionForm(gift)}
@@ -264,14 +264,14 @@ export default function GiftIndex({ auth, gifts, filters = {} }) {
                                                             )
                                                         )}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 dark:text-indigo-400">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap text-sm text-indigo-600 dark:text-indigo-400">
                                                         {gift.letter_code ? (
                                                              <a href="#" onClick={(e) => e.preventDefault()} className="hover:underline cursor-pointer" title="Lihat Dokumen">
                                                                 {gift.letter_code}
                                                              </a>
                                                         ) : '-'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    <td className="px-6 py-2.5 whitespace-nowrap">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                                             gift.status === 'received' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
                                                             gift.status === 'returned' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
@@ -286,7 +286,7 @@ export default function GiftIndex({ auth, gifts, filters = {} }) {
                                                         </span>
                                                     </td>
                                                     {isAdmin && (
-                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium">
                                                             <div className="flex justify-end gap-3">
                                                                 {gift.status === 'pending_verification' && (
                                                                     <button

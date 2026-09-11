@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
+import { autoGrow } from '@/Utils/autoGrow';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { __ } from '@/Utils/lang';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files }) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [confirmState, setConfirmState] = useState({ show: false, title: '', message: '', onConfirm: null });
+    const askConfirm = (title, message, fn) => setConfirmState({ show: true, title, message, onConfirm: fn });
+    const closeConfirm = () => setConfirmState(s => ({ ...s, show: false }));
 
     const defaultSwot = [
         { aspect: 'S', description: '' },
@@ -67,9 +72,11 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
     };
 
     const deleteFile = (fileId) => {
-        if (confirm(__('RMD_DELETE_CONFIRMATION'))) {
-            router.delete(route('rmd.files.delete', fileId));
-        }
+        askConfirm(
+            __('RMD_DELETE'),
+            __('RMD_DELETE_CONFIRMATION'),
+            () => router.delete(route('rmd.files.delete', fileId))
+        );
     };
 
     const swotLabels = [
@@ -106,7 +113,7 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
                         opacity: 0.08,
                     }}
                 />
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8 relative z-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
 
                     {/* Header Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-8 border border-gray-100 dark:border-gray-700">
@@ -145,8 +152,8 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
                                 <label className="block text-gray-700 dark:text-gray-300 font-medium">
                                     {__('RMD_CH4_P2_FINAL_CAREER_REASON_LABEL')}
                                 </label>
-                                <textarea
-                                    className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-400 focus:ring-orange-400 shadow-sm min-h-[120px]"
+                                <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                    className="w-full max-w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-400 focus:ring-orange-400 shadow-sm min-h-[120px]"
                                     value={data.final_career_reason}
                                     onChange={e => setData('final_career_reason', e.target.value)}
                                     placeholder={__('RMD_CH4_P2_FINAL_CAREER_REASON_PLACEHOLDER')}
@@ -169,8 +176,8 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
                                 <label className="block text-gray-700 dark:text-gray-300 font-medium">
                                     {__('RMD_CH4_P2_SWOT_DEF_LABEL')}
                                 </label>
-                                <textarea
-                                    className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[100px]"
+                                <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                    className="w-full max-w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[100px]"
                                     value={data.swot_definition}
                                     onChange={e => setData('swot_definition', e.target.value)}
                                     placeholder={__('RMD_CH4_P2_SWOT_DEF_PLACEHOLDER')}
@@ -194,8 +201,8 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
                                                     </span>
                                                 </td>
                                                 <td className="p-2">
-                                                    <textarea
-                                                        className="w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
+                                                    <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                                        className="w-full max-w-full min-h-[128px] border-none focus:ring-0 bg-transparent resize dark:text-gray-200"
                                                         value={row.description}
                                                         onChange={e => updateSwot(index, e.target.value)}
                                                         placeholder={__('RMD_CH4_P2_SWOT_PLACEHOLDER')}
@@ -244,8 +251,8 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
                             <h4 className="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">
                                 {__('RMD_CH4_P2_MENTORING_NOTES_TITLE')}
                             </h4>
-                            <textarea
-                                className="w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[120px]"
+                            <textarea ref={autoGrow} onInput={(e) => autoGrow(e.target)}
+                                className="w-full max-w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm min-h-[120px]"
                                 value={data.mentoring_notes}
                                 onChange={e => setData('mentoring_notes', e.target.value)}
                                 placeholder={__('RMD_CH4_P2_MENTORING_NOTES_PLACEHOLDER')}
@@ -373,6 +380,14 @@ export default function MenentukanCitaCitaP2({ auth, careerExplorationP2, files 
 
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmState.show}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={() => { confirmState.onConfirm?.(); closeConfirm(); }}
+                onCancel={closeConfirm}
+                confirmLabel={__('RMD_DELETE')}
+            />
         </AuthenticatedLayout>
     );
 }
