@@ -31,7 +31,7 @@ export default function ChatWidget({ user }) {
     const [isSending, setIsSending] = useState(false);
     const [retryQueue, setRetryQueue] = useState([]);
     const [offlineQueue, setOfflineQueue] = useState(() => {
-        if (!user?.id) return [];
+        if (!user?.id || typeof localStorage === 'undefined') return [];
         const saved = localStorage.getItem(`offline_queue_${user.id}`);
         return saved ? JSON.parse(saved) : [];
     });
@@ -250,7 +250,7 @@ export default function ChatWidget({ user }) {
     };
 
     const [notificationPermission, setNotificationPermission] = useState(
-        "Notification" in window ? Notification.permission : "default"
+        typeof window !== 'undefined' && "Notification" in window ? Notification.permission : "default"
     );
 
     const requestNotificationPermission = async () => {
